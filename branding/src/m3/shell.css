@@ -1,0 +1,76 @@
+/*
+ * Material Design 3 — app shell (navbar, sidebar, pages)
+ */
+
+@layer components {
+  #dashboard-navbar {
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+  }
+
+  #dashboard-navbar .border-b {
+    border-color: var(--md-sys-color-outline-variant) !important;
+  }
+
+  #sidebar {
+    background-color: var(--md-sys-color-surface-container-low) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+  }
+
+  #sidebar a[aria-current='page'],
+  #sidebar button[aria-current='page'] {
+    background-color: var(--md-sys-color-secondary-container) !important;
+    color: var(--md-sys-color-on-secondary-container) !important;
+    border-radius: var(--md-sys-shape-corner-full) !important;
+  }
+
+  #sidebar a:not([aria-current='page']):hover,
+  #sidebar button:not([aria-current='page']):hover {
+    background-color: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface) calc(var(--md-sys-state-hover) * 100%),
+      transparent
+    ) !important;
+    border-radius: var(--md-sys-shape-corner-full) !important;
+  }
+
+  main.relative {
+    background-color: var(--md-sys-color-surface);
+  }
+
+  /* Page header strip */
+  main .absolute.flex.h-16.w-full.border-b {
+    background-color: var(--md-sys-color-surface-container);
+    border-color: var(--md-sys-color-outline-variant) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  /* Auth page card */
+  section.relative.isolate .border.max-w-xl {
+    border-radius: var(--md-sys-shape-corner-extra-large) !important;
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    box-shadow: var(--md-sys-elevation-2) !important;
+  }
+
+  /* Empty states */
+  [class*='rounded-3xl'][class*='bg-gray-50'],
+  [class*='rounded-3xl'][class*='dark:bg-immich-dark-gray'] {
+    border-radius: var(--md-sys-shape-corner-large) !important;
+    background-color: var(--md-sys-color-surface-container) !important;
+    border: 1px dashed var(--md-sys-color-outline-variant);
+  }
+
+  /* Scrollbar — M3 subtle */
+  .immich-scrollbar::-webkit-scrollbar-thumb,
+  html::-webkit-scrollbar-thumb {
+    background-color: var(--md-sys-color-outline-variant) !important;
+    border-radius: var(--md-sys-shape-corner-full) !important;
+  }
+
+  .immich-scrollbar::-webkit-scrollbar-track,
+  html::-webkit-scrollbar-track {
+    background-color: var(--md-sys-color-surface-container) !important;
+  }
+}

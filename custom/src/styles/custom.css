@@ -1,14 +1,22 @@
+@import '../../../branding/src/fonts.css';
+@import '../../../branding/src/m3/tokens.css';
+@import '../../../branding/src/m3/shape.css';
+@import '../../../branding/src/m3/elevation.css';
+@import '../../../branding/src/m3/typography.css';
+@import '../../../branding/src/m3/immich-bridge.css';
 @import '../../../branding/src/theme-light.css';
 @import '../../../branding/src/theme-dark.css';
+@import '../../../branding/src/m3/components.css';
+@import '../../../branding/src/m3/shell.css';
 @import '../../../branding/src/loading.css';
 
 .pg-brand-accent {
-  color: var(--pg-primary);
+  color: var(--md-sys-color-primary);
 }
 
 .pg-brand-surface {
-  background-color: var(--pg-surface);
-  color: var(--pg-text);
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
 }
 
 .pg-server-error {
@@ -17,7 +25,7 @@
   width: 100%;
   align-items: center;
   justify-content: center;
-  background: #24104f;
+  background: var(--md-sys-color-surface-container-highest);
   padding: 1rem;
 }
 

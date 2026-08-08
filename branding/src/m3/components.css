@@ -1,0 +1,157 @@
+/*
+ * Material Design 3 — component overrides (@immich/ui + app chrome)
+ */
+
+@layer components {
+  /* ── Buttons (filled / tonal / outlined / text) ── */
+  button[class*='rounded'],
+  a[class*='rounded'][role='button'],
+  [role='button'][class*='rounded'] {
+    border-radius: var(--md-sys-shape-corner-full) !important;
+    font-size: var(--md-sys-typescale-label-large-size) !important;
+    font-weight: var(--md-sys-typescale-label-large-weight) !important;
+    letter-spacing: 0.006em;
+    transition:
+      background-color 200ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+      color 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  button.bg-primary,
+  a.bg-primary {
+    background-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
+    box-shadow: var(--md-sys-elevation-0);
+  }
+
+  button.bg-primary:not(:disabled):hover,
+  a.bg-primary:hover {
+    box-shadow: var(--md-sys-elevation-1);
+    filter: brightness(1.05);
+  }
+
+  button.border-primary,
+  a.border-primary {
+    background-color: transparent !important;
+    border-color: var(--md-sys-color-outline) !important;
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  button.text-primary:not(.bg-primary):not(.border-primary),
+  a.text-primary:not(.bg-primary):not(.border-primary) {
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  button.text-dark:not(.bg-primary):not(.border-primary),
+  a.text-dark:not(.bg-primary):not(.border-primary) {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  /* Icon buttons — M3 standard icon button */
+  button[class*='h-10'][class*='w-10'],
+  button[class*='h-8'][class*='w-8'] {
+    border-radius: var(--md-sys-shape-corner-full) !important;
+  }
+
+  /* ── Cards ── */
+  [class*='rounded-2xl'].border,
+  [class*='rounded-3xl'].border,
+  .border-subtle[class*='rounded'] {
+    border-radius: var(--md-sys-shape-corner-medium) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    background-color: var(--md-sys-color-surface-container-low) !important;
+    box-shadow: var(--md-sys-elevation-1);
+  }
+
+  /* ── Modals / dialogs ── */
+  [data-dialog-content],
+  [role='dialog'][class*='rounded'] {
+    border-radius: var(--md-sys-shape-corner-extra-large) !important;
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    color: var(--md-sys-color-on-surface) !important;
+    border: 1px solid var(--md-sys-color-outline-variant) !important;
+    box-shadow: var(--md-sys-elevation-3) !important;
+  }
+
+  [data-dialog-overlay],
+  [data-state='open'][class*='fixed'][class*='inset-0']:not(nav):not(main) {
+    background-color: var(--md-sys-color-scrim) !important;
+  }
+
+  /* ── Inputs / text fields (outlined) ── */
+  .immich-form-input,
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    border-radius: var(--md-sys-shape-corner-extra-small) !important;
+    border: 1px solid var(--md-sys-color-outline) !important;
+    background-color: var(--md-sys-color-surface-container-highest) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .immich-form-input:focus-within,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-color: var(--md-sys-color-primary) !important;
+    outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 24%, transparent) !important;
+    outline-offset: 0 !important;
+  }
+
+  .immich-form-label,
+  label {
+    color: var(--md-sys-color-on-surface-variant) !important;
+    font-size: var(--md-sys-typescale-body-medium-size);
+  }
+
+  /* ── Badges / chips ── */
+  [class*='rounded-full'][class*='bg-'] {
+    border-radius: var(--md-sys-shape-corner-small) !important;
+    font-size: var(--md-sys-typescale-label-medium-size);
+    font-weight: var(--md-sys-typescale-label-medium-weight);
+  }
+
+  /* ── Toasts ── */
+  [data-testid='toast'],
+  [class*='toast'] {
+    border-radius: var(--md-sys-shape-corner-small) !important;
+    box-shadow: var(--md-sys-elevation-3) !important;
+  }
+
+  /* ── Account panel ── */
+  #account-info-panel {
+    border-radius: var(--md-sys-shape-corner-extra-large) !important;
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    border: 1px solid var(--md-sys-color-outline-variant) !important;
+    box-shadow: var(--md-sys-elevation-3) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  #account-info-panel .rounded-t-3xl,
+  #account-info-panel .rounded-b-3xl {
+    border-radius: var(--md-sys-shape-corner-large) !important;
+    background-color: var(--md-sys-color-surface-container) !important;
+  }
+
+  /* ── Notification panel ── */
+  [class*='top-17'][class*='rounded-3xl'] {
+    border-radius: var(--md-sys-shape-corner-extra-large) !important;
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    box-shadow: var(--md-sys-elevation-3) !important;
+  }
+
+  /* ── Search bar ── */
+  #search-input,
+  [id*='search'] input {
+    border-radius: var(--md-sys-shape-corner-full) !important;
+    background-color: var(--md-sys-color-surface-container-highest) !important;
+  }
+
+  /* ── Setting accordion ── */
+  [class*='rounded-2xl'][class*='border'][class*='bg-gray'] {
+    border-radius: var(--md-sys-shape-corner-medium) !important;
+    background-color: var(--md-sys-color-surface-container) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+  }
+}

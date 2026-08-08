@@ -1,68 +1,48 @@
-/*
- * Be Vietnam Pro — self-hosted (OFL, Google Fonts)
- */
-
-@font-face {
-  font-family: 'Be Vietnam Pro';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Regular.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Be Vietnam Pro';
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Italic.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Be Vietnam Pro';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Medium.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Be Vietnam Pro';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-SemiBold.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Be Vietnam Pro';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Bold.ttf') format('truetype');
-}
-
-@theme inline {
-  --font-sans: 'Be Vietnam Pro', sans-serif;
-  --font-mono: 'Be Vietnam Pro', sans-serif;
-}
-
 @layer base {
-  :root {
-    --fontFamilyBase: 'Be Vietnam Pro', sans-serif;
-    --fontFamilyMonospace: 'Be Vietnam Pro', sans-serif;
-    --font-sans: 'Be Vietnam Pro', sans-serif;
-    --font-mono: 'Be Vietnam Pro', sans-serif;
-    font-family: 'Be Vietnam Pro', sans-serif;
-    letter-spacing: normal;
+  @font-face {
+    font-family: 'Be Vietnam Pro';
+    src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
   }
 
-  html,
-  body,
-  button,
-  input,
-  textarea,
-  select {
-    font-family: 'Be Vietnam Pro', sans-serif;
+  @font-face {
+    font-family: 'Be Vietnam Pro';
+    src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Italic.ttf') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Be Vietnam Pro';
+    src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Be Vietnam Pro';
+    src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Be Vietnam Pro';
+    src: url('/branding/fonts/BeVietnamPro/BeVietnamPro-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --md-ref-typeface-brand: 'Be Vietnam Pro', system-ui, sans-serif;
+    --md-ref-typeface-plain: 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-mono: 'Be Vietnam Pro', system-ui, sans-serif;
   }
 }

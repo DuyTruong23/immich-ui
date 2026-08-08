@@ -1,20 +1,13 @@
 #stencil {
   --stencil-width: 120px;
+  background-color: var(--md-sys-color-surface, var(--pg-loading-bg));
 }
 
-#stencil svg .st0 {
-  fill: var(--pg-primary, #2563eb);
-}
-
+#stencil svg .st0,
 #stencil svg .st1,
 #stencil svg .st2,
 #stencil svg .st3,
 #stencil svg .st4 {
-  fill: var(--pg-primary, #2563eb);
-  opacity: 0.85;
-}
-
-html.dark #stencil,
-html.light #stencil {
-  background-color: var(--pg-loading-bg);
+  fill: var(--md-sys-color-primary, var(--pg-primary, #6750a4));
+  opacity: 0.9;
 }

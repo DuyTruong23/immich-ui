@@ -1,0 +1,110 @@
+/*
+ * Bridge Material Design 3 tokens → @immich/ui + legacy Immich CSS variables
+ */
+
+@layer base {
+  html.light,
+  :root:not(.dark) {
+    --color-neutral-50: var(--md-sys-color-surface-container-lowest);
+    --color-neutral-100: var(--md-sys-color-surface-container-low);
+    --color-neutral-200: var(--md-sys-color-surface-container);
+    --color-neutral-300: var(--md-sys-color-outline-variant);
+    --color-neutral-400: #a8a3ae;
+    --color-neutral-500: var(--md-sys-color-outline);
+    --color-neutral-600: #605d64;
+    --color-neutral-700: #48464c;
+    --color-neutral-800: #313033;
+    --color-neutral-900: #1d1b20;
+    --color-neutral-950: #141218;
+
+    --immich-ui-primary-500: var(--md-sys-color-primary);
+    --immich-ui-primary-400: #7965a8;
+    --immich-ui-primary-600: #523c8b;
+    --immich-ui-primary-300: #8f7bb5;
+    --immich-ui-primary-200: #a792c3;
+    --immich-ui-primary-100: var(--md-sys-color-primary-container);
+    --immich-ui-primary-50: #f6edff;
+    --immich-ui-primary-700: #432d73;
+    --immich-ui-primary-800: #351f62;
+    --immich-ui-primary-900: #271052;
+    --immich-ui-primary-950: #1a0342;
+
+    --immich-ui-success-500: #386a20;
+    --immich-ui-danger-500: var(--md-sys-color-error);
+    --immich-ui-warning-500: #7d5700;
+    --immich-ui-info-500: #00639b;
+
+    --immich-ui-light: var(--md-sys-color-surface-container-lowest);
+    --immich-ui-dark: var(--md-sys-color-on-surface);
+    --immich-ui-muted: var(--md-sys-color-on-surface-variant);
+    --immich-ui-gray: var(--md-sys-color-surface-container);
+    --immich-ui-default-border: var(--md-sys-color-outline-variant);
+
+    --immich-primary: 103 80 164;
+    --immich-bg: 254 247 255;
+    --immich-fg: 29 27 32;
+    --immich-gray: 243 237 247;
+
+    --pg-primary: var(--md-sys-color-primary);
+    --pg-primary-hover: #523c8b;
+    --pg-surface: var(--md-sys-color-surface);
+    --pg-surface-muted: var(--md-sys-color-surface-container);
+    --pg-text: var(--md-sys-color-on-surface);
+    --pg-text-muted: var(--md-sys-color-on-surface-variant);
+    --pg-border: var(--md-sys-color-outline-variant);
+    --pg-loading-bg: var(--md-sys-color-surface);
+  }
+
+  html.dark,
+  .dark {
+    --color-neutral-50: var(--md-sys-color-surface-container-lowest);
+    --color-neutral-100: var(--md-sys-color-surface-container-low);
+    --color-neutral-200: var(--md-sys-color-surface-container);
+    --color-neutral-300: var(--md-sys-color-outline-variant);
+    --color-neutral-400: #605d64;
+    --color-neutral-500: var(--md-sys-color-outline);
+    --color-neutral-600: #938f99;
+    --color-neutral-700: #cac4d0;
+    --color-neutral-800: #e6e0e9;
+    --color-neutral-900: #f5eff7;
+    --color-neutral-950: #ffffff;
+
+    --immich-ui-primary-500: var(--md-sys-color-primary);
+    --immich-ui-primary-400: #dbc7ff;
+    --immich-ui-primary-600: #ba9eff;
+    --immich-ui-primary-300: #e4d0ff;
+    --immich-ui-primary-200: var(--md-sys-color-primary-container);
+    --immich-ui-primary-100: #6a5399;
+    --immich-ui-primary-50: #594882;
+    --immich-ui-primary-700: #9a82db;
+    --immich-ui-primary-800: #b69df8;
+    --immich-ui-primary-900: #d0bcff;
+    --immich-ui-primary-950: #eaddff;
+
+    --immich-ui-success-500: #6dd58c;
+    --immich-ui-danger-500: var(--md-sys-color-error);
+    --immich-ui-warning-500: #ffb951;
+    --immich-ui-info-500: #8ecfff;
+
+    --immich-ui-light: var(--md-sys-color-surface-container-low);
+    --immich-ui-dark: var(--md-sys-color-on-surface);
+    --immich-ui-muted: var(--md-sys-color-on-surface-variant);
+    --immich-ui-gray: var(--md-sys-color-surface-container-high);
+    --immich-ui-default-border: var(--md-sys-color-outline-variant);
+
+    --immich-primary: 208 188 255;
+    --immich-dark-primary: 208 188 255;
+    --immich-dark-bg: 20 18 24;
+    --immich-dark-fg: 230 224 233;
+    --immich-dark-gray: 43 41 48;
+
+    --pg-primary: var(--md-sys-color-primary);
+    --pg-primary-hover: #e4d0ff;
+    --pg-surface: var(--md-sys-color-surface);
+    --pg-surface-muted: var(--md-sys-color-surface-container);
+    --pg-text: var(--md-sys-color-on-surface);
+    --pg-text-muted: var(--md-sys-color-on-surface-variant);
+    --pg-border: var(--md-sys-color-outline-variant);
+    --pg-loading-bg: var(--md-sys-color-surface);
+  }
+}
