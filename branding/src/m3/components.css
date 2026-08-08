@@ -26,8 +26,9 @@
 
   button.bg-primary:not(:disabled):hover,
   a.bg-primary:hover {
+    /* M3 filled button states — see m3/states.css */
     box-shadow: var(--md-sys-elevation-1);
-    filter: brightness(1.05);
+    filter: none;
   }
 
   button.border-primary,

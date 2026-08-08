@@ -1,0 +1,70 @@
+/*
+ * Material Design 3 — media-chrome video controls (preview / player)
+ * Unlayered so overrides apply when VideoNativeViewer scoped styles are absent.
+ */
+
+media-controller {
+  --media-control-background: transparent !important;
+  --media-control-hover-background: var(--md-state-on-video-hover) !important;
+  --media-focus-box-shadow: 0 0 0 2px var(--md-state-focus-ring) !important;
+  --media-primary-color: #ffffff !important;
+  --media-text-color: rgba(255, 255, 255, 0.92) !important;
+  --media-icon-color: #ffffff !important;
+  --media-font-family: var(--font-sans, 'Be Vietnam Pro', system-ui, sans-serif) !important;
+  --media-font-weight: 500 !important;
+  --media-font-size: var(--md-sys-typescale-label-large-size, 0.875rem) !important;
+  --media-menu-item-hover-background: var(--md-state-on-video-hover) !important;
+  --media-settings-menu-background: var(--md-sys-color-surface-container-high) !important;
+  --media-menu-border-radius: var(--md-sys-shape-corner-medium) !important;
+  --media-tooltip-background-color: var(--md-sys-color-inverse-surface) !important;
+  --media-tooltip-border-radius: var(--md-sys-shape-corner-extra-small) !important;
+  --media-tooltip-padding: 6px 10px !important;
+  --media-tooltip-distance: 8px !important;
+  --media-tooltip-filter: none !important;
+  --media-tooltip-arrow-display: none !important;
+  --media-time-range-buffered-color: color-mix(in srgb, #ffffff 24%, transparent) !important;
+  --media-range-track-background: color-mix(in srgb, #ffffff 32%, transparent) !important;
+  --media-range-bar-color: var(--md-sys-color-primary) !important;
+  --media-range-thumb-background: #ffffff !important;
+}
+
+media-controller .volume-wrapper:hover {
+  background-color: var(--md-state-on-video-hover) !important;
+}
+
+media-settings-menu {
+  --media-primary-color: var(--md-sys-color-on-surface) !important;
+  --media-text-color: var(--md-sys-color-on-surface) !important;
+  --media-icon-color: var(--md-sys-color-on-surface) !important;
+  --media-menu-item-hover-background: var(--md-state-on-surface-hover) !important;
+  border-color: var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-3) !important;
+}
+
+media-play-button::part(tooltip),
+media-mute-button::part(tooltip),
+media-fullscreen-button::part(tooltip),
+media-settings-menu-button::part(tooltip),
+media-time-display::part(tooltip),
+media-playback-rate-button::part(tooltip) {
+  --media-tooltip-background-color: var(--md-sys-color-inverse-surface) !important;
+  --media-primary-color: var(--md-sys-color-inverse-on-surface) !important;
+  --media-text-color: var(--md-sys-color-inverse-on-surface) !important;
+  --media-font-size: var(--md-sys-typescale-label-medium-size) !important;
+  --media-font-weight: var(--md-sys-typescale-label-medium-weight) !important;
+  --media-tooltip-border-radius: var(--md-sys-shape-corner-extra-small) !important;
+  --media-tooltip-padding: 6px 10px !important;
+  --media-tooltip-filter: none !important;
+  color: var(--md-sys-color-inverse-on-surface) !important;
+}
+
+media-control-bar media-play-button,
+media-control-bar media-mute-button,
+media-control-bar media-fullscreen-button,
+media-control-bar media-settings-menu-button,
+media-control-bar media-time-display {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  transition:
+    background-color var(--md-motion-duration-short) var(--md-motion-easing-standard),
+    transform 150ms var(--md-motion-easing-standard) !important;
+}

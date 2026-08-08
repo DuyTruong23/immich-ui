@@ -1,0 +1,291 @@
+/*
+ * Material Design 3 — interaction states (hover, press, focus, tooltip)
+ * https://m3.material.io/foundations/interaction/states
+ */
+
+@layer components {
+  /* ── Shared motion ── */
+  button,
+  a[href],
+  [role='button'],
+  [role='menuitem'],
+  [role='option'],
+  [role='tab'],
+  summary,
+  .immich-circle-icon-button,
+  .tooltip-content {
+    transition:
+      background-color var(--md-motion-duration-short) var(--md-motion-easing-standard),
+      color var(--md-motion-duration-short) var(--md-motion-easing-standard),
+      box-shadow var(--md-motion-duration-short) var(--md-motion-easing-standard),
+      border-color var(--md-motion-duration-short) var(--md-motion-easing-standard),
+      opacity var(--md-motion-duration-short) var(--md-motion-easing-standard),
+      transform 150ms var(--md-motion-easing-standard);
+  }
+
+  /* ── Tooltips (bits-ui / @immich/ui) ── */
+  .tooltip-content {
+    background-color: var(--md-sys-color-inverse-surface) !important;
+    color: var(--md-sys-color-inverse-on-surface) !important;
+    border-radius: var(--md-sys-shape-corner-extra-small) !important;
+    font-family: var(--md-ref-typeface-plain, 'Be Vietnam Pro'), system-ui, sans-serif !important;
+    font-size: var(--md-sys-typescale-label-medium-size) !important;
+    font-weight: var(--md-sys-typescale-label-medium-weight) !important;
+    line-height: var(--md-sys-typescale-label-medium-line-height) !important;
+    letter-spacing: 0.025em;
+    padding: 6px 10px !important;
+    box-shadow: var(--md-sys-elevation-2) !important;
+    border: none !important;
+    max-width: min(240px, 90vw);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .tooltip-content[data-state='delayed-open'],
+  .tooltip-content[data-state='instant-open'] {
+    animation: m3-tooltip-enter 150ms var(--md-motion-easing-standard) !important;
+  }
+
+  @keyframes m3-tooltip-enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.96);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* ── Focus ring (keyboard) ── */
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible,
+  [role='menuitem']:focus-visible,
+  [role='option']:focus-visible,
+  [role='tab']:focus-visible,
+  summary:focus-visible,
+  .immich-circle-icon-button:focus-visible {
+    outline: 2px solid var(--md-state-focus-ring) !important;
+    outline-offset: 2px;
+  }
+
+  /* ── @immich/ui filled buttons ── */
+  button.bg-primary:not(:disabled):not([aria-disabled='true']):hover,
+  a.bg-primary:not([aria-disabled='true']):hover,
+  [class*='hover:bg-primary/80']:hover:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-primary/90']:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-on-primary-hover) !important;
+    box-shadow: var(--md-sys-elevation-1);
+    filter: none !important;
+  }
+
+  button.bg-primary:not(:disabled):not([aria-disabled='true']):active,
+  a.bg-primary:not([aria-disabled='true']):active,
+  [class*='hover:bg-primary/80']:active:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-primary/90']:active:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-on-primary-pressed) !important;
+    box-shadow: var(--md-sys-elevation-0);
+    transform: scale(0.98);
+  }
+
+  /* ── Outlined / tonal buttons ── */
+  button.border-primary:not(:disabled):hover,
+  a.border-primary:not([aria-disabled='true']):hover,
+  [class*='hover:bg-primary/20']:hover:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-primary/10']:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-primary-hover) !important;
+  }
+
+  button.border-primary:not(:disabled):active,
+  a.border-primary:not([aria-disabled='true']):active,
+  [class*='hover:bg-primary/20']:active:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-primary/10']:active:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-primary-pressed) !important;
+    transform: scale(0.98);
+  }
+
+  /* ── Ghost / text buttons ── */
+  [class*='hover:bg-primary/15']:hover:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-dark/10']:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-on-surface-hover) !important;
+  }
+
+  [class*='hover:bg-primary/15']:active:not(:disabled):not([aria-disabled='true']),
+  [class*='hover:bg-dark/10']:active:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--md-state-on-surface-pressed) !important;
+    transform: scale(0.98);
+  }
+
+  /* ── Icon buttons ── */
+  .immich-circle-icon-button:not(:disabled):hover,
+  button[class*='h-10'][class*='w-10']:not(:disabled):hover,
+  button[class*='h-8'][class*='w-8']:not(:disabled):hover,
+  button[class*='h-12'][class*='w-12']:not(:disabled):hover,
+  button[class*='h-14'][class*='w-14']:not(:disabled):hover {
+    background-color: var(--md-state-on-surface-hover) !important;
+  }
+
+  .immich-circle-icon-button:not(:disabled):active,
+  button[class*='h-10'][class*='w-10']:not(:disabled):active,
+  button[class*='h-8'][class*='w-8']:not(:disabled):active,
+  button[class*='h-12'][class*='w-12']:not(:disabled):active,
+  button[class*='h-14'][class*='w-14']:not(:disabled):active {
+    background-color: var(--md-state-on-surface-pressed) !important;
+    transform: scale(0.94);
+  }
+
+  /* ── List / menu rows (Immich Tailwind hover utilities → M3 state layer) ── */
+  .hover\:bg-gray-100:hover,
+  .hover\:bg-gray-200:hover,
+  .hover\:bg-gray-300:hover,
+  .hover\:bg-gray-500:hover,
+  .hover\:bg-subtle:hover,
+  .hover\:bg-slate-200:hover,
+  .hover\:bg-light-100:hover,
+  .hover\:bg-immich-primary\/10:hover,
+  .hover\:bg-immich-primary\/25:hover,
+  .hover\:bg-immich-primary\/5:hover {
+    background-color: var(--md-state-on-surface-hover) !important;
+  }
+
+  /* Video scrim — prev/next nav & volume pill use light-on-dark state layer */
+  media-controller .hover\:bg-light-100:hover,
+  button.hover\:bg-gray-500:hover,
+  button[class*='hover:bg-gray-500']:hover {
+    background-color: var(--md-state-on-video-hover) !important;
+  }
+
+  button.hover\:bg-gray-500:hover,
+  button[class*='hover:bg-gray-500']:hover {
+    color: #ffffff !important;
+  }
+
+  .dark .dark\:hover\:bg-gray-700:hover,
+  .dark .dark\:hover\:bg-gray-800:hover,
+  .dark .dark\:hover\:bg-gray-900:hover,
+  .dark .dark\:hover\:bg-slate-800:hover,
+  .dark .dark\:hover\:bg-immich-dark-gray:hover,
+  .dark .dark\:hover\:bg-immich-dark-primary\/10:hover,
+  .dark .dark\:hover\:bg-immich-dark-primary\/20:hover,
+  .dark .dark\:hover\:bg-immich-dark-primary\/25:hover,
+  .dark .dark\:hover\:bg-immich-dark-primary\/50:hover,
+  .dark .hover\:dark\:bg-immich-dark-primary\/20:hover,
+  .dark .hover\:dark\:bg-\[\#232932\]:hover {
+    background-color: var(--md-state-on-surface-hover) !important;
+  }
+
+  .hover\:bg-gray-100:active,
+  .hover\:bg-gray-200:active,
+  .hover\:bg-gray-300:active,
+  .hover\:bg-gray-500:active,
+  .hover\:bg-subtle:active,
+  .hover\:bg-slate-200:active {
+    background-color: var(--md-state-on-surface-pressed) !important;
+  }
+
+  button.hover\:bg-gray-500:active,
+  button[class*='hover:bg-gray-500']:active {
+    background-color: var(--md-state-on-video-pressed) !important;
+    transform: scale(0.94);
+  }
+
+  /* ── Asset viewer navbar actions (video / photo preview) ── */
+  [data-testid='asset-viewer-navbar-actions'] button:not(:disabled):hover,
+  [data-testid='asset-viewer-navbar-actions'] a:not([aria-disabled='true']):hover {
+    background-color: var(--md-state-on-video-hover) !important;
+  }
+
+  [data-testid='asset-viewer-navbar-actions'] button:not(:disabled):active,
+  [data-testid='asset-viewer-navbar-actions'] a:not([aria-disabled='true']):active {
+    background-color: var(--md-state-on-video-pressed) !important;
+    transform: scale(0.94);
+  }
+
+  .dark .dark\:hover\:bg-gray-700:active,
+  .dark .dark\:hover\:bg-gray-800:active,
+  .dark .dark\:hover\:bg-immich-dark-gray:active {
+    background-color: var(--md-state-on-surface-pressed) !important;
+  }
+
+  /* Selected / highlighted rows */
+  [aria-selected='true'].aria-selected\:bg-gray-100,
+  [aria-selected='true'].aria-selected\:bg-gray-200,
+  [aria-selected='true'].dark\:aria-selected\:bg-gray-700,
+  [aria-selected='true'].dark\:aria-selected\:bg-gray-500\/30 {
+    background-color: var(--md-sys-color-secondary-container) !important;
+    color: var(--md-sys-color-on-secondary-container) !important;
+  }
+
+  /* ── Sidebar nav ── */
+  #sidebar a:not([aria-current='page']):active,
+  #sidebar button:not([aria-current='page']):active {
+    background-color: var(--md-state-on-surface-pressed) !important;
+    border-radius: var(--md-sys-shape-corner-full) !important;
+  }
+
+  /* ── Account panel actions ── */
+  #account-info-panel button:not(:disabled):hover,
+  #account-info-panel a:not([aria-disabled='true']):hover {
+    background-color: var(--md-state-primary-hover) !important;
+  }
+
+  #account-info-panel button:not(:disabled):active,
+  #account-info-panel a:not([aria-disabled='true']):active {
+    background-color: var(--md-state-primary-pressed) !important;
+    transform: scale(0.98);
+  }
+
+  /* ── Notification rows ── */
+  [class*='hover:bg-immich-primary/10']:hover {
+    background-color: var(--md-state-primary-hover) !important;
+  }
+
+  /* ── Links in content ── */
+  main a:not([class*='rounded']):not([role='button']):hover,
+  .prose a:hover {
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── Inputs hover ── */
+  .immich-form-input:hover:not(:focus-within),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):hover:not(:focus-visible),
+  textarea:hover:not(:focus-visible),
+  select:hover:not(:focus-visible) {
+    border-color: var(--md-sys-color-on-surface) !important;
+  }
+
+  /* ── Cards hover (clickable) ── */
+  a[class*='rounded-2xl']:hover,
+  a[class*='rounded-3xl']:hover,
+  [class*='cursor-pointer'][class*='rounded-2xl']:hover,
+  [class*='cursor-pointer'][class*='rounded-xl']:hover {
+    box-shadow: var(--md-sys-elevation-2);
+  }
+
+  a[class*='rounded-2xl']:active,
+  a[class*='rounded-3xl']:active,
+  [class*='cursor-pointer'][class*='rounded-2xl']:active,
+  [class*='cursor-pointer'][class*='rounded-xl']:active {
+    box-shadow: var(--md-sys-elevation-1);
+    transform: scale(0.995);
+  }
+
+  /* ── Table rows ── */
+  table tbody tr:hover td {
+    background-color: var(--md-state-on-surface-hover);
+  }
+
+  /* ── Scrollbar thumb hover ── */
+  html::-webkit-scrollbar-thumb:hover,
+  .immich-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--md-sys-color-primary) 48%,
+      var(--md-sys-color-outline-variant)
+    ) !important;
+  }
+}

@@ -4,6 +4,13 @@
  */
 
 @layer base {
+  :root {
+    /* State layers on dark video scrim / overlay controls */
+    --md-state-on-video-hover: color-mix(in srgb, #ffffff 8%, transparent);
+    --md-state-on-video-pressed: color-mix(in srgb, #ffffff 12%, transparent);
+    --md-state-on-video-focus: color-mix(in srgb, #ffffff 12%, transparent);
+  }
+
   html.light,
   :root:not(.dark) {
     --md-sys-color-primary: #6750a4;
@@ -51,6 +58,18 @@
     --md-sys-state-focus: 0.12;
     --md-sys-state-pressed: 0.12;
     --md-sys-state-dragged: 0.16;
+
+    /* Precomputed state layers (light) */
+    --md-state-on-surface-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+    --md-state-on-surface-pressed: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    --md-state-on-surface-focus: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    --md-state-on-primary-hover: color-mix(in srgb, var(--md-sys-color-on-primary) 8%, var(--md-sys-color-primary));
+    --md-state-on-primary-pressed: color-mix(in srgb, var(--md-sys-color-on-primary) 12%, var(--md-sys-color-primary));
+    --md-state-primary-hover: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    --md-state-primary-pressed: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    --md-state-focus-ring: color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+    --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --md-motion-duration-short: 200ms;
   }
 
   html.dark,
@@ -94,5 +113,19 @@
 
     --md-sys-color-scrim: rgba(0, 0, 0, 0.32);
     --md-sys-color-shadow: #000000;
+
+    --md-sys-state-hover: 0.08;
+    --md-sys-state-focus: 0.12;
+    --md-sys-state-pressed: 0.12;
+    --md-sys-state-dragged: 0.16;
+
+    --md-state-on-surface-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+    --md-state-on-surface-pressed: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    --md-state-on-surface-focus: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    --md-state-on-primary-hover: color-mix(in srgb, var(--md-sys-color-on-primary) 8%, var(--md-sys-color-primary));
+    --md-state-on-primary-pressed: color-mix(in srgb, var(--md-sys-color-on-primary) 12%, var(--md-sys-color-primary));
+    --md-state-primary-hover: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    --md-state-primary-pressed: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    --md-state-focus-ring: color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
   }
 }

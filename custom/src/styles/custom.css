@@ -8,6 +8,8 @@
 @import '../../../branding/src/theme-dark.css';
 @import '../../../branding/src/m3/components.css';
 @import '../../../branding/src/m3/shell.css';
+@import '../../../branding/src/m3/states.css';
+@import '../../../branding/src/m3/media-chrome.css';
 @import '../../../branding/src/loading.css';
 
 .pg-brand-accent {

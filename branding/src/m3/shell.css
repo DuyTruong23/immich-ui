@@ -27,11 +27,7 @@
 
   #sidebar a:not([aria-current='page']):hover,
   #sidebar button:not([aria-current='page']):hover {
-    background-color: color-mix(
-      in srgb,
-      var(--md-sys-color-on-surface) calc(var(--md-sys-state-hover) * 100%),
-      transparent
-    ) !important;
+    background-color: var(--md-state-on-surface-hover) !important;
     border-radius: var(--md-sys-shape-corner-full) !important;
   }
 
