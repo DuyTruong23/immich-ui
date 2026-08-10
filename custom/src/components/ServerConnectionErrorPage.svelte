@@ -97,7 +97,7 @@
       />
     {/each}
 
-    <rect x="220" y="500" width="360" height="44" rx="22" fill="url(#pg-btn)" />
+    <rect x="220" y="500" width="578" height="44" rx="22" fill="url(#pg-btn)" />
     <text
       x="400"
       y="528"
