@@ -10,8 +10,10 @@ restore_upstream_ui() {
     if git show "$ref:$git_path" >/dev/null 2>&1; then
       mkdir -p "$(dirname "$dest")"
       git show "$ref:$git_path" >"$dest"
+    elif [ -f "$dest" ]; then
+      echo "    skip restore (ref unavailable): $git_path"
     else
-      rm -f "$dest"
+      echo "    warn: cannot restore missing file (ref unavailable): $git_path" >&2
     fi
   }
 
@@ -29,6 +31,8 @@ import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
+if not path.is_file():
+    sys.exit(0)
 text = path.read_text(encoding="utf-8")
 text = re.sub(
     r'class="absolute inset-e-6 top-19 z-1 w-\[min\(360px,100vw-50px\)\]',
@@ -45,6 +49,8 @@ import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
+if not path.is_file():
+    sys.exit(0)
 text = path.read_text(encoding="utf-8")
 text = re.sub(
     r"<title>[^<]*</title>",
