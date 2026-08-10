@@ -3,7 +3,7 @@ import { isHttpError } from '@immich/sdk';
 const CONNECTION_ERROR_PATTERN =
   /\b(502|503|504|505|bad gateway|service unavailable|gateway timeout|failed to fetch|network error|econnrefused|err_connection_refused|aggregateerror)\b/i;
 
-export const SERVER_CONNECTION_MESSAGE = 'Liên hệ admin để khởi động server';
+export const SERVER_CONNECTION_MESSAGE = 'Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau 17:30 ngày 13/8/2026 .';
 
 export interface ServerConnectionErrorData {
   message: string;
