@@ -107,7 +107,7 @@
       font-weight="600"
       font-family="system-ui, -apple-system, Segoe UI, sans-serif"
     >
-      Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau 17:30 ngày 13/8/2026 .
+      Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau 17:30 ngày 13/8/2026.
     </text>
   </svg>
 </div>
