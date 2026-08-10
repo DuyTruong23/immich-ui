@@ -38,47 +38,55 @@
 
 ### Bước 1: Immich Docker (backend)
 
-Immich có thể nằm ở **bất kỳ đâu**, ví dụ:
+Immich backend production nằm trong repo **`immich-docker`** (PC B / HDD portable):
 
-- `D:\Personal\Coding\photo-gallery-v1\immich`
-- `D:\immich\`
-- `poga-v2/docker/` (compose dev của repo)
+- `<HDD>/Immich-Gallery/immich-gallery/immich-docker/`
+- External library: `../../Photo_Gallery` (relative — không phụ thuộc ổ `F:`/`E:`)
+
+Compose dev trong `immich-ui/docker/` **không** mount external library — chỉ dùng cho dev frontend.
 
 **Yêu cầu:** container `immich-server` lắng nghe **port 2283**.
 
 ```bash
-# Ví dụ — vào folder có docker-compose.yml
-cd /path/to/immich
+# Production / PC B — chạy từ immich-docker trên HDD
+cd /mnt/f/Project/Immich-Gallery/immich-gallery/immich-docker
 docker compose up -d
 
 curl http://localhost:2283/api/server/ping   # → pong
 ```
 
-#### External library (ảnh có sẵn trên ổ/NAS khác)
+#### External library (ảnh có sẵn trên HDD — portable)
 
-Trong `docker-compose.yml` của Immich, mount read-only:
+Cấu hình trong repo **`immich-docker`**, không phải poga-v2. External library dùng **relative path** — không cần sửa khi đổi drive letter (`F:` → `E:`).
+
+**Cấu trúc HDD bắt buộc:**
+
+```text
+<HDD>/Immich-Gallery/
+├── immich-gallery/
+│   └── immich-docker/
+│       └── docker-compose.yml
+└── Photo_Gallery/
+```
+
+Trong `immich-docker/docker-compose.yml`:
 
 ```yaml
 volumes:
   - ${UPLOAD_LOCATION:-./library}:/data
-  - ${EXTERNAL_LIBRARY_PATH}:/external-library:ro
+  - ../../Photo_Gallery:/external-library:ro
 ```
 
-`.env` trên **máy chạy Docker** (path **host**, không phải path Windows nếu dùng WSL):
+**Không cần** `EXTERNAL_LIBRARY_PATH` trong `.env` — Docker Compose tự resolve `../../Photo_Gallery` từ thư mục `immich-docker`.
 
-```env
-UPLOAD_LOCATION=./library
-EXTERNAL_LIBRARY_PATH=/mnt/f/Project/Photo_Gallery   # ví dụ WSL
-# hoặc /mnt/nas/photos trên Linux/NAS
-```
-
-Sau khi `docker up`:
+Sau khi `docker compose up -d`:
 
 1. Immich UI → **Administration → External Libraries**
 2. Add folder **`/external-library`** (path trong container)
 3. **Scan New Library Files**
 
-> Nếu dùng WSL + ổ F:, xem script `verify-mount.sh` trong folder immich bạn đang dùng.
+> Chi tiết: [PORTABLE-EXTERNAL-LIBRARY.md](../../docs/PORTABLE-EXTERNAL-LIBRARY.md)  
+> WSL + ổ F: chưa mount → `./scripts/setup-wsl-f-drive.sh` trong `immich-docker`
 
 ---
 
@@ -185,35 +193,45 @@ Mọi thứ hoạt động bình thường — Vercel không cần redeploy.
 
 ---
 
-## External library — path ở vị trí khác
+## External library — portable (immich-docker)
 
-External library **không** liên quan poga-v2 hay Vercel. Chỉ cấu hình trên **máy chạy Immich Docker**:
+External library **không** liên quan poga-v2 hay Vercel. Chỉ cấu hình trên **máy chạy Immich Docker** (`immich-docker`):
 
+```text
+<HDD>/Immich-Gallery/
+├── immich-gallery/immich-docker/   ← chạy docker compose ở đây
+└── Photo_Gallery/                  ← ../../Photo_Gallery (relative)
+         ↓ docker bind (read-only)
+    /external-library trong container
+         ↓ Immich UI scan
+    Ảnh hiện trên gallery (local hoặc Vercel — cùng API)
 ```
-NAS / ổ F: / SMB share
-       ↓ mount trên host
-EXTERNAL_LIBRARY_PATH trong .env
-       ↓ docker bind
-/external-library trong container
-       ↓ Immich UI scan
-Ảnh hiện trên gallery (local hoặc Vercel — cùng API)
-```
 
-| Bạn có | Ghi vào `.env` Immich |
+| Thành phần | Giá trị |
 |---|---|
-| `F:\Project\Photo_Gallery` (WSL) | `EXTERNAL_LIBRARY_PATH=/mnt/f/Project/Photo_Gallery` |
-| `/mnt/nas/photos` (Linux) | `EXTERNAL_LIBRARY_PATH=/mnt/nas/photos` |
+| `docker-compose.yml` mount | `../../Photo_Gallery:/external-library:ro` |
+| `.env` | **Không cần** path external — đã cấu hình trong compose |
 | Immich UI add folder | Luôn là **`/external-library`** |
+| Đổi máy / drive letter | **Không sửa** compose — giữ cấu trúc thư mục HDD |
+
+**Lệnh kiểm tra** (trong `immich-docker`):
+
+```bash
+./scripts/verify-mount.sh
+```
+
+Tài liệu đầy đủ: [PORTABLE-EXTERNAL-LIBRARY.md](../../docs/PORTABLE-EXTERNAL-LIBRARY.md)
 
 ---
 
 ## Lệnh tóm tắt
 
-**Immich (folder compose bất kỳ):**
+**Immich production (HDD / PC B):**
 
 ```bash
-cd /path/to/immich
+cd /path/to/Immich-Gallery/immich-gallery/immich-docker
 docker compose up -d
+./scripts/verify-mount.sh
 curl http://localhost:2283/api/server/ping
 ```
 
@@ -237,3 +255,4 @@ pnpm prepare:custom && pnpm dev
 | [Development.md](./Development.md) | Dev workflow poga-v2 |
 | [Deployment.md](./Deployment.md) | Vercel + env production |
 | [Environment.md](./Environment.md) | Biến môi trường |
+| [PORTABLE-EXTERNAL-LIBRARY.md](../../docs/PORTABLE-EXTERNAL-LIBRARY.md) | External library portable (immich-docker) |

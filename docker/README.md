@@ -27,6 +27,14 @@ pnpm dev:full       # Cả hai (blocking)
 | `caddy/Caddyfile.example` | Reverse proxy production |
 | `docker-compose.prod.example.yml` | Backend production reference |
 
+### Dev stack vs production (immich-docker)
+
+| | `immich-ui/docker/` (dev) | `immich-docker/` (production / PC B) |
+|---|---|---|
+| Mục đích | Frontend dev + Immich local test | Chạy 24/7 trên HDD |
+| External library | **Không** mount | `../../Photo_Gallery:/external-library:ro` |
+| Path config | Không cần | Relative — xem [PORTABLE-EXTERNAL-LIBRARY.md](../../docs/PORTABLE-EXTERNAL-LIBRARY.md) |
+
 ### Lệnh thủ công
 
 ```bash
