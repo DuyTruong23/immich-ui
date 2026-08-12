@@ -10,7 +10,7 @@
 ```
 ┌─ LOCAL DEV (máy bạn) ─────────────────────────────────────────────────┐
 │                                                                         │
-│   Immich Docker :2283          Vite dev :5002                          │
+│   Immich Docker :2283          Vite dev :5283                          │
 │   (compose bất kỳ)      ←──→   poga-v2                                 │
 │   localhost:2283               IMMICH_SERVER_URL=localhost:2283       │
 │                                hoặc tunnel URL                          │
@@ -27,7 +27,7 @@
 
 | | **Local dev** | **Vercel (production)** |
 |---|---|---|
-| poga-v2 | `pnpm dev` → `:5002` | Build static, host CDN |
+| poga-v2 | `pnpm dev` → `:5283` | Build static, host CDN |
 | Immich | Docker **trên máy bạn** (hoặc máy khác qua tunnel) | Docker **máy nhà/VPS** + tunnel/proxy |
 | Ảnh lưu ở đâu | Máy chạy Immich | Máy chạy Immich (không phải Vercel) |
 | Tắt Immich thì sao | Frontend load, API lỗi | Website mở được, **login/xem ảnh lỗi** |
@@ -124,7 +124,7 @@ pnpm prepare:custom
 pnpm dev
 ```
 
-Mở **http://localhost:5002** — Vite proxy `/api` → `IMMICH_SERVER_URL`.
+Mở **http://localhost:5283** — Vite proxy `/api` → `IMMICH_SERVER_URL`.
 
 **Không cần** `pnpm docker:up` trong poga-v2 nếu Immich đã chạy ở folder compose riêng.
 
@@ -135,7 +135,7 @@ Mở **http://localhost:5002** — Vite proxy `/api` → `IMMICH_SERVER_URL`.
 | Kiểm tra | Kỳ vọng |
 |---|---|
 | `curl localhost:2283/api/server/ping` | `pong` |
-| http://localhost:5002 | Trang login / gallery |
+| http://localhost:5283 | Trang login / gallery |
 | Login | Vào được timeline |
 | Tắt Docker Immich + F5 | Login/API lỗi (frontend vẫn mở shell) |
 
@@ -241,7 +241,7 @@ curl http://localhost:2283/api/server/ping
 cd poga-v2
 # .env: IMMICH_SERVER_URL=http://localhost:2283
 pnpm prepare:custom && pnpm dev
-# → http://localhost:5002
+# → http://localhost:5283
 ```
 
 **Vercel:** push git → auto deploy. Immich + tunnel phải **online** riêng.

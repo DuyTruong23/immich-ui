@@ -1,6 +1,9 @@
 <script lang="ts">
   import ServerConnectionErrorPage from '$custom/components/ServerConnectionErrorPage.svelte';
-  import { isServerConnectionError } from '$custom/utils/server-connection-error';
+  import {
+    getServerConnectionErrorCode,
+    isServerConnectionError,
+  } from '$custom/utils/server-connection-error';
   import BrandLogo from '$lib/components/shared-components/BrandLogo.svelte';
   import { copyToClipboard } from '$lib/utils';
   import {
@@ -42,7 +45,7 @@
 </script>
 
 {#if showServerConnectionPage}
-  <ServerConnectionErrorPage code={505} />
+  <ServerConnectionErrorPage code={getServerConnectionErrorCode(error)} />
 {:else}
   <div class="flex h-dvh w-dvw flex-col">
     <section>

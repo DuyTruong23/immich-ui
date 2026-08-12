@@ -5,6 +5,7 @@
 <script lang="ts">
   import { useActions, type ActionArray } from '$lib/actions/use-actions';
   import NavigationBar from '$lib/components/shared-components/navigation-bar/NavigationBar.svelte';
+  import UiDevModeBanner from '$lib/components/UiDevModeBanner.svelte';
   import UserSidebar from '$lib/components/shared-components/side-bar/UserSidebar.svelte';
   import type { HeaderButtonActionItem } from '$lib/types';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -55,6 +56,7 @@
 <header>
   {#if !hideNavbar}
     <NavigationBar {onUploadClick} />
+    <UiDevModeBanner />
   {/if}
 </header>
 <div

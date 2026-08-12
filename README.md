@@ -24,7 +24,7 @@ cp .env.example upstream/web/.env
 pnpm dev
 ```
 
-Frontend: http://localhost:5002 — cần Immich Server tại http://localhost:2283
+Frontend: http://localhost:5283 — cần Immich Server tại http://localhost:2283
 
 ## Scripts
 

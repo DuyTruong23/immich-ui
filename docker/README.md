@@ -5,7 +5,7 @@
 ```
 Immich Docker (port 2283)
         ↓ REST + WebSocket
-Custom Frontend (pnpm dev, port 5002, hot reload)
+Custom Frontend (pnpm dev, port 5283, hot reload)
 ```
 
 ### Quick start

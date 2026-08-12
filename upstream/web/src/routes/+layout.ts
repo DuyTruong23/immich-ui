@@ -26,8 +26,10 @@ import {
   PUBLIC_ENABLE_WORKFLOWS,
   PUBLIC_IMMICH_SERVER_URL,
   PUBLIC_SESSION_ONLY_AUTH,
+  PUBLIC_UI_DEV_MODE,
   PUBLIC_THEME,
 } from '$env/static/public';
+import { getAppConfig } from '@photo-gallery/config';
 import { bootstrapAppConfig } from '$custom/providers/app-config';
 import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
 import { createServerConnectionError, isServerConnectionError } from '$custom/utils/server-connection-error';
@@ -52,6 +54,7 @@ export const load = (async ({ fetch, url }) => {
     PUBLIC_ENABLE_ADMIN,
     PUBLIC_ENABLE_EXPERIMENTAL,
     PUBLIC_SESSION_ONLY_AUTH,
+    PUBLIC_UI_DEV_MODE,
     PUBLIC_ENABLE_MEMORIES,
     PUBLIC_ENABLE_PARTNER,
     PUBLIC_ENABLE_SHARING,
@@ -71,17 +74,21 @@ export const load = (async ({ fetch, url }) => {
 
   await enforceFeatureRoute(url.pathname);
 
+  const uiDevMode = getAppConfig().publicEnv.uiDevMode;
+
   let error;
   try {
     await init(fetch);
 
-    if (maintenanceShouldRedirect(serverConfigManager.value.maintenanceMode, url)) {
+    if (!uiDevMode && maintenanceShouldRedirect(serverConfigManager.value.maintenanceMode, url)) {
       await goto(
         serverConfigManager.value.maintenanceMode ? maintenanceCreateUrl(url) : maintenanceReturnUrl(url.searchParams),
       );
     }
   } catch (initError) {
-    if (isServerConnectionError(initError)) {
+    if (uiDevMode) {
+      console.warn('[ui-dev-mode] init fallback', initError);
+    } else if (isServerConnectionError(initError)) {
       error = createServerConnectionError(initError);
     } else {
       error = initError;

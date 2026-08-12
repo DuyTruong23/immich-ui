@@ -1,7 +1,9 @@
 import { isHttpError } from '@immich/sdk';
 
 const CONNECTION_ERROR_PATTERN =
-  /\b(502|503|504|505|bad gateway|service unavailable|gateway timeout|failed to fetch|network error|econnrefused|err_connection_refused|aggregateerror)\b/i;
+  /\b(bad gateway|service unavailable|gateway timeout|failed to fetch|network error|econnrefused|err_connection_refused|aggregateerror)\b/i;
+
+export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 
 export const SERVER_CONNECTION_MESSAGE = 'Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau 17:30 ngày 13/8/2026.';
 
@@ -12,13 +14,22 @@ export interface ServerConnectionErrorData {
   serverConnectionError: true;
 }
 
-export function createServerConnectionError(initError: unknown): ServerConnectionErrorData {
-  return {
-    message: SERVER_CONNECTION_MESSAGE,
-    code: 505,
-    stack: initError instanceof Error ? initError.stack : undefined,
-    serverConnectionError: true,
-  };
+function isServerErrorStatus(status: number | undefined): boolean {
+  return status !== undefined && status >= 500 && status < 600;
+}
+
+function readErrorStatus(error: unknown): number | undefined {
+  if (isHttpError(error)) {
+    return error.status || error.data?.statusCode;
+  }
+
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = Number((error as { code?: string | number }).code);
+    return Number.isFinite(code) ? code : undefined;
+  }
+
+  const match = readErrorText(error).match(/\b([5][0-9]{2})\b/);
+  return match ? Number(match[1]) : undefined;
 }
 
 function readErrorText(error: unknown): string {
@@ -43,19 +54,24 @@ export function isServerConnectionError(error: unknown): boolean {
     return (error as { serverConnectionError?: boolean }).serverConnectionError === true;
   }
 
-  if (isHttpError(error)) {
-    const status = error.status || error.data?.statusCode;
-    return status === 502 || status === 503 || status === 504 || status === 505;
+  if (isServerErrorStatus(readErrorStatus(error))) {
+    return true;
   }
 
   return CONNECTION_ERROR_PATTERN.test(readErrorText(error));
 }
 
-export function getServerConnectionErrorCode(error: unknown): number {
-  if (isHttpError(error)) {
-    return error.status || error.data?.statusCode || 505;
-  }
+export function createServerConnectionError(initError: unknown): ServerConnectionErrorData {
+  console.error('[server-connection-error] Original error:', initError);
 
-  const match = readErrorText(error).match(/\b(502|503|504|505)\b/);
-  return match ? Number(match[1]) : 505;
+  return {
+    message: SERVER_CONNECTION_MESSAGE,
+    code: SERVER_CONNECTION_DISPLAY_CODE,
+    stack: initError instanceof Error ? initError.stack : undefined,
+    serverConnectionError: true,
+  };
+}
+
+export function getServerConnectionErrorCode(_error: unknown): number {
+  return SERVER_CONNECTION_DISPLAY_CODE;
 }

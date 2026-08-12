@@ -1,3 +1,4 @@
+import { isServerConnectionError } from '$custom/utils/server-connection-error';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
 import type { HandleClientError } from '@sveltejs/kit';
 
@@ -32,6 +33,12 @@ const parseError = (error: unknown, status: number, message: string) => {
 
 export const handleError: HandleClientError = ({ error, status, message }) => {
   const result = parseError(error, status, message);
-  console.error(`[hooks.client.ts]:handleError ${result.message}`, error);
+
+  if (isServerConnectionError({ ...result, code: result.code })) {
+    console.error(`[server-connection-error] HTTP ${result.code}:`, result.message, error);
+  } else {
+    console.error(`[hooks.client.ts]:handleError ${result.message}`, error);
+  }
+
   return result;
 };

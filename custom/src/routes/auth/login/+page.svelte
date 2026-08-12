@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
+  import { applyDevRole, type UiDevRole } from '$custom/hooks/ui-dev-mode';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
   import { goto } from '$app/navigation';
@@ -12,7 +13,8 @@
   import { oauth } from '$lib/utils';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { login, type LoginResponseDto } from '@immich/sdk';
-  import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
+  import { Alert, Button, Field, Icon, Input, PasswordInput, Stack, Text } from '@immich/ui';
+  import { mdiAccountCog, mdiAccountOutline, mdiPalette } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -29,9 +31,16 @@
   let oauthError = $state('');
   let loading = $state(false);
   let oauthLoading = $state(true);
+  let loadingRole = $state<UiDevRole | null>(null);
 
   const serverConfig = $derived(serverConfigManager.value);
   const { publicEnv } = getAppConfig();
+
+  const enterAs = async (role: UiDevRole) => {
+    loadingRole = role;
+    applyDevRole(role);
+    await goto(data.continueUrl, { invalidateAll: true });
+  };
 
   const onSuccess = async (user: LoginResponseDto) => {
     if (publicEnv.sessionOnlyAuth) {
@@ -48,6 +57,11 @@
   const onOnboarding = () => goto(Route.onboarding());
 
   onMount(async () => {
+    if (publicEnv.uiDevMode) {
+      oauthLoading = false;
+      return;
+    }
+
     if (!featureFlagsManager.value.oauth) {
       oauthLoading = false;
       return;
@@ -135,61 +149,111 @@
 </script>
 
 <AuthPageLayout title={data.meta.title}>
-  <Stack gap={4}>
-    {#if serverConfig.loginPageMessage}
-      <Alert color="primary" class="mb-6">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html serverConfig.loginPageMessage}
-      </Alert>
-    {/if}
-
-    {#if !oauthLoading && featureFlagsManager.value.passwordLogin}
-      <form {onsubmit} class="flex flex-col gap-4">
-        {#if errorMessage}
-          <Alert color="danger" title={errorMessage} closable />
-        {/if}
-
-        <Field label={$t('email')} required="indicator">
-          <Input id="email" name="email" type="email" autocomplete="email" bind:value={email} />
-        </Field>
-
-        <Field label={$t('password')} required="indicator">
-          <PasswordInput id="password" bind:value={password} autocomplete="current-password" />
-        </Field>
-
-        <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
-      </form>
-    {/if}
-
-    {#if featureFlagsManager.value.oauth}
-      {#if featureFlagsManager.value.passwordLogin}
-        <div class="my-4 inline-flex w-full items-center justify-center">
-          <hr class="my-4 h-px w-3/4 border-0 bg-gray-200 dark:bg-gray-600" />
-          <span
-            class="absolute inset-s-1/2 -translate-x-1/2 bg-gray-50 px-3 font-medium text-gray-900 uppercase dark:bg-neutral-900 dark:text-white"
-          >
-            {$t('or')}
-          </span>
+  {#if publicEnv.uiDevMode}
+    <Stack gap={4}>
+      <div class="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+        <div class="mb-2 flex items-center gap-2 text-amber-300">
+          <Icon icon={mdiPalette} size="20" />
+          <Text fontWeight="medium">UI Dev Mode</Text>
         </div>
-      {/if}
-      {#if oauthError}
-        <Alert color="danger" title={oauthError} closable />
-      {/if}
-      <Button
-        shape="round"
-        loading={loading || oauthLoading}
-        disabled={loading || oauthLoading}
-        size="large"
-        fullWidth
-        color={featureFlagsManager.value.passwordLogin ? 'secondary' : 'primary'}
-        onclick={handleOAuthLogin}
-      >
-        {serverConfig.oauthButtonText}
-      </Button>
-    {/if}
+        <Text size="small" class="text-(--pg-text-muted)">
+          Không cần Docker hay server Immich. Chọn role để xem giao diện — timeline/album sẽ trống, dashboard dùng
+          dữ liệu mock.
+        </Text>
+      </div>
 
-    {#if !featureFlagsManager.value.passwordLogin && !featureFlagsManager.value.oauth}
-      <Alert color="warning" title={$t('login_has_been_disabled')} />
-    {/if}
-  </Stack>
+      <Stack gap={3}>
+        <Button
+          size="large"
+          shape="round"
+          fullWidth
+          loading={loadingRole === 'admin'}
+          disabled={loadingRole !== null}
+          onclick={() => enterAs('admin')}
+        >
+          <span class="inline-flex items-center justify-center gap-2">
+            <Icon icon={mdiAccountCog} size="20" />
+            Vào với Admin
+          </span>
+        </Button>
+
+        <Button
+          size="large"
+          shape="round"
+          fullWidth
+          color="secondary"
+          loading={loadingRole === 'user'}
+          disabled={loadingRole !== null}
+          onclick={() => enterAs('user')}
+        >
+          <span class="inline-flex items-center justify-center gap-2">
+            <Icon icon={mdiAccountOutline} size="20" />
+            Vào với User
+          </span>
+        </Button>
+      </Stack>
+
+      <Text size="tiny" class="text-center text-(--pg-text-muted)">
+        Tắt chế độ này: dùng `pnpm dev` thay vì `pnpm dev:local`
+      </Text>
+    </Stack>
+  {:else}
+    <Stack gap={4}>
+      {#if serverConfig.loginPageMessage}
+        <Alert color="primary" class="mb-6">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html serverConfig.loginPageMessage}
+        </Alert>
+      {/if}
+
+      {#if !oauthLoading && featureFlagsManager.value.passwordLogin}
+        <form {onsubmit} class="flex flex-col gap-4">
+          {#if errorMessage}
+            <Alert color="danger" title={errorMessage} closable />
+          {/if}
+
+          <Field label={$t('email')} required="indicator">
+            <Input id="email" name="email" type="email" autocomplete="email" bind:value={email} />
+          </Field>
+
+          <Field label={$t('password')} required="indicator">
+            <PasswordInput id="password" bind:value={password} autocomplete="current-password" />
+          </Field>
+
+          <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
+        </form>
+      {/if}
+
+      {#if featureFlagsManager.value.oauth}
+        {#if featureFlagsManager.value.passwordLogin}
+          <div class="my-4 inline-flex w-full items-center justify-center">
+            <hr class="my-4 h-px w-3/4 border-0 bg-gray-200 dark:bg-gray-600" />
+            <span
+              class="absolute inset-s-1/2 -translate-x-1/2 bg-gray-50 px-3 font-medium text-gray-900 uppercase dark:bg-neutral-900 dark:text-white"
+            >
+              {$t('or')}
+            </span>
+          </div>
+        {/if}
+        {#if oauthError}
+          <Alert color="danger" title={oauthError} closable />
+        {/if}
+        <Button
+          shape="round"
+          loading={loading || oauthLoading}
+          disabled={loading || oauthLoading}
+          size="large"
+          fullWidth
+          color={featureFlagsManager.value.passwordLogin ? 'secondary' : 'primary'}
+          onclick={handleOAuthLogin}
+        >
+          {serverConfig.oauthButtonText}
+        </Button>
+      {/if}
+
+      {#if !featureFlagsManager.value.passwordLogin && !featureFlagsManager.value.oauth}
+        <Alert color="warning" title={$t('login_has_been_disabled')} />
+      {/if}
+    </Stack>
+  {/if}
 </AuthPageLayout>

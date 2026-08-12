@@ -4,7 +4,7 @@
   "license": "GNU Affero General Public License version 3",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --host 0.0.0.0 --port 5002",
+    "dev": "vite dev --host 0.0.0.0 --port 5283",
     "build": "vite build",
     "build:stats": "BUILD_STATS=true vite build",
     "package": "svelte-kit package",

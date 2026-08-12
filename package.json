@@ -14,6 +14,8 @@
     "predev": "pnpm prepare:custom",
     "prebuild": "pnpm prepare:custom",
     "dev": "bash scripts/dev.sh",
+    "predev:local": "pnpm prepare:custom",
+    "dev:local": "bash scripts/dev-local.sh",
     "dev:full": "bash scripts/dev-full.sh",
     "build": "pnpm --filter immich-web exec vite build",
     "vite": "bash scripts/vite.sh",

@@ -2,6 +2,7 @@ import { getHeatmapRange } from '$lib';
 import { getAlbumStatistics } from '$custom/api/albums';
 import { getServerStatistics, getServerVersion, getStorage, pingServer } from '$custom/api/system';
 import { enforceAdminRoute } from '$custom/hooks/admin-guard';
+import { getMockDashboardData, isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
 import {
   CalendarHeatmapType,
@@ -49,6 +50,10 @@ export type UserDeviceGroup = {
 export const load = (async ({ url }) => {
   await enforceFeatureRoute(url.pathname);
   await enforceAdminRoute();
+
+  if (isUiDevMode()) {
+    return getMockDashboardData();
+  }
 
   const heatmapRange = getHeatmapRange();
 

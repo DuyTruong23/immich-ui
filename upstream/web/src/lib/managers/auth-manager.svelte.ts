@@ -12,6 +12,11 @@ import {
   clearSessionActive,
   isActiveBrowserSession,
 } from '$custom/hooks/session-auth';
+import {
+  clearDevSession,
+  isUiDevMode,
+  restoreDevSession,
+} from '$custom/hooks/ui-dev-mode';
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
@@ -58,6 +63,11 @@ class AuthManager {
       return;
     }
 
+    if (isUiDevMode()) {
+      restoreDevSession();
+      return;
+    }
+
     if (this.#isSessionOnlyAuth()) {
       beginBrowserSession();
       if (!isActiveBrowserSession()) {
@@ -73,6 +83,11 @@ class AuthManager {
   }
 
   async refresh() {
+    if (isUiDevMode()) {
+      restoreDevSession();
+      return;
+    }
+
     try {
       const [user, preferences] = await Promise.all([getMyUser(), getMyPreferences()]);
       this.#preferences = preferences;
@@ -102,6 +117,15 @@ class AuthManager {
   }
 
   async logout() {
+    if (isUiDevMode()) {
+      clearDevSession();
+      this.isPurchased = false;
+      this.reset();
+      eventManager.emit('AuthLogout');
+      await goto(Route.login());
+      return;
+    }
+
     let redirectUri = Route.login();
 
     try {
