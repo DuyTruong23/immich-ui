@@ -45,7 +45,7 @@
 </script>
 
 {#if showServerConnectionPage}
-  <ServerConnectionErrorPage code={getServerConnectionErrorCode(error)} />
+  <ServerConnectionErrorPage code={getServerConnectionErrorCode(error)} message={error?.message} />
 {:else}
   <div class="flex h-dvh w-dvw flex-col">
     <section>

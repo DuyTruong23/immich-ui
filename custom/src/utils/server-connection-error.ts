@@ -5,7 +5,8 @@ const CONNECTION_ERROR_PATTERN =
 
 export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 
-export const SERVER_CONNECTION_MESSAGE = 'Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau 17:30 ngày 13/8/2026.';
+export const SERVER_CONNECTION_MESSAGE =
+  'Cảm ơn bạn đã ghé thăm, chúng tôi sẽ quay lại vào 17:30 ngày 13/8/2026.';
 
 export interface ServerConnectionErrorData {
   message: string;
