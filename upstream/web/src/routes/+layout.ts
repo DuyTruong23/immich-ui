@@ -26,9 +26,9 @@ import {
   PUBLIC_ENABLE_WORKFLOWS,
   PUBLIC_IMMICH_SERVER_URL,
   PUBLIC_SESSION_ONLY_AUTH,
-  PUBLIC_UI_DEV_MODE,
   PUBLIC_THEME,
 } from '$env/static/public';
+import { env as publicEnvDynamic } from '$env/dynamic/public';
 import { getAppConfig } from '@photo-gallery/config';
 import { bootstrapAppConfig } from '$custom/providers/app-config';
 import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
@@ -54,7 +54,7 @@ export const load = (async ({ fetch, url }) => {
     PUBLIC_ENABLE_ADMIN,
     PUBLIC_ENABLE_EXPERIMENTAL,
     PUBLIC_SESSION_ONLY_AUTH,
-    PUBLIC_UI_DEV_MODE,
+    PUBLIC_UI_DEV_MODE: publicEnvDynamic.PUBLIC_UI_DEV_MODE ?? 'false',
     PUBLIC_ENABLE_MEMORIES,
     PUBLIC_ENABLE_PARTNER,
     PUBLIC_ENABLE_SHARING,
