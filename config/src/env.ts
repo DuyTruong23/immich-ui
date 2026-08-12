@@ -11,6 +11,7 @@ export interface PublicEnv {
   enableAdmin: boolean;
   enableExperimental: boolean;
   sessionOnlyAuth: boolean;
+  enableLoginNotify: boolean;
 }
 
 const readBool = (value: string | undefined, fallback: boolean): boolean => {
@@ -39,6 +40,7 @@ export const createPublicEnv = (env: Record<string, string | undefined>): Public
   enableAdmin: readBool(env.PUBLIC_ENABLE_ADMIN, true),
   enableExperimental: readBool(env.PUBLIC_ENABLE_EXPERIMENTAL, false),
   sessionOnlyAuth: readBool(env.PUBLIC_SESSION_ONLY_AUTH, false),
+  enableLoginNotify: readBool(env.PUBLIC_ENABLE_LOGIN_NOTIFY, false),
 });
 
 /** Dev proxy target — map từ VITE_IMMICH_API_URL hoặc IMMICH_SERVER_URL */

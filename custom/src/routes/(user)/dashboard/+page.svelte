@@ -1,17 +1,20 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
+  import CalendarHeatmap from '$lib/components/CalendarHeatmap.svelte';
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
-  import { Route } from '$lib/route';
+  import DeviceCard from '$lib/components/user-settings-page/DeviceCard.svelte';
   import {
-    mdiAccountMultipleOutline,
     mdiCheckCircle,
-    mdiHeartOutline,
+    mdiCloudUploadOutline,
+    mdiDevices,
     mdiImageAlbum,
     mdiImageMultipleOutline,
+    mdiInformationOutline,
     mdiServerOff,
     mdiVideoOutline,
   } from '@mdi/js';
   import { Icon } from '@immich/ui';
+  import { DateTime } from 'luxon';
   import type { PageData } from './$types';
 
   interface Props {
@@ -28,19 +31,17 @@
     { label: 'Phiên bản', value: `v${data.serverVersion}`, icon: mdiCheckCircle, tone: 'emerald' },
   ]);
 
-  const quickLinks = [
-    { label: 'Timeline', href: Route.photos(), icon: mdiImageMultipleOutline, primary: true },
-    { label: 'Albums', href: Route.albums(), icon: mdiImageAlbum },
-    { label: 'Yêu thích', href: Route.favorites(), icon: mdiHeartOutline },
-    { label: 'Chia sẻ', href: Route.sharing(), icon: mdiAccountMultipleOutline },
-  ];
-
   const toneClass: Record<string, string> = {
     sky: 'bg-sky-500/10 text-sky-400',
     violet: 'bg-violet-500/10 text-violet-400',
     amber: 'bg-amber-500/10 text-amber-400',
     emerald: 'bg-emerald-500/10 text-emerald-400',
   };
+
+  const activeDeviceGroups = $derived(data.userDeviceGroups.filter((group) => group.sessions.length > 0));
+
+  const formatSessionTime = (iso: string) =>
+    DateTime.fromISO(iso).setLocale('vi').toLocaleString(DateTime.DATETIME_MED);
 </script>
 
 <UserPageLayout title={data.meta.title} description={publicEnv.companyName || 'Quản trị hệ thống'}>
@@ -72,7 +73,7 @@
       {/each}
     </section>
 
-    <section class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <section class="mt-6">
       <article class="rounded-2xl border border-(--pg-border) p-6">
         <div class="mb-4 flex items-end justify-between gap-4">
           <div>
@@ -101,24 +102,91 @@
           <span>{data.storageTotalGiB} tổng</span>
         </div>
       </article>
+    </section>
+
+    <section class="mt-6 space-y-6">
+      <div>
+        <h2 class="text-lg font-semibold">Thống kê lịch sử</h2>
+        <p class="mt-1 text-sm text-(--pg-text-muted)">Hoạt động upload và thiết bị đăng nhập của người dùng</p>
+      </div>
 
       <article class="rounded-2xl border border-(--pg-border) p-6">
-        <h2 class="text-lg font-semibold">Truy cập nhanh</h2>
-        <p class="mt-1 mb-4 text-sm text-(--pg-text-muted)">Đi tới các khu vực chính của thư viện</p>
+        <div class="mb-2 flex items-center gap-2">
+          <Icon icon={mdiCloudUploadOutline} size="22" class="text-(--pg-primary)" />
+          <h3 class="text-base font-semibold">Lịch sử upload (52 tuần)</h3>
+        </div>
+        <p class="mb-4 text-sm text-(--pg-text-muted)">Tổng hợp upload của tất cả người dùng trên hệ thống</p>
 
-        <nav class="grid gap-2">
-          {#each quickLinks as link (link.href)}
-            <a
-              class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors {link.primary
-                ? 'bg-(--pg-primary) text-white hover:bg-(--pg-primary-hover)'
-                : 'border border-(--pg-border) hover:bg-(--pg-border)/40'}"
-              href={link.href}
-            >
-              <Icon icon={link.icon} size="20" />
-              {link.label}
-            </a>
+        {#if data.uploadHistory}
+          <CalendarHeatmap
+            data={data.uploadHistory}
+            itemLabel={({ date, count }) => `${count} ảnh/video ngày ${date}`}
+            totalLabel={(count) => `${count.toLocaleString('vi-VN')} upload`}
+          />
+        {:else}
+          <p class="text-sm text-(--pg-text-muted)">Chưa có dữ liệu upload.</p>
+        {/if}
+      </article>
+
+      <article class="rounded-2xl border border-(--pg-border) p-6">
+        <div class="mb-2 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <Icon icon={mdiDevices} size="22" class="text-(--pg-primary)" />
+            <h3 class="text-base font-semibold">Thiết bị được phép</h3>
+          </div>
+          <span class="text-sm text-(--pg-text-muted)">
+            {data.totalSessions.toLocaleString('vi-VN')} phiên đăng nhập
+          </span>
+        </div>
+        <p class="mb-4 text-sm text-(--pg-text-muted)">
+          Danh sách thiết bị đã đăng nhập — tương tự mục Authorized Devices trong quản lý người dùng
+        </p>
+
+        <div class="space-y-6">
+          {#each activeDeviceGroups as group (group.user.id)}
+            <div class="rounded-xl border border-(--pg-border)/60 p-4">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <h4 class="font-medium">{group.user.name}</h4>
+                <span class="text-sm text-(--pg-text-muted)">{group.user.email}</span>
+                {#if group.user.isAdmin}
+                  <span class="rounded-full bg-(--pg-primary)/15 px-2 py-0.5 text-xs text-(--pg-primary)">Admin</span>
+                {/if}
+              </div>
+
+              <div class="space-y-4">
+                {#each group.sessions as session (session.id)}
+                  <div class="rounded-lg bg-(--pg-border)/20 px-3 py-2">
+                    <DeviceCard {session} />
+                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 ps-4 text-xs text-(--pg-text-muted) sm:ps-0">
+                      <span>Đăng nhập: {formatSessionTime(session.createdAt)}</span>
+                      <span>Hết hạn: {session.expiresAt ? formatSessionTime(session.expiresAt) : '—'}</span>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {:else}
+            <p class="text-sm text-(--pg-text-muted)">Không có thiết bị nào đang đăng nhập.</p>
           {/each}
-        </nav>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
+        <div class="flex gap-3">
+          <Icon icon={mdiInformationOutline} size="22" class="mt-0.5 shrink-0 text-amber-400" />
+          <div class="space-y-2 text-sm text-(--pg-text-muted)">
+            <p class="font-medium text-(--pg-text)">Giới hạn theo dõi của Immich</p>
+            <p>
+              Immich <strong>không</strong> lưu thống kê thời gian làm việc trong từng phiên hay danh sách ảnh đã xem
+              của người dùng. API chỉ cung cấp phiên đăng nhập (thiết bị, lần hoạt động cuối) và lịch sử upload như
+              trên.
+            </p>
+            <p>
+              Để theo dõi chi tiết hơn (ảnh đã xem, thời lượng phiên), cần tích hợp riêng — ví dụ ghi log phía client
+              hoặc mở rộng backend.
+            </p>
+          </div>
+        </div>
       </article>
     </section>
   </div>

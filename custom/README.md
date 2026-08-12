@@ -22,7 +22,7 @@ custom/src/
 | Explorer | `/explorer` | Planned |
 | Settings | `/settings` | Planned |
 | Widgets | — | Planned |
-| Notifications | — | Planned |
+| Notifications | — | ✓ Login email notify (Resend) |
 | Statistics | — | Planned |
 
 Thêm route mới trong `custom/src/routes/`, chạy `pnpm prepare:custom`.

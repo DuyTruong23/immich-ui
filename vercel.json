@@ -20,7 +20,7 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/((?!notify-login$).*)",
       "destination": "https://immich.gallery-app.pp.ua/api/$1"
     },
     {

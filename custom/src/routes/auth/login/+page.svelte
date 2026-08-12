@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
+  import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
   import { goto } from '$app/navigation';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
@@ -38,6 +39,7 @@
       await authManager.refresh();
     }
 
+    notifyAdminOnLogin();
     await goto(data.continueUrl, { invalidateAll: true });
     eventManager.emit('AuthLogin', user);
   };

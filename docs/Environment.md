@@ -46,6 +46,39 @@ Khi `false`, route **biến mất hoàn toàn** (sidebar + redirect).
 | `PUBLIC_ENABLE_ARCHIVE` | `/archive` |
 | `PUBLIC_ENABLE_DASHBOARD` | `/dashboard` |
 
+## Thông báo đăng nhập (email admin)
+
+Chỉ hoạt động trên **Vercel production** (serverless function `api/notify-login.ts`). Dev local (`pnpm dev`) không có endpoint này.
+
+### Client (build-time)
+
+| Biến | Mặc định | Mô tả |
+|---|---|---|
+| `PUBLIC_ENABLE_LOGIN_NOTIFY` | `false` | Bật gọi `/api/notify-login` sau login thành công |
+
+### Server (Vercel — không public)
+
+| Biến | Bắt buộc | Mô tả |
+|---|---|---|
+| `LOGIN_NOTIFY_ENABLED` | Có | `true` để bật gửi email |
+| `RESEND_API_KEY` | Có | API key từ [Resend](https://resend.com) |
+| `ADMIN_NOTIFY_EMAIL` | Có | Email admin nhận thông báo |
+| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi, vd. `Gallery <noreply@yourdomain.com>` |
+| `LOGIN_NOTIFY_SKIP_ADMIN` | Không | `false` để gửi cả khi admin đăng nhập (mặc định bỏ qua admin) |
+| `IMMICH_SERVER_URL` | Không | Dùng để xác minh session (đã có sẵn) |
+
+Ví dụ Vercel:
+
+```env
+PUBLIC_ENABLE_LOGIN_NOTIFY=true
+LOGIN_NOTIFY_ENABLED=true
+RESEND_API_KEY=re_xxxxxxxx
+ADMIN_NOTIFY_EMAIL=admin@example.com
+LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
+```
+
+Luồng: user login → cookie Immich → client gọi `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
+
 ## Production tối thiểu (Vercel)
 
 Chỉ cần:
