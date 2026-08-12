@@ -55,6 +55,7 @@ export const load = (async ({ fetch, url }) => {
     PUBLIC_ENABLE_EXPERIMENTAL,
     PUBLIC_SESSION_ONLY_AUTH,
     PUBLIC_UI_DEV_MODE: publicEnvDynamic.PUBLIC_UI_DEV_MODE ?? 'false',
+    PUBLIC_ENABLE_LOGIN_NOTIFY: publicEnvDynamic.PUBLIC_ENABLE_LOGIN_NOTIFY ?? 'false',
     PUBLIC_ENABLE_MEMORIES,
     PUBLIC_ENABLE_PARTNER,
     PUBLIC_ENABLE_SHARING,
