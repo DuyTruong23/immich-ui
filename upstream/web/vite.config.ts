@@ -3,7 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, type ProxyOptions, type UserConfig } from 'vite';
+import { defineConfig, loadEnv, type ProxyOptions, type UserConfig } from 'vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { customViteAliases, resolveImmichServerUrl } from '../../config/src/vite.integration.ts';
@@ -11,21 +11,24 @@ import { customViteAliases, resolveImmichServerUrl } from '../../config/src/vite
 const viteDir = path.dirname(fileURLToPath(import.meta.url));
 const isWindows = process.platform === 'win32';
 
-const upstream = {
-  target: resolveImmichServerUrl(),
-  secure: true,
-  changeOrigin: true,
-  logLevel: 'info',
-  ws: true,
+const createProxy = (mode: string): Record<string, string | ProxyOptions> => {
+  Object.assign(process.env, loadEnv(mode, viteDir, ''));
+  const upstream = {
+    target: resolveImmichServerUrl(),
+    secure: true,
+    changeOrigin: true,
+    logLevel: 'info',
+    ws: true,
+  };
+
+  return {
+    '/api': upstream,
+    '/.well-known/immich': upstream,
+    '/custom.css': upstream,
+  };
 };
 
-const proxy: Record<string, string | ProxyOptions> = {
-  '/api': upstream,
-  '/.well-known/immich': upstream,
-  '/custom.css': upstream,
-};
-
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2022',
   },
@@ -40,7 +43,7 @@ export default defineConfig({
   },
   server: {
     // connect to a remote backend during web-only development
-    proxy,
+    proxy: createProxy(mode),
     allowedHosts: true,
     ...(isWindows
       ? {
@@ -52,7 +55,7 @@ export default defineConfig({
       : {}),
   },
   preview: {
-    proxy,
+    proxy: createProxy(mode),
   },
   plugins: [
     enhancedImages(),
@@ -82,4 +85,4 @@ export default defineConfig({
       TZ: 'UTC',
     },
   },
-} as UserConfig);
+} as UserConfig));

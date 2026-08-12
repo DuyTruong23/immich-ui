@@ -8,6 +8,9 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 |---|---|
 | `lib/components/shared-components/side-bar/UserSidebar.svelte` | Sidebar với feature flags, ẩn Trash |
 | `lib/components/shared-components/side-bar/BottomInfo.svelte` | Ẩn Storage space & Server offline |
+| `lib/components/shared-components/side-bar/StorageSpace.svelte` | Sửa dark mode cho Storage space |
+| `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
+| `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar |
 | `lib/commands.ts` | Ẩn Explore khỏi command palette |
 

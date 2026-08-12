@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT/upstream/web"
+cd "$ROOT"
 
 # Avoid native config-loader warning noise on Vite 8
 export VITE_CONFIG_NATIVE_IGNORE_WARNING=true
@@ -11,4 +11,4 @@ export VITE_CONFIG_NATIVE_IGNORE_WARNING=true
 HOST="${VITE_DEV_HOST:-127.0.0.1}"
 PORT="${VITE_DEV_PORT:-5002}"
 
-exec pnpm exec vite dev --host "$HOST" --port "$PORT" --strictPort "$@"
+exec pnpm --filter immich-web exec vite dev --host "$HOST" --port "$PORT" --strictPort "$@"
