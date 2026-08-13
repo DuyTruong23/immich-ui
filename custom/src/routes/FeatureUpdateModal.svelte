@@ -4,7 +4,8 @@
     DEFAULT_FEATURE_UPDATE_VERSION,
   } from '$custom/constants/feature-updates';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
-  import { Field, Button, HStack, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
+  import { Field, Button, HStack, Icon, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
+  import { mdiCheckCircleOutline } from '@mdi/js';
   import { onMount } from 'svelte';
 
   type Props = {
@@ -142,11 +143,20 @@
       Gallery vừa được cập nhật với các thay đổi sau:
     </Text>
 
-    <ul class="my-4 list-disc space-y-2 ps-5 text-sm leading-relaxed">
-      {#each updates as item}
-        <li>{item}</li>
-      {/each}
-    </ul>
+    <section class="feature-updates-section" aria-label="Các mục tính năng">
+      <Text class="feature-updates-section__heading">Các mục tính năng</Text>
+
+      <ul class="feature-updates-list">
+        {#each updates as item}
+          <li class="feature-updates-item">
+            <span class="feature-updates-item__icon" aria-hidden="true">
+              <Icon icon={mdiCheckCircleOutline} size="18" />
+            </span>
+            <span class="feature-updates-item__text">{item}</span>
+          </li>
+        {/each}
+      </ul>
+    </section>
 
     <Field label="Đóng góp ý kiến">
       <Textarea
@@ -169,6 +179,72 @@
 </Modal>
 
 <style>
+  .feature-updates-section {
+    margin-block: 1rem 1.25rem;
+    padding: 0.875rem;
+    border-radius: 1rem;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container);
+  }
+
+  .feature-updates-section__heading {
+    display: block;
+    margin-bottom: 0.625rem;
+    padding-inline: 0.125rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--md-sys-color-primary);
+  }
+
+  .feature-updates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .feature-updates-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: 0.75rem;
+    border-inline-start: 3px solid var(--md-sys-color-primary);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .feature-updates-item__icon {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: var(--md-sys-color-primary);
+  }
+
+  .feature-updates-item__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .feature-updates-item {
+      transition:
+        background-color var(--md-motion-duration-short, 200ms)
+          var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)),
+        border-color var(--md-motion-duration-short, 200ms)
+          var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1));
+    }
+
+    .feature-updates-item:hover {
+      background: var(--md-sys-color-surface-container-high);
+    }
+  }
+
   :global(html[data-feature-update-modal='open'] [data-dialog-overlay]) {
     animation: pg-feature-update-backdrop-in var(--md-motion-duration-short, 200ms)
       var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)) both;
