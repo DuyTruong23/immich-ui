@@ -126,24 +126,26 @@
   icon={false}
   class="{MODAL_CLASS}{isClosing ? ` ${MODAL_CLASS}--closing` : ''}"
 >
-  <ModalBody>
-    {#if preview}
-      <Text size="tiny" class="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
-        Chế độ preview — dữ liệu mock cho local dev
+  <ModalBody class="feature-update-body">
+    <div class="feature-update-body__header">
+      {#if preview}
+        <Text size="tiny" class="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
+          Chế độ preview — dữ liệu mock cho local dev
+        </Text>
+      {/if}
+
+      <span
+        class="mb-3 inline-flex rounded-full bg-(--md-sys-color-primary-container) px-2.5 py-0.5 text-xs font-semibold tracking-wide text-(--md-sys-color-on-primary-container)"
+      >
+        {version}
+      </span>
+
+      <Text class="text-(--md-sys-color-on-surface-variant)">
+        Gallery vừa được cập nhật với các thay đổi sau:
       </Text>
-    {/if}
+    </div>
 
-    <span
-      class="mb-3 inline-flex rounded-full bg-(--md-sys-color-primary-container) px-2.5 py-0.5 text-xs font-semibold tracking-wide text-(--md-sys-color-on-primary-container)"
-    >
-      {version}
-    </span>
-
-    <Text class="text-(--md-sys-color-on-surface-variant)">
-      Gallery vừa được cập nhật với các thay đổi sau:
-    </Text>
-
-    <section class="feature-updates-section" aria-label="Các mục tính năng">
+    <section class="feature-updates-section feature-updates-section--scroll" aria-label="Các mục tính năng">
       <Text class="feature-updates-section__heading">Các mục tính năng</Text>
 
       <ul class="feature-updates-list">
@@ -158,12 +160,13 @@
       </ul>
     </section>
 
-    <Field label="Đóng góp ý kiến">
+    <Field label="Đóng góp ý kiến" class="feature-update-feedback">
       <Textarea
         bind:value={feedback}
         grow
-        rows={4}
+        rows={1}
         placeholder="Chia sẻ trải nghiệm hoặc góp ý của bạn..."
+        class="feature-update-feedback__input"
       />
     </Field>
   </ModalBody>
@@ -179,8 +182,52 @@
 </Modal>
 
 <style>
+  :global(.pg-feature-update-modal) {
+    display: flex;
+    flex-direction: column;
+    max-height: min(88dvh, 640px);
+  }
+
+  :global(.pg-feature-update-modal > :last-child) {
+    flex-shrink: 0;
+  }
+
+  :global(.pg-feature-update-modal .feature-update-body) {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .feature-update-body__header {
+    flex-shrink: 0;
+  }
+
+  .feature-updates-section--scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-block: 0.75rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .feature-update-feedback {
+    flex-shrink: 0;
+    margin: 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  :global(.feature-update-feedback__input textarea) {
+    min-height: 2.5rem;
+    max-height: 8rem;
+    field-sizing: content;
+  }
+
   .feature-updates-section {
-    margin-block: 1rem 1.25rem;
     padding: 0.875rem;
     border-radius: 1rem;
     border: 1px solid var(--md-sys-color-outline-variant);

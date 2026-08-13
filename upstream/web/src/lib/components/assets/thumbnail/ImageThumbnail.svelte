@@ -45,11 +45,15 @@
 
   let loaded = $state(false);
   let errored = $state(false);
+  let retryCount = $state(0);
+
+  const MAX_RETRIES = 2;
 
   $effect(() => {
     url;
     loaded = false;
     errored = false;
+    retryCount = 0;
   });
 
   const setLoaded = () => {
@@ -58,6 +62,13 @@
   };
 
   const setErrored = () => {
+    if (retryCount < MAX_RETRIES) {
+      retryCount += 1;
+      loaded = false;
+      errored = false;
+      return;
+    }
+
     errored = true;
     onComplete?.(true);
   };
@@ -80,7 +91,7 @@
 {#if errored}
   <BrokenAsset class={[sharedClasses, brokenAssetClass]} width={widthStyle} height={heightStyle} />
 {:else}
-  {#key url}
+  {#key `${url}-${retryCount}`}
     <Image
       src={url}
       onLoad={setLoaded}
