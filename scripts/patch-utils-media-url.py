@@ -41,10 +41,24 @@ def patch_app_d_ts(app_d_path: pathlib.Path) -> None:
     app_d_path.write_text(text, encoding='utf-8')
 
 
+def patch_svelte_config(svelte_config_path: pathlib.Path) -> None:
+    text = svelte_config_path.read_text(encoding='utf-8')
+    line = "process.env.PUBLIC_IMMICH_MEDIA_URL = process.env.PUBLIC_IMMICH_MEDIA_URL || '';\n"
+    if line in text:
+        return
+
+    marker = "process.env.PUBLIC_IMMICH_PAY_HOST = process.env.PUBLIC_IMMICH_PAY_HOST || 'https://pay.futo.org';\n"
+    if marker not in text:
+        raise SystemExit(f"Cannot find PUBLIC_IMMICH_PAY_HOST default in {svelte_config_path}")
+    text = text.replace(marker, marker + line, 1)
+    svelte_config_path.write_text(text, encoding='utf-8')
+
+
 def main() -> None:
     root = pathlib.Path(sys.argv[1])
     patch_utils(root / 'upstream/web/src/lib/utils.ts')
     patch_app_d_ts(root / 'upstream/web/src/app.d.ts')
+    patch_svelte_config(root / 'upstream/web/svelte.config.js')
 
 
 if __name__ == '__main__':

@@ -1,10 +1,10 @@
 import { getBaseUrl } from '@immich/sdk';
-import { PUBLIC_IMMICH_MEDIA_URL } from '$env/static/public';
-
-const directMediaOrigin = PUBLIC_IMMICH_MEDIA_URL.trim().replace(/\/$/, '');
+import { env } from '$env/dynamic/public';
 
 /** Base URL cho media (ảnh/video) — bỏ qua Vercel proxy khi set PUBLIC_IMMICH_MEDIA_URL */
 export const getMediaBaseUrl = (): string => {
+  const directMediaOrigin = (env.PUBLIC_IMMICH_MEDIA_URL ?? '').trim().replace(/\/$/, '');
+
   if (!directMediaOrigin) {
     return getBaseUrl();
   }
