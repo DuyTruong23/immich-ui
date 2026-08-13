@@ -5,6 +5,21 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin, ViteDevServer } from 'vite';
 
 const rootDir = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const LOCAL_FEATURE_UPDATES_PATH = path.join(rootDir, '.data/feature-updates/config.json');
+
+const readLocalFeatureUpdatesConfig = (): unknown | null => {
+  try {
+    const raw = fs.readFileSync(LOCAL_FEATURE_UPDATES_PATH, 'utf8');
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+};
+
+const writeLocalFeatureUpdatesConfig = (config: unknown): void => {
+  fs.mkdirSync(path.dirname(LOCAL_FEATURE_UPDATES_PATH), { recursive: true });
+  fs.writeFileSync(LOCAL_FEATURE_UPDATES_PATH, JSON.stringify(config, null, 2), 'utf8');
+};
 
 /** Vercel serverless routes handled locally during Vite dev (not proxied to Immich). */
 export const DEV_API_ROUTES = ['/api/feature-updates', '/api/notify-login'] as const;
@@ -56,13 +71,6 @@ const handleDevApi = async (
   }
 
   try {
-    const module = await server.ssrLoadModule(handlerPath);
-    const handler = module.default as (req: Request) => Promise<Response>;
-
-    if (typeof handler !== 'function') {
-      throw new Error(`Missing default handler export in ${handlerPath}`);
-    }
-
     const host = request.headers.host ?? '127.0.0.1';
     const url = `http://${host}${request.url ?? pathname}`;
     const body = await readRequestBody(request);
@@ -86,7 +94,69 @@ const handleDevApi = async (
       init.duplex = 'half';
     }
 
-    await sendResponse(await handler(new Request(url, init)), response);
+    const webRequest = new Request(url, init);
+
+    if (pathname === '/api/feature-updates' && request.method === 'GET') {
+      const [{ normalizeFeatureUpdatesConfig }, { json }] = await Promise.all([
+        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
+        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
+      ]);
+      const localConfig = normalizeFeatureUpdatesConfig(readLocalFeatureUpdatesConfig());
+      if (localConfig) {
+        await sendResponse(json(localConfig), response);
+        return true;
+      }
+    }
+
+    if (pathname === '/api/feature-updates' && request.method === 'PUT') {
+      const [{ verifyAdminSession }, { normalizeFeatureUpdatesConfig }, { json }] = await Promise.all([
+        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/immich-auth.ts')),
+        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
+        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
+      ]);
+
+      let parsedBody: { accessToken?: string; version?: string; items?: string[] } = {};
+      try {
+        const text = body ? Buffer.from(body).toString('utf8') : '';
+        if (text) {
+          parsedBody = JSON.parse(text) as typeof parsedBody;
+        }
+      } catch {
+        await sendResponse(json({ error: 'Invalid JSON body' }, 400), response);
+        return true;
+      }
+
+      const admin = await verifyAdminSession(
+        parsedBody.accessToken,
+        request.headers.cookie ?? undefined,
+      );
+      if (!admin) {
+        await sendResponse(json({ error: 'Admin authentication required' }, 401), response);
+        return true;
+      }
+
+      const nextConfig = normalizeFeatureUpdatesConfig({
+        version: parsedBody.version,
+        items: parsedBody.items,
+      });
+      if (!nextConfig) {
+        await sendResponse(json({ error: 'Version and at least one feature item are required' }, 400), response);
+        return true;
+      }
+
+      writeLocalFeatureUpdatesConfig(nextConfig);
+      await sendResponse(json(nextConfig), response);
+      return true;
+    }
+
+    const module = await server.ssrLoadModule(handlerPath);
+    const handler = module.default as (req: Request) => Promise<Response>;
+
+    if (typeof handler !== 'function') {
+      throw new Error(`Missing default handler export in ${handlerPath}`);
+    }
+
+    await sendResponse(await handler(webRequest), response);
     return true;
   } catch (error) {
     console.error('[vite-api-dev]', pathname, error);

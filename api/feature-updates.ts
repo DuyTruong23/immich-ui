@@ -1,5 +1,6 @@
 import { verifyAdminSession } from './_lib/immich-auth';
 import {
+  DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
   type FeatureUpdatesConfig,
 } from './_lib/feature-updates-config';
@@ -7,7 +8,7 @@ import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feat
 import { json } from './_lib/email';
 
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'edge',
 };
 
 type FeatureUpdatesBody = {
@@ -32,8 +33,13 @@ const parseBody = async (request: Request): Promise<FeatureUpdatesBody | null> =
 /** GET/PUT /api/feature-updates — đọc/ghi nội dung modal tính năng mới */
 export default async function handler(request: Request): Promise<Response> {
   if (request.method === 'GET') {
-    const config = await readFeatureUpdatesConfig();
-    return json(config);
+    try {
+      const config = await readFeatureUpdatesConfig();
+      return json(config);
+    } catch (error) {
+      console.error('[feature-updates] read failed', error);
+      return json(DEFAULT_FEATURE_UPDATES);
+    }
   }
 
   if (request.method === 'PUT') {
