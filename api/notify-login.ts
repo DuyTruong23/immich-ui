@@ -1,4 +1,4 @@
-import { getEnv, json, sendViaResend } from './_lib/email';
+import { getEnv, json, ResendSendError, sendViaResend } from './_lib/email';
 
 export const config = {
   runtime: 'edge',
@@ -22,6 +22,13 @@ const isEnabled = (): boolean => getEnv('LOGIN_NOTIFY_ENABLED') === 'true';
 
 const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
 
+const escapeHtml = (value: string): string =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
 const verifySession = async (request: Request, accessToken?: string): Promise<ImmichUser | null> => {
   const headers: Record<string, string> = { Accept: 'application/json' };
 
@@ -36,13 +43,18 @@ const verifySession = async (request: Request, accessToken?: string): Promise<Im
     headers.cookie = cookie;
   }
 
-  const response = await fetch(`${getUpstreamBase()}/api/users/me`, { headers });
+  try {
+    const response = await fetch(`${getUpstreamBase()}/api/users/me`, { headers });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as ImmichUser;
+  } catch (error) {
+    console.error('[notify-login] verifySession failed:', error);
     return null;
   }
-
-  return (await response.json()) as ImmichUser;
 };
 
 const buildEmailHtml = (user: ImmichUser, userAgent: string | undefined, appName: string): string => {
@@ -52,13 +64,13 @@ const buildEmailHtml = (user: ImmichUser, userAgent: string | undefined, appName
   return `
     <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 0.5rem;">Có người dùng vừa đăng nhập</h2>
-      <p style="color: #555; margin-top: 0;">Thông báo từ <strong>${appName}</strong></p>
+      <p style="color: #555; margin-top: 0;">Thông báo từ <strong>${escapeHtml(appName)}</strong></p>
       <table style="border-collapse: collapse; margin: 1rem 0;">
-        <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Tên</td><td><strong>${user.name}</strong></td></tr>
-        <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Email</td><td>${user.email}</td></tr>
+        <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Tên</td><td><strong>${escapeHtml(user.name)}</strong></td></tr>
+        <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Email</td><td>${escapeHtml(user.email)}</td></tr>
         <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Vai trò</td><td>${role}</td></tr>
         <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Thời gian</td><td>${time}</td></tr>
-        ${userAgent ? `<tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Thiết bị</td><td style="font-size: 0.875rem;">${userAgent}</td></tr>` : ''}
+        ${userAgent ? `<tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Thiết bị</td><td style="font-size: 0.875rem;">${escapeHtml(userAgent)}</td></tr>` : ''}
       </table>
     </div>
   `.trim();
@@ -121,7 +133,24 @@ export default async function handler(request: Request): Promise<Response> {
     });
   } catch (error) {
     console.error('[notify-login]', error);
-    return json({ error: 'Failed to send notification email' }, 502);
+
+    if (error instanceof ResendSendError) {
+      const reason =
+        error.message === 'RESEND_API_KEY is not configured'
+          ? 'missing_resend_api_key'
+          : 'resend_rejected';
+
+      return json(
+        {
+          error: 'Failed to send notification email',
+          reason,
+          detail: error.detail ?? error.message,
+        },
+        502,
+      );
+    }
+
+    return json({ error: 'Failed to send notification email', reason: 'unexpected' }, 502);
   }
 
   return json({ ok: true });

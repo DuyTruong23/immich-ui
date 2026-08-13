@@ -27,7 +27,19 @@ export const notifyAdminOnLogin = (accessToken?: string): void => {
     .then(async (response) => {
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
-        console.warn('[login-notify] Notify failed:', response.status, detail);
+        let parsed: { detail?: string; reason?: string; error?: string } | undefined;
+        try {
+          parsed = JSON.parse(detail) as { detail?: string; reason?: string; error?: string };
+        } catch {
+          parsed = undefined;
+        }
+
+        console.warn(
+          '[login-notify] Notify failed:',
+          response.status,
+          parsed?.detail ?? parsed?.error ?? detail,
+          parsed?.reason ? `(reason: ${parsed.reason})` : '',
+        );
       }
     })
     .catch((error) => {

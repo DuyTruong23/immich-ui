@@ -9,6 +9,32 @@ export const getEnv = (key: string): string | undefined => {
   return env?.[key]?.trim() || undefined;
 };
 
+export class ResendSendError extends Error {
+  readonly status?: number;
+  readonly detail?: string;
+
+  constructor(message: string, status?: number, detail?: string) {
+    super(message);
+    this.name = 'ResendSendError';
+    this.status = status;
+    this.detail = detail;
+  }
+};
+
+const parseResendDetail = (raw: string): string | undefined => {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as { message?: string };
+    return parsed.message ?? trimmed;
+  } catch {
+    return trimmed;
+  }
+};
+
 export const sendViaResend = async (options: {
   to: string;
   from: string;
@@ -17,7 +43,7 @@ export const sendViaResend = async (options: {
 }): Promise<void> => {
   const apiKey = getEnv('RESEND_API_KEY');
   if (!apiKey) {
-    throw new Error('RESEND_API_KEY is not configured');
+    throw new ResendSendError('RESEND_API_KEY is not configured');
   }
 
   const response = await fetch('https://api.resend.com/emails', {
@@ -35,7 +61,7 @@ export const sendViaResend = async (options: {
   });
 
   if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Resend API error (${response.status}): ${detail}`);
+    const detail = parseResendDetail(await response.text());
+    throw new ResendSendError(`Resend API error (${response.status})`, response.status, detail);
   }
 };
