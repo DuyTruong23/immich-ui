@@ -72,6 +72,9 @@ class AuthManager {
   constructor() {
     eventManager.on({
       SessionDelete: () => goto(Route.logout()),
+      AuthLogin: () => {
+        void this.ensureMediaSessionKey();
+      },
     });
   }
 

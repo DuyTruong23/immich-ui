@@ -15,9 +15,6 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile preload, HLS lazy-load, cross-origin fallback |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
-| `lib/components/assets/thumbnail/VideoThumbnail.svelte` | `preload="none"` cho hover preview |
-| `lib/components/assets/thumbnail/Thumbnail.svelte` | Lazy load, cross-origin media auth, tắt GIF/Live Photo preview trên mobile |
-| `lib/components/assets/thumbnail/ImageThumbnail.svelte` | `decoding=async`, fetchpriority |
 | `lib/components/timeline/Month.svelte` | Tắt transition khi scroll mobile, `content-visibility: auto` |
 | `lib/managers/auth-manager.svelte.ts` | `sessionKey` cho media cross-subdomain |
 | `lib/managers/timeline-manager/internal/intersection-support.svelte.ts` | Buffer viewport nhỏ hơn trên mobile |
