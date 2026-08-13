@@ -10,6 +10,7 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { oauth } from '$lib/utils';
+  import { shouldShowNotifications } from '$lib/utils/user-restrictions';
   import { type ApiKeyResponseDto, type SessionResponseDto } from '@immich/sdk';
   import {
     mdiAccountGroupOutline,
@@ -47,6 +48,7 @@
     oauth.isCallback(location) || $page.url.searchParams.get(QueryParameter.OPEN_SETTING) === OpenQueryParam.OAUTH;
 
   const isAdmin = $derived(authManager.user.isAdmin);
+  const showNotifications = $derived(shouldShowNotifications(authManager.user.email));
 </script>
 
 <SettingAccordion
@@ -103,14 +105,16 @@
     <FeatureSettings />
   </SettingAccordion>
 
-  <SettingAccordion
-    icon={mdiBellOutline}
-    key={OpenQueryParam.NOTIFICATIONS}
-    title={$t('notifications')}
-    subtitle={$t('notifications_setting_description')}
-  >
-    <NotificationsSettings />
-  </SettingAccordion>
+  {#if showNotifications}
+    <SettingAccordion
+      icon={mdiBellOutline}
+      key={OpenQueryParam.NOTIFICATIONS}
+      title={$t('notifications')}
+      subtitle={$t('notifications_setting_description')}
+    >
+      <NotificationsSettings />
+    </SettingAccordion>
+  {/if}
 {/if}
 
 {#if featureFlagsManager.value.oauth}

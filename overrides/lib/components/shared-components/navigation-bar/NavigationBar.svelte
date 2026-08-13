@@ -16,6 +16,7 @@
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { notificationManager } from '$lib/stores/notification-manager.svelte';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
+  import { shouldShowNotifications } from '$lib/utils/user-restrictions';
   import { ActionButton, Button, IconButton } from '@immich/ui';
   import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiTrayArrowUp } from '@mdi/js';
   import { onMount } from 'svelte';
@@ -34,9 +35,14 @@
   let shouldShowAccountInfoPanel = $state(false);
   let shouldShowNotificationPanel = $state(false);
   let innerWidth: number = $state(0);
+  const showNotifications = $derived(shouldShowNotifications(authManager.user.email));
   const hasUnreadNotifications = $derived(notificationManager.notifications.length > 0);
 
   onMount(async () => {
+    if (!showNotifications) {
+      return;
+    }
+
     try {
       await notificationManager.refresh();
     } catch (error) {
@@ -126,36 +132,38 @@
 
         <ThemeButton />
 
-        <div
-          use:clickOutside={{
-            onOutclick: () => (shouldShowNotificationPanel = false),
-            onEscape: () => (shouldShowNotificationPanel = false),
-          }}
-        >
-          <div class="relative">
-            <IconButton
-              shape="round"
-              color={hasUnreadNotifications ? 'primary' : 'secondary'}
-              variant="ghost"
-              size="medium"
-              icon={hasUnreadNotifications ? mdiBellBadge : mdiBellOutline}
-              onclick={() => (shouldShowNotificationPanel = !shouldShowNotificationPanel)}
-              aria-label={$t('notifications')}
-            />
+        {#if showNotifications}
+          <div
+            use:clickOutside={{
+              onOutclick: () => (shouldShowNotificationPanel = false),
+              onEscape: () => (shouldShowNotificationPanel = false),
+            }}
+          >
+            <div class="relative">
+              <IconButton
+                shape="round"
+                color={hasUnreadNotifications ? 'primary' : 'secondary'}
+                variant="ghost"
+                size="medium"
+                icon={hasUnreadNotifications ? mdiBellBadge : mdiBellOutline}
+                onclick={() => (shouldShowNotificationPanel = !shouldShowNotificationPanel)}
+                aria-label={$t('notifications')}
+              />
 
-            {#if hasUnreadNotifications}
-              <div
-                class="pointer-events-none absolute top-0 right-1 flex size-5 items-center justify-center rounded-full border bg-primary text-[10px] font-bold text-light"
-              >
-                {notificationManager.notifications.length}
-              </div>
+              {#if hasUnreadNotifications}
+                <div
+                  class="pointer-events-none absolute top-0 right-1 flex size-5 items-center justify-center rounded-full border bg-primary text-[10px] font-bold text-light"
+                >
+                  {notificationManager.notifications.length}
+                </div>
+              {/if}
+            </div>
+
+            {#if shouldShowNotificationPanel}
+              <NotificationPanel />
             {/if}
           </div>
-
-          {#if shouldShowNotificationPanel}
-            <NotificationPanel />
-          {/if}
-        </div>
+        {/if}
 
         <ActionButton action={Cast} />
 
