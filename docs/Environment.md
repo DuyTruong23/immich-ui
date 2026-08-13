@@ -64,7 +64,7 @@ Chỉ hoạt động trên **Vercel production** (serverless function `api/notif
 | `LOGIN_NOTIFY_ENABLED` | Có | `true` để bật gửi email |
 | `RESEND_API_KEY` | Có | API key từ [Resend](https://resend.com) |
 | `ADMIN_NOTIFY_EMAIL` | Có | Email admin nhận thông báo |
-| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi, vd. `Gallery <noreply@yourdomain.com>` |
+| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi Resend. Dùng nhanh: `Photo Gallery <onboarding@resend.dev>` (không cần verify domain) |
 | `LOGIN_NOTIFY_SKIP_ADMIN` | Không | `false` để gửi cả khi admin đăng nhập (mặc định bỏ qua admin) |
 | `IMMICH_SERVER_URL` | Không | Dùng để xác minh session (đã có sẵn) |
 
@@ -75,8 +75,10 @@ PUBLIC_ENABLE_LOGIN_NOTIFY=true
 LOGIN_NOTIFY_ENABLED=true
 RESEND_API_KEY=re_xxxxxxxx
 ADMIN_NOTIFY_EMAIL=admin@example.com
-LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
+LOGIN_NOTIFY_FROM=Photo Gallery <onboarding@resend.dev>
 ```
+
+> **Resend onboarding:** `onboarding@resend.dev` gửi được ngay, không cần verify domain. Trên free tier, email chỉ tới địa chỉ đã đăng ký Resend — đặt `ADMIN_NOTIFY_EMAIL` khớp email đó.
 
 Luồng: user login → client gửi `accessToken` tới `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
 
@@ -103,7 +105,7 @@ DEPLOY_NOTIFY_ENABLED=true
 DEPLOY_NOTIFY_WEBHOOK_SECRET=whsec_xxxxxxxx
 RESEND_API_KEY=re_xxxxxxxx
 ADMIN_NOTIFY_EMAIL=admin@example.com
-LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
+LOGIN_NOTIFY_FROM=Photo Gallery <onboarding@resend.dev>
 ```
 
 Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → gửi email qua Resend.
