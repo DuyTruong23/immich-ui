@@ -3,6 +3,9 @@ import { isHttpError } from '@immich/sdk';
 const CONNECTION_ERROR_PATTERN =
   /\b(bad gateway|service unavailable|gateway timeout|failed to fetch|network error|econnrefused|err_connection_refused|aggregateerror)\b/i;
 
+const STALE_CHUNK_PATTERN =
+  /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|error loading chunk/i;
+
 export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 
 export const SERVER_CONNECTION_MESSAGE =
@@ -50,8 +53,16 @@ function readErrorText(error: unknown): string {
   return String(error);
 }
 
+export function isStaleChunkError(error: unknown): boolean {
+  return STALE_CHUNK_PATTERN.test(readErrorText(error));
+}
+
 export function isServerConnectionError(error: unknown): boolean {
   if (!error) {
+    return false;
+  }
+
+  if (isStaleChunkError(error)) {
     return false;
   }
 

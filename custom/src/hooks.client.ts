@@ -1,6 +1,32 @@
-import { isServerConnectionError } from '$custom/utils/server-connection-error';
+import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
 import type { HandleClientError } from '@sveltejs/kit';
+
+const STALE_CHUNK_RELOAD_KEY = 'pg-stale-chunk-reload';
+const STALE_CHUNK_RELOAD_WINDOW_MS = 10_000;
+
+function reloadOnceForStaleChunk(): boolean {
+  try {
+    const last = Number(sessionStorage.getItem(STALE_CHUNK_RELOAD_KEY) ?? '0');
+    const now = Date.now();
+    if (last && now - last < STALE_CHUNK_RELOAD_WINDOW_MS) {
+      return false;
+    }
+    sessionStorage.setItem(STALE_CHUNK_RELOAD_KEY, String(now));
+  } catch {
+    // sessionStorage unavailable — still try a one-shot reload
+  }
+
+  location.reload();
+  return true;
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    reloadOnceForStaleChunk();
+  });
+}
 
 const DEFAULT_MESSAGE = 'Hmm, not sure about that. Check the logs or open a ticket?';
 
@@ -33,6 +59,12 @@ const parseError = (error: unknown, status: number, message: string) => {
 
 export const handleError: HandleClientError = ({ error, status, message }) => {
   const result = parseError(error, status, message);
+
+  if (isStaleChunkError(error) || isStaleChunkError(result)) {
+    console.warn('[stale-chunk] Reloading after missing JS chunk:', result.message);
+    reloadOnceForStaleChunk();
+    return result;
+  }
 
   if (isServerConnectionError({ ...result, code: result.code })) {
     console.error(`[server-connection-error] HTTP ${result.code}:`, result.message, error);

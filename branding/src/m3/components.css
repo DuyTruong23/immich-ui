@@ -79,6 +79,43 @@
     color: var(--md-sys-color-on-surface-variant) !important;
   }
 
+  /* ── Context menus / dropdowns (@immich/ui ContextMenu: bg-light-100) ── */
+  .bg-light-100.flex.flex-col.overflow-hidden.rounded-xl,
+  [data-dropdown-menu-content],
+  [data-menu-content] {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    color: var(--md-sys-color-on-surface) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    box-shadow: var(--md-sys-elevation-2) !important;
+  }
+
+  .bg-light-100.rounded-xl [role='menuitem'],
+  [data-dropdown-menu-content] [role='menuitem'],
+  [data-menu-content] [role='menuitem'] {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .bg-light-100.rounded-xl [role='menuitem'].text-primary,
+  .bg-light-100.rounded-xl [role='menuitem'] .text-primary,
+  .bg-light-100.rounded-xl [role='menuitem'].text-dark,
+  .bg-light-100.rounded-xl [role='menuitem'] .text-dark {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .bg-light-100.rounded-xl [role='menuitem'].text-danger,
+  .bg-light-100.rounded-xl [role='menuitem'] .text-danger {
+    color: var(--md-sys-color-error) !important;
+  }
+
+  .bg-light-100.rounded-xl [role='menuitem'] svg {
+    fill: currentColor !important;
+  }
+
+  .bg-light-100.rounded-xl [role='menuitem'][data-highlighted],
+  .bg-light-100.rounded-xl [role='menuitem']:hover {
+    background-color: var(--md-state-on-surface-hover) !important;
+  }
+
   /* ── Modals / dialogs ── */
   [data-dialog-content],
   [role='dialog'][class*='rounded'] {

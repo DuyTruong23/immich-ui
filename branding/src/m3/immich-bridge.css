@@ -93,6 +93,21 @@
     --immich-ui-gray: var(--md-sys-color-surface-container-high);
     --immich-ui-default-border: var(--md-sys-color-outline-variant);
 
+    /* @immich/ui inverts light-* onto --color-neutral-900 in .dark.
+       Our M3 bridge makes --color-neutral-900 a light tint, so menus
+       (bg-light-100 + text-dark) become light-on-light. Pin the scale. */
+    --immich-ui-light-50: var(--md-sys-color-surface-container-lowest);
+    --immich-ui-light-100: var(--md-sys-color-surface-container-high);
+    --immich-ui-light-200: var(--md-sys-color-surface-container-highest);
+    --immich-ui-light-300: var(--md-sys-color-outline-variant);
+    --immich-ui-light-400: var(--md-sys-color-outline);
+    --immich-ui-light-500: var(--md-sys-color-on-surface-variant);
+    --immich-ui-light-600: var(--md-sys-color-on-surface-variant);
+    --immich-ui-light-700: var(--md-sys-color-on-surface);
+    --immich-ui-light-800: var(--md-sys-color-on-surface);
+    --immich-ui-light-900: var(--md-sys-color-on-surface);
+    --immich-ui-light-950: var(--md-sys-color-on-surface);
+
     --immich-primary: 208 188 255;
     --immich-dark-primary: 208 188 255;
     --immich-dark-bg: 20 18 24;
