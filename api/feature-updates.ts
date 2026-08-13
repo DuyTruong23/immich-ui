@@ -7,10 +7,6 @@ import {
 import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
 import { json } from './_lib/email.js';
 
-export const config = {
-  runtime: 'edge',
-};
-
 type FeatureUpdatesBody = {
   accessToken?: string;
   version?: string;

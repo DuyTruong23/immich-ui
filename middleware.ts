@@ -19,15 +19,17 @@ export default async function middleware(request: Request): Promise<Response> {
   const headers = new Headers(request.headers);
   headers.delete('host');
 
-  const init: RequestInit & { duplex?: 'half' } = {
+  const init: RequestInit = {
     method: request.method,
     headers,
     redirect: 'manual',
   };
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    init.body = request.body;
-    init.duplex = 'half';
+    const body = await request.arrayBuffer();
+    if (body.byteLength > 0) {
+      init.body = body;
+    }
   }
 
   return fetch(targetUrl, init);

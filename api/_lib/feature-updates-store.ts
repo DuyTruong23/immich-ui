@@ -67,9 +67,9 @@ export const writeFeatureUpdatesConfig = async (config: FeatureUpdatesConfig): P
   const { put } = await import('@vercel/blob');
   await put(BLOB_PATHNAME, JSON.stringify(config, null, 2), {
     access: 'public',
+    addRandomSuffix: false,
     contentType: 'application/json',
     token,
-    allowOverwrite: true,
   });
   memoryConfig = config;
 };
