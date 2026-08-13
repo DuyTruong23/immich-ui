@@ -77,7 +77,7 @@ ADMIN_NOTIFY_EMAIL=admin@example.com
 LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
 ```
 
-Luồng: user login → cookie Immich → client gọi `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
+Luồng: user login → client gửi `accessToken` tới `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
 
 ## Production tối thiểu (Vercel)
 

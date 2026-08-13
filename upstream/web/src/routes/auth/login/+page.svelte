@@ -48,7 +48,7 @@
       await authManager.refresh();
     }
 
-    notifyAdminOnLogin();
+    notifyAdminOnLogin(user.accessToken);
     await goto(data.continueUrl, { invalidateAll: true });
     eventManager.emit('AuthLogin', user);
   };

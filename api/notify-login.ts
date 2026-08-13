@@ -13,6 +13,7 @@ type ImmichUser = {
 
 type NotifyBody = {
   userAgent?: string;
+  accessToken?: string;
 };
 
 const json = (body: unknown, status = 200) =>
@@ -30,15 +31,21 @@ const isEnabled = (): boolean => getEnv('LOGIN_NOTIFY_ENABLED') === 'true';
 
 const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
 
-const verifySession = async (request: Request): Promise<ImmichUser | null> => {
-  const cookie = request.headers.get('cookie');
-  if (!cookie) {
-    return null;
+const verifySession = async (request: Request, accessToken?: string): Promise<ImmichUser | null> => {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+
+  const token = accessToken?.trim();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else {
+    const cookie = request.headers.get('cookie');
+    if (!cookie) {
+      return null;
+    }
+    headers.cookie = cookie;
   }
 
-  const response = await fetch(`${getUpstreamBase()}/api/users/me`, {
-    headers: { cookie },
-  });
+  const response = await fetch(`${getUpstreamBase()}/api/users/me`, { headers });
 
   if (!response.ok) {
     return null;
@@ -126,15 +133,6 @@ export default async function handler(request: Request): Promise<Response> {
     return json({ error: 'Email notification is not configured' }, 503);
   }
 
-  const user = await verifySession(request);
-  if (!user) {
-    return json({ error: 'Unauthorized' }, 401);
-  }
-
-  if (skipAdmin && user.isAdmin) {
-    return json({ ok: true, skipped: true, reason: 'admin_login' });
-  }
-
   let body: NotifyBody = {};
   try {
     const text = await request.text();
@@ -143,6 +141,15 @@ export default async function handler(request: Request): Promise<Response> {
     }
   } catch {
     return json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const user = await verifySession(request, body.accessToken);
+  if (!user) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+
+  if (skipAdmin && user.isAdmin) {
+    return json({ ok: true, skipped: true, reason: 'admin_login' });
   }
 
   try {

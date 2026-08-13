@@ -1,21 +1,36 @@
 import { getAppConfig } from '@photo-gallery/config';
 
 /** Gửi thông báo email cho admin — fire-and-forget, không chặn luồng login */
-export const notifyAdminOnLogin = (): void => {
+export const notifyAdminOnLogin = (accessToken?: string): void => {
   const { publicEnv } = getAppConfig();
 
   if (!publicEnv.enableLoginNotify) {
     return;
   }
 
+  const token = accessToken?.trim();
+  if (!token) {
+    console.warn('[login-notify] Missing accessToken, skipping notify');
+    return;
+  }
+
   void fetch('/api/notify-login', {
     method: 'POST',
     credentials: 'include',
+    keepalive: true,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      accessToken: token,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
     }),
-  }).catch((error) => {
-    console.warn('[login-notify] Failed to notify admin:', error);
-  });
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        console.warn('[login-notify] Notify failed:', response.status, detail);
+      }
+    })
+    .catch((error) => {
+      console.warn('[login-notify] Failed to notify admin:', error);
+    });
 };
