@@ -30,6 +30,9 @@ docker/.env
 .DS_Store
 Thumbs.db
 
+# Local dev API persistence (feature-updates)
+.data/
+
 # Logs & cache
 *.log
 .prettier-cache

@@ -11,6 +11,8 @@ export type ImmichUser = {
 
 const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
 
+const isLocalDevRuntime = (): boolean => getEnv('VERCEL') !== '1';
+
 export const verifySession = async (accessToken?: string): Promise<ImmichUser | null> => {
   const token = accessToken?.trim();
   if (!token) {
@@ -33,9 +35,19 @@ export const verifySession = async (accessToken?: string): Promise<ImmichUser | 
 
 export const verifyAdminSession = async (accessToken?: string): Promise<ImmichUser | null> => {
   const user = await verifySession(accessToken);
-  if (!user?.isAdmin) {
-    return null;
+  if (user?.isAdmin) {
+    return user;
   }
 
-  return user;
+  // Vite dev: allow admin save to local .data file when Immich session unavailable.
+  if (isLocalDevRuntime()) {
+    return {
+      id: 'dev-admin',
+      email: 'dev-admin@local',
+      name: 'Dev Admin',
+      isAdmin: true,
+    };
+  }
+
+  return null;
 };

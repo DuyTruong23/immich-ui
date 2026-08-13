@@ -6,6 +6,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, loadEnv, type ProxyOptions, type UserConfig } from 'vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { immichApiProxyPattern, viteApiDevPlugin } from '../../config/src/vite-api-dev-plugin.ts';
 import { customViteAliases, resolveImmichServerUrl } from '../../config/src/vite.integration.ts';
 
 const viteDir = path.dirname(fileURLToPath(import.meta.url));
@@ -13,7 +14,7 @@ const isWindows = process.platform === 'win32';
 
 const createProxy = (mode: string): Record<string, string | ProxyOptions> => {
   Object.assign(process.env, loadEnv(mode, viteDir, ''));
-  const upstream = {
+  const upstream: ProxyOptions = {
     target: resolveImmichServerUrl(),
     secure: true,
     changeOrigin: true,
@@ -22,7 +23,7 @@ const createProxy = (mode: string): Record<string, string | ProxyOptions> => {
   };
 
   return {
-    '/api': upstream,
+    [immichApiProxyPattern]: upstream,
     '/.well-known/immich': upstream,
     '/custom.css': upstream,
   };
@@ -58,6 +59,7 @@ export default defineConfig(({ mode }) => ({
     proxy: createProxy(mode),
   },
   plugins: [
+    viteApiDevPlugin(),
     enhancedImages(),
     tailwindcss(),
     sveltekit(),
