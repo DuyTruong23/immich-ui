@@ -108,6 +108,27 @@ LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
 
 Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → gửi email qua Resend.
 
+## Modal cập nhật tính năng sau login
+
+Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công. Modal tự đóng sau 5 giây; nếu user focus hoặc nhập vào ô **Đóng góp ý kiến**, timer auto-close sẽ dừng.
+
+Danh sách tính năng: `custom/src/constants/feature-updates.ts`
+
+### Gửi góp ý qua email (Vercel)
+
+| Biến | Bắt buộc | Mô tả |
+|---|---|---|
+| `FEEDBACK_ENABLED` | Có | `true` để gửi góp ý qua Resend |
+| `RESEND_API_KEY` | Có | Dùng chung với login notify |
+| `ADMIN_NOTIFY_EMAIL` | Có | Email admin nhận góp ý |
+| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi |
+
+```env
+FEEDBACK_ENABLED=true
+```
+
+Luồng: login → modal → user nhập góp ý → đóng modal → POST `/api/feedback` → email admin.
+
 ## Production tối thiểu (Vercel)
 
 Chỉ cần:

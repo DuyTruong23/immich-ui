@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { SERVER_CONNECTION_MESSAGE } from '$custom/utils/server-connection-error';
+  import {
+    SERVER_CONNECTION_DISPLAY_CODE,
+    SERVER_CONNECTION_MESSAGE,
+  } from '$custom/utils/server-connection-error';
 
   interface Props {
     code?: number;
     message?: string;
   }
 
-  let { code = 505, message = SERVER_CONNECTION_MESSAGE }: Props = $props();
+  let { code = SERVER_CONNECTION_DISPLAY_CODE, message = SERVER_CONNECTION_MESSAGE }: Props = $props();
 </script>
 
 <div class="pg-server-error" role="alert" aria-live="polite">

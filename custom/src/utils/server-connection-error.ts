@@ -71,12 +71,12 @@ export function createServerConnectionError(initError: unknown): ServerConnectio
 
   return {
     message: SERVER_CONNECTION_MESSAGE,
-    code: SERVER_CONNECTION_DISPLAY_CODE,
+    code: readErrorStatus(initError) ?? SERVER_CONNECTION_DISPLAY_CODE,
     stack: initError instanceof Error ? initError.stack : undefined,
     serverConnectionError: true,
   };
 }
 
-export function getServerConnectionErrorCode(_error: unknown): number {
-  return SERVER_CONNECTION_DISPLAY_CODE;
+export function getServerConnectionErrorCode(error: unknown): number {
+  return readErrorStatus(error) ?? SERVER_CONNECTION_DISPLAY_CODE;
 }

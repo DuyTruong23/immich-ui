@@ -50,4 +50,7 @@ restore_upstream_ui "$ROOT"
 echo "==> Patch media URL routing (PUBLIC_IMMICH_MEDIA_URL)"
 python "$ROOT/scripts/patch-utils-media-url.py" "$ROOT"
 
+echo "==> Patch feature update modal into +layout.svelte"
+python "$ROOT/scripts/patch-layout-feature-modal.py" "$ROOT"
+
 echo "Custom layer prepared."
