@@ -1,21 +1,26 @@
 <script lang="ts">
   import { FEATURE_UPDATES } from '$custom/constants/feature-updates';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
-  import { Field, Modal, ModalBody, Text, Textarea } from '@immich/ui';
+  import { Field, Button, HStack, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
   import { onDestroy, onMount } from 'svelte';
 
   type Props = {
     onClose: () => void;
     accessToken?: string;
+    updates?: readonly string[];
+    preview?: boolean;
   };
 
-  const { onClose, accessToken }: Props = $props();
+  const { onClose, accessToken, updates = FEATURE_UPDATES, preview = false }: Props = $props();
 
   const AUTO_CLOSE_MS = 5000;
 
   let feedback = $state('');
   let autoClosePaused = $state(false);
+  let sentFeedback = $state(false);
   let timerId: ReturnType<typeof setTimeout> | undefined;
+
+  const hasFeedback = $derived(feedback.trim().length > 0);
 
   const pauseAutoClose = () => {
     if (autoClosePaused) {
@@ -30,19 +35,26 @@
     }
   };
 
-  const handleClose = () => {
+  const handleDismiss = () => {
     pauseAutoClose();
-
-    const trimmed = feedback.trim();
-    if (trimmed) {
-      submitFeedback(trimmed, accessToken);
-    }
-
     onClose();
   };
 
+  const handleSendFeedback = () => {
+    pauseAutoClose();
+
+    const trimmed = feedback.trim();
+    if (!trimmed || sentFeedback) {
+      return;
+    }
+
+    submitFeedback(trimmed, accessToken);
+    sentFeedback = true;
+    handleDismiss();
+  };
+
   onMount(() => {
-    timerId = setTimeout(handleClose, AUTO_CLOSE_MS);
+    timerId = setTimeout(handleDismiss, AUTO_CLOSE_MS);
   });
 
   onDestroy(() => {
@@ -52,14 +64,20 @@
   });
 </script>
 
-<Modal size="medium" title="Tính năng được cập nhật" onClose={handleClose} icon={false}>
+<Modal size="medium" title="Tính năng được cập nhật" onClose={handleDismiss} icon={false}>
   <ModalBody>
+    {#if preview}
+      <Text size="tiny" class="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
+        Chế độ preview — dữ liệu mock cho local dev
+      </Text>
+    {/if}
+
     <Text class="text-(--md-sys-color-on-surface-variant)">
       Gallery vừa được cập nhật với các thay đổi sau:
     </Text>
 
     <ul class="my-4 list-disc space-y-2 ps-5 text-sm leading-relaxed">
-      {#each FEATURE_UPDATES as item}
+      {#each updates as item}
         <li>{item}</li>
       {/each}
     </ul>
@@ -81,4 +99,13 @@
       </Text>
     {/if}
   </ModalBody>
+
+  <ModalFooter>
+    <HStack fullWidth gap={3}>
+      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss}>Đóng</Button>
+      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!hasFeedback}>
+        Gửi góp ý
+      </Button>
+    </HStack>
+  </ModalFooter>
 </Modal>
