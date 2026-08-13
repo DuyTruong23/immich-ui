@@ -6,7 +6,8 @@ export type FeatureUpdatesConfig = {
 export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = {
   version: 'v1.0.3',
   items: [
-   'Cải thiện tốc độ xem video trên thiết bị di động',
+    'Cải thiện tốc độ xem video trên thiết bị di động',
+    'Cho phép đổi avatar, tên',
   'Form đăng nhập hỗ trợ chặn autofill mật khẩu tốt hơn khi dùng OAuth',
   'Giao diện admin dễ đọc hơn trên mobile — bảng, thư viện ngoài, chọn ảnh'
   ],
