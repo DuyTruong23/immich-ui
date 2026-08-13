@@ -112,7 +112,9 @@ Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → g
 
 Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công. Modal tự đóng sau 5 giây; nếu user focus hoặc nhập vào ô **Đóng góp ý kiến**, timer auto-close sẽ dừng.
 
-Danh sách tính năng: `custom/src/constants/feature-updates.ts`
+**Cập nhật danh sách:** sửa mảng `FEATURE_UPDATES` trong `custom/src/constants/feature-updates.ts`, rồi redeploy.
+
+Chi tiết luồng, preview dev, và trang **"Hệ thống đang cập nhật dữ liệu."**: [UserMessaging.md](./UserMessaging.md).
 
 ### Gửi góp ý qua email (Vercel)
 
@@ -129,13 +131,27 @@ FEEDBACK_ENABLED=true
 
 Luồng: login → modal → user nhập góp ý → đóng modal → POST `/api/feedback` → email admin.
 
+## Trang "Hệ thống đang cập nhật dữ liệu."
+
+Khi Immich/tunnel không phản hồi (5xx, 404 API, `failed to fetch`), app hiển thị trang thân thiện thay vì lỗi Immich mặc định.
+
+| Phần | File chỉnh |
+|---|---|
+| Tiêu đề *Hệ thống đang cập nhật dữ liệu.* | `custom/src/components/ServerConnectionErrorPage.svelte` |
+| Mô tả (giờ quay lại, lời nhắn) | `SERVER_CONNECTION_MESSAGE` trong `custom/src/utils/server-connection-error.ts` |
+
+Xem [UserMessaging.md](./UserMessaging.md).
+
 ## Production tối thiểu (Vercel)
 
-Chỉ cần:
+Xem [VercelProduction.md](./VercelProduction.md). Tóm tắt:
 
 ```env
-PUBLIC_IMMICH_SERVER_URL=https://immich.example.com
-PUBLIC_APP_NAME=My Gallery
+PUBLIC_IMMICH_SERVER_URL=
+PUBLIC_IMMICH_WS_URL=https://immich.gallery-app.pp.ua
+PUBLIC_IMMICH_MEDIA_URL=https://api.gallery-app.pp.ua
+IMMICH_SERVER_URL=https://immich.gallery-app.pp.ua
+PUBLIC_APP_NAME=Photo Gallery
 ```
 
-Khuyến nghị dùng reverse proxy cùng origin để tránh CORS.
+**Không set** `PUBLIC_IMMICH_SERVER_URL` cross-origin — Immich không hỗ trợ CORS; REST qua `/api` proxy same-origin.

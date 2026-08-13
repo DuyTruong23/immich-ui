@@ -65,6 +65,7 @@ Không phát triển trực tiếp trên `main`.
 | [Customization](docs/Customization.md) | Branding, overrides, custom pages |
 | [Update-Upstream](docs/Update-Upstream.md) | Đồng bộ Immich mới |
 | [Environment](docs/Environment.md) | Biến môi trường |
+| [UserMessaging](docs/UserMessaging.md) | Modal tính năng & trang "Hệ thống đang cập nhật dữ liệu." |
 | [Upgrade](docs/Upgrade.md) | Nâng cấp Immich |
 | [GitWorkflow](docs/GitWorkflow.md) | Branch strategy |
 

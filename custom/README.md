@@ -23,6 +23,7 @@ custom/src/
 | Settings | `/settings` | Planned |
 | Widgets | — | Planned |
 | Notifications | — | ✓ Login email notify (Resend) |
+| User messaging | — | ✓ Modal tính năng + trang bảo trì — xem [UserMessaging.md](../docs/UserMessaging.md) |
 | Statistics | — | Planned |
 
 Thêm route mới trong `custom/src/routes/`, chạy `pnpm prepare:custom`.

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
-  import { applyDevRole, type UiDevRole } from '$custom/hooks/ui-dev-mode';
+  import { applyDevRole, isUiDevMode, type UiDevRole } from '$custom/hooks/ui-dev-mode';
+  import { getFeatureUpdatesForDisplay } from '$custom/constants/feature-updates';
+  import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
   import { goto } from '$app/navigation';
@@ -13,7 +15,7 @@
   import { oauth } from '$lib/utils';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { login, type LoginResponseDto } from '@immich/sdk';
-  import { Alert, Button, Field, Icon, Input, PasswordInput, Stack, Text } from '@immich/ui';
+  import { Alert, Button, Field, Icon, Input, PasswordInput, Stack, Text, modalManager } from '@immich/ui';
   import { mdiAccountCog, mdiAccountOutline, mdiPalette } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -40,6 +42,18 @@
     loadingRole = role;
     applyDevRole(role);
     await goto(data.continueUrl, { invalidateAll: true });
+    eventManager.emit('AuthLogin', { accessToken: `dev-${role}` } as LoginResponseDto);
+  };
+
+  const previewFeatureModal = () => {
+    modalManager
+      .show(FeatureUpdateModal, {
+        updates: getFeatureUpdatesForDisplay(),
+        preview: isUiDevMode(),
+      })
+      .catch((error) => {
+        console.error('[login] previewFeatureModal', error);
+      });
   };
 
   const onSuccess = async (user: LoginResponseDto) => {
@@ -196,6 +210,10 @@
       <Text size="tiny" class="text-center text-(--pg-text-muted)">
         Tắt chế độ này: dùng `pnpm dev` thay vì `pnpm dev:local`
       </Text>
+
+      <Button size="medium" shape="round" fullWidth color="secondary" onclick={previewFeatureModal}>
+        Xem modal "Tính năng được cập nhật"
+      </Button>
     </Stack>
   {:else}
     <Stack gap={4}>

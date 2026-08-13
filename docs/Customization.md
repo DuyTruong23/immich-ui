@@ -63,6 +63,13 @@ custom/
 └── Statistics/
 ```
 
+### Thông báo người dùng
+
+| Tính năng | File chính | Tài liệu |
+|---|---|---|
+| Modal tính năng sau login | `custom/src/constants/feature-updates.ts` | [UserMessaging.md](./UserMessaging.md) |
+| Trang bảo trì / lỗi kết nối | `custom/src/utils/server-connection-error.ts` | [UserMessaging.md](./UserMessaging.md) |
+
 Route đăng ký qua SvelteKit route group wrapper — không sửa route upstream.
 
 ## Feature flags
