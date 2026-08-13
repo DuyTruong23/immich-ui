@@ -55,28 +55,62 @@ export const shouldPlayVideoThumbnailOnHover = (): boolean => {
   return !isCoarsePointer() && getNetworkQuality() === 'fast';
 };
 
+/** GIF / motion preview on thumbnail hover — desktop + mạng nhanh only */
+export const shouldLoadAnimatedPreview = (): boolean => shouldPlayVideoThumbnailOnHover();
+
+/** Live Photo video overlay — tránh fetch playback URL trên mobile/mạng chậm */
+export const shouldLoadLivePhotoPreview = (): boolean => shouldPlayVideoThumbnailOnHover();
+
 export const shouldPreloadAdjacentAssets = (): boolean => {
-  return getNetworkQuality() === 'fast' && !prefersReducedMotion();
+  return getNetworkQuality() === 'fast' && !prefersReducedMotion() && !isCoarsePointer();
 };
 
 export const getTimelineIntersectionExpand = (): number => {
   const quality = getNetworkQuality();
   if (quality === 'save-data') {
-    return 80;
+    return 50;
   }
 
-  if (quality === 'slow' || isNarrowViewport() || isCoarsePointer()) {
-    return 250;
+  if (quality === 'slow') {
+    return 120;
+  }
+
+  if (isNarrowViewport() || isCoarsePointer()) {
+    return 200;
   }
 
   return 500;
 };
 
+/** Giới hạn thumbnail cache trong service worker theo chất lượng mạng */
+export const getServiceWorkerThumbnailCacheLimit = (): number => {
+  const quality = getNetworkQuality();
+  if (quality === 'save-data') {
+    return 80;
+  }
+
+  if (quality === 'slow') {
+    return 180;
+  }
+
+  if (isCoarsePointer() || isNarrowViewport()) {
+    return 280;
+  }
+
+  return 400;
+};
+
 export const getTimelineLayoutOptions = (): { rowHeight: number; headerHeight: number } => {
   const quality = getNetworkQuality();
-  const compact = isNarrowViewport();
+  const compact = isNarrowViewport() || isCoarsePointer();
 
-  if (quality === 'save-data' || quality === 'slow') {
+  if (quality === 'save-data') {
+    return compact
+      ? { rowHeight: 72, headerHeight: 24 }
+      : { rowHeight: 140, headerHeight: 36 };
+  }
+
+  if (quality === 'slow') {
     return compact
       ? { rowHeight: 80, headerHeight: 28 }
       : { rowHeight: 160, headerHeight: 40 };
@@ -85,6 +119,11 @@ export const getTimelineLayoutOptions = (): { rowHeight: number; headerHeight: n
   return compact
     ? { rowHeight: 100, headerHeight: 32 }
     : { rowHeight: 235, headerHeight: 48 };
+};
+
+/** Tắt CSS transition timeline trên mobile để giảm jank khi scroll */
+export const shouldUseTimelineTransitions = (): boolean => {
+  return !isCoarsePointer() && !prefersReducedMotion() && getNetworkQuality() === 'fast';
 };
 
 export const motionDuration = (durationMs: number): number => {
