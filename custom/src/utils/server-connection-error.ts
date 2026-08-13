@@ -19,6 +19,10 @@ function isServerErrorStatus(status: number | undefined): boolean {
   return status !== undefined && status >= 500 && status < 600;
 }
 
+function isServerConnectionStatus(status: number | undefined): boolean {
+  return status === 404 || isServerErrorStatus(status);
+}
+
 function readErrorStatus(error: unknown): number | undefined {
   if (isHttpError(error)) {
     return error.status || error.data?.statusCode;
@@ -29,7 +33,7 @@ function readErrorStatus(error: unknown): number | undefined {
     return Number.isFinite(code) ? code : undefined;
   }
 
-  const match = readErrorText(error).match(/\b([5][0-9]{2})\b/);
+  const match = readErrorText(error).match(/\b(404|[5][0-9]{2})\b/);
   return match ? Number(match[1]) : undefined;
 }
 
@@ -55,7 +59,7 @@ export function isServerConnectionError(error: unknown): boolean {
     return (error as { serverConnectionError?: boolean }).serverConnectionError === true;
   }
 
-  if (isServerErrorStatus(readErrorStatus(error))) {
+  if (isServerConnectionStatus(readErrorStatus(error))) {
     return true;
   }
 

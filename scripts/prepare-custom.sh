@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+bash "$ROOT/scripts/sync-web-env.sh"
+
 copy_merge() {
   local src="$1"
   local dest="$2"
