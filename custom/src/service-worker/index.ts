@@ -8,7 +8,28 @@ import { handleFetch as handleAssetFetch } from './request';
 const ASSET_REQUEST_REGEX = /^\/api\/assets\/[a-f0-9-]+\/(original|thumbnail)/;
 const THUMBNAIL_PATH_REGEX = /\/api\/assets\/[a-f0-9-]+\/thumbnail/;
 const THUMB_CACHE = 'pg-thumbs-v1';
-const THUMB_CACHE_LIMIT = 400;
+
+type NetworkConnection = {
+  saveData?: boolean;
+  effectiveType?: string;
+};
+
+const getConnection = (): NetworkConnection | undefined =>
+  (navigator as Navigator & { connection?: NetworkConnection }).connection;
+
+const getThumbnailCacheLimit = (): number => {
+  const connection = getConnection();
+  if (connection?.saveData) {
+    return 80;
+  }
+
+  const type = connection?.effectiveType;
+  if (type === 'slow-2g' || type === '2g' || type === '3g') {
+    return 180;
+  }
+
+  return 400;
+};
 
 const sw = globalThis as unknown as ServiceWorkerGlobalScope;
 
@@ -32,12 +53,13 @@ const cacheKeyFor = (request: Request) => {
 };
 
 const pruneCache = async (cache: Cache) => {
+  const limit = getThumbnailCacheLimit();
   const keys = await cache.keys();
-  if (keys.length <= THUMB_CACHE_LIMIT) {
+  if (keys.length <= limit) {
     return;
   }
 
-  await Promise.all(keys.slice(0, keys.length - THUMB_CACHE_LIMIT).map((request) => cache.delete(request)));
+  await Promise.all(keys.slice(0, keys.length - limit).map((request) => cache.delete(request)));
 };
 
 const cacheFirstThumbnail = async (request: Request): Promise<Response> => {
