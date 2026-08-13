@@ -1,4 +1,4 @@
-import { getEnv } from './email';
+import { getEnv } from './email.js';
 
 const DEFAULT_UPSTREAM = 'https://immich.gallery-app.pp.ua';
 

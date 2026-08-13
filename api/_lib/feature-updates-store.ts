@@ -1,10 +1,10 @@
-import { getEnv } from './email';
+import { getEnv } from './email.js';
 import {
   DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
   parseFeatureUpdatesConfig,
   type FeatureUpdatesConfig,
-} from './feature-updates-config';
+} from './feature-updates-config.js';
 
 const BLOB_PATHNAME = 'feature-updates/config.json';
 

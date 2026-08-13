@@ -1,4 +1,4 @@
-import { getEnv, json, ResendSendError, sendViaResend } from './_lib/email';
+import { getEnv, json, ResendSendError, sendViaResend } from './_lib/email.js';
 
 export const config = {
   runtime: 'edge',

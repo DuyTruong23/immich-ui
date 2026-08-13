@@ -1,11 +1,11 @@
-import { verifyAdminSession } from './_lib/immich-auth';
+import { verifyAdminSession } from './_lib/immich-auth.js';
 import {
   DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
   type FeatureUpdatesConfig,
-} from './_lib/feature-updates-config';
-import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store';
-import { json } from './_lib/email';
+} from './_lib/feature-updates-config.js';
+import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
+import { json } from './_lib/email.js';
 
 export const config = {
   runtime: 'edge',

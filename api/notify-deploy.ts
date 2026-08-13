@@ -1,5 +1,5 @@
-import { getEnv, json, sendViaResend } from './_lib/email';
-import { isDeployNotifyEvent, verifyVercelSignature, type VercelDeploymentWebhook } from './_lib/vercel-webhook';
+import { getEnv, json, sendViaResend } from './_lib/email.js';
+import { isDeployNotifyEvent, verifyVercelSignature, type VercelDeploymentWebhook } from './_lib/vercel-webhook.js';
 
 export const config = {
   runtime: 'edge',
