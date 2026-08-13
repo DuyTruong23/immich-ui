@@ -1,5 +1,5 @@
 import { getEnv, json, ResendSendError, sendViaResend } from './_lib/email.js';
-import { verifySessionFromRequest } from './_lib/immich-auth.js';
+import { verifySession } from './_lib/immich-auth.js';
 
 export const config = {
   runtime: 'edge',
@@ -79,7 +79,7 @@ export default async function handler(request: Request): Promise<Response> {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  const user = await verifySessionFromRequest(request, body.accessToken);
+  const user = await verifySession(body.accessToken, request.headers.get('cookie') ?? undefined);
   if (!user) {
     return json({ error: 'Unauthorized' }, 401);
   }
