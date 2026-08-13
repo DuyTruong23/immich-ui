@@ -84,16 +84,18 @@ def patch_thumbnail(path: pathlib.Path) -> None:
         '  });\n',
         'Thumbnail derived mobile flags',
     )
-    text = replace_once(
-        text,
-        '        curve={selected}\n        onComplete={(errored) => {',
-        '        curve={selected}\n        preload={!lazyThumbnails}\n        onComplete={(errored) => {',
-        'Thumbnail ImageThumbnail preload',
-    )
-    text = text.replace(
-        'enablePlayback={mouseOver && $playVideoThumbnailOnHover}',
-        'enablePlayback={mouseOver && allowVideoHover}',
-    )
+    if 'preload={!lazyThumbnails}' not in text:
+        text = replace_once(
+            text,
+            '        curve={selected}\n        onComplete={(errored) => {',
+            '        curve={selected}\n        preload={!lazyThumbnails}\n        onComplete={(errored) => {',
+            'Thumbnail ImageThumbnail preload',
+        )
+    if 'enablePlayback={mouseOver && allowVideoHover}' not in text:
+        text = text.replace(
+            'enablePlayback={mouseOver && $playVideoThumbnailOnHover}',
+            'enablePlayback={mouseOver && allowVideoHover}',
+        )
     path.write_text(text, encoding='utf-8')
 
 
@@ -220,6 +222,8 @@ def patch_layout_head(path: pathlib.Path) -> None:
 
 def patch_thumbnail_media_auth(path: pathlib.Path) -> None:
     text = path.read_text(encoding='utf-8')
+    if 'const thumbnailUrl = $derived.by' in text:
+        return
     text = insert_after(
         text,
         "  import { getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';\n",
@@ -392,35 +396,7 @@ def patch_image_thumbnail_reset(path: pathlib.Path) -> None:
     path.write_text(text, encoding='utf-8')
 
 
-def patch_auth_manager_media_session(path: pathlib.Path) -> None:
-    text = path.read_text(encoding='utf-8')
-    text = remove_once(
-        text,
-        """      AuthLogin: (user) => {
-        if (isCrossOriginMediaBase() && user.accessToken) {
-          this.#mediaSessionKey = user.accessToken;
-        }
-      },
-""",
-    )
-    text = replace_once(
-        text,
-        """  async load() {
-    if (authManager.authenticated) {
-      return;
-    }
-""",
-        """  async load() {
-    if (authManager.authenticated) {
-      await this.ensureMediaSessionKey();
-      return;
-    }
-""",
-        'auth-manager ensure media session on load',
-    )
-    path.write_text(text, encoding='utf-8')
-
-
+def patch_force_compressed_media(web: pathlib.Path) -> None:
     preferences = web / 'src/lib/stores/preferences.store.ts'
     text = preferences.read_text(encoding='utf-8')
     text = insert_after(
@@ -464,6 +440,35 @@ if (browser) {
         'AssetViewer force transcoded video',
     )
     viewer.write_text(text, encoding='utf-8')
+
+
+def patch_auth_manager_media_session(path: pathlib.Path) -> None:
+    text = path.read_text(encoding='utf-8')
+    text = remove_once(
+        text,
+        """      AuthLogin: (user) => {
+        if (isCrossOriginMediaBase() && user.accessToken) {
+          this.#mediaSessionKey = user.accessToken;
+        }
+      },
+""",
+    )
+    text = replace_once(
+        text,
+        """  async load() {
+    if (authManager.authenticated) {
+      return;
+    }
+""",
+        """  async load() {
+    if (authManager.authenticated) {
+      await this.ensureMediaSessionKey();
+      return;
+    }
+""",
+        'auth-manager ensure media session on load',
+    )
+    path.write_text(text, encoding='utf-8')
 
 
 def main() -> None:
