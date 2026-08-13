@@ -15,7 +15,7 @@
   import { oauth } from '$lib/utils';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { login, type LoginResponseDto } from '@immich/sdk';
-  import { Alert, Button, Field, Icon, Input, PasswordInput, Stack, Text, modalManager } from '@immich/ui';
+  import { Alert, Button, Field, Icon, Input, Stack, Text, modalManager } from '@immich/ui';
   import { mdiAccountCog, mdiAccountOutline, mdiPalette } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -32,7 +32,7 @@
   let password = $state('');
   let oauthError = $state('');
   let loading = $state(false);
-  let oauthLoading = $state(true);
+  let oauthLoading = $state(featureFlagsManager.value.oauth);
   let loadingRole = $state<UiDevRole | null>(null);
 
   const serverConfig = $derived(serverConfigManager.value);
@@ -42,7 +42,10 @@
     loadingRole = role;
     applyDevRole(role);
     await goto(data.continueUrl, { invalidateAll: true });
-    eventManager.emit('AuthLogin', { accessToken: `dev-${role}` } as LoginResponseDto);
+    eventManager.emit('AuthLogin', {
+      accessToken: `dev-${role}`,
+      isAdmin: role === 'admin',
+    } as LoginResponseDto);
   };
 
   const previewFeatureModal = () => {
@@ -224,18 +227,37 @@
         </Alert>
       {/if}
 
-      {#if !oauthLoading && featureFlagsManager.value.passwordLogin}
-        <form {onsubmit} class="flex flex-col gap-4">
+      {#if featureFlagsManager.value.passwordLogin}
+        <form
+          method="post"
+          action="/auth/login"
+          autocomplete="on"
+          {onsubmit}
+          class="flex flex-col gap-4"
+          hidden={oauthLoading}
+        >
           {#if errorMessage}
             <Alert color="danger" title={errorMessage} closable />
           {/if}
 
           <Field label={$t('email')} required="indicator">
-            <Input id="email" name="email" type="email" autocomplete="email" bind:value={email} />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              bind:value={email}
+            />
           </Field>
 
           <Field label={$t('password')} required="indicator">
-            <PasswordInput id="password" bind:value={password} autocomplete="current-password" />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              bind:value={password}
+            />
           </Field>
 
           <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
