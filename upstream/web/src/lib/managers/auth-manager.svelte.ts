@@ -33,6 +33,7 @@ import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
 import { isSharedLinkRoute } from '$lib/utils/navigation';
 
 const MEDIA_SESSION_DURATION_SECONDS = 60 * 60;
+const MEDIA_SESSION_TIMEOUT_MS = 4000;
 
 class AuthManager {
   isPurchased = $state(false);
@@ -49,9 +50,15 @@ class AuthManager {
     return {};
   });
 
+  /** Cookie không đi kèm media cross-origin — phải có sessionKey trên URL trước khi <img> load */
+  get mediaAuthReady() {
+    return this.isSharedLink || !isCrossOriginMediaBase() || !!this.#mediaSessionKey || this.#mediaSessionAttempted;
+  }
+
   #user = $state<UserAdminResponseDto>();
   #preferences = $state<UserPreferencesResponseDto>();
   #mediaSessionKey = $state<string | undefined>();
+  #mediaSessionAttempted = $state(false);
   #mediaSessionPromise: Promise<void> | undefined;
   #expiryWatcherCleanup: (() => void) | undefined;
 
@@ -158,18 +165,36 @@ class AuthManager {
     }
 
     this.#mediaSessionPromise = (async () => {
+      const sessionPromise = createSession({
+        sessionCreateDto: {
+          duration: MEDIA_SESSION_DURATION_SECONDS,
+          deviceOS: 'Web',
+          deviceType: 'Browser',
+        },
+      });
+
+      const timeoutPromise = new Promise<'timeout'>((resolve) => {
+        setTimeout(() => resolve('timeout'), MEDIA_SESSION_TIMEOUT_MS);
+      });
+
       try {
-        const session = await createSession({
-          sessionCreateDto: {
-            duration: MEDIA_SESSION_DURATION_SECONDS,
-            deviceOS: 'Web',
-            deviceType: 'Browser',
-          },
-        });
-        this.#mediaSessionKey = session.token;
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        if (result === 'timeout') {
+          void sessionPromise
+            .then((session) => {
+              this.#mediaSessionKey = session.token;
+            })
+            .catch((error) => {
+              console.warn('Failed to create media session key', error);
+            });
+          return;
+        }
+
+        this.#mediaSessionKey = result.token;
       } catch (error) {
         console.warn('Failed to create media session key', error);
       } finally {
+        this.#mediaSessionAttempted = true;
         this.#mediaSessionPromise = undefined;
       }
     })();
@@ -222,6 +247,7 @@ class AuthManager {
     this.#user = undefined;
     this.#preferences = undefined;
     this.#mediaSessionKey = undefined;
+    this.#mediaSessionAttempted = false;
     this.#mediaSessionPromise = undefined;
     this.#stopSessionExpiryWatcher();
     clearStoredAccessToken();

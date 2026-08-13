@@ -65,18 +65,29 @@ export const shouldPreloadAdjacentAssets = (): boolean => {
   return getNetworkQuality() === 'fast' && !prefersReducedMotion() && !isCoarsePointer();
 };
 
-export const getTimelineIntersectionExpand = (): number => {
+export const getTimelineIntersectionExpand = (options?: { scrolling?: boolean }): number => {
   const quality = getNetworkQuality();
+  const scrolling = options?.scrolling === true;
+  const mobile = isNarrowViewport() || isCoarsePointer();
+
+  // Scrub / jump-to-date: keep destination month + neighbors mounted so thumbs aren't torn down mid-flight.
+  if (scrolling) {
+    if (quality === 'save-data') {
+      return mobile ? 400 : 600;
+    }
+    return mobile ? 900 : 1200;
+  }
+
   if (quality === 'save-data') {
-    return 50;
+    return mobile ? 80 : 120;
   }
 
   if (quality === 'slow') {
-    return 120;
+    return mobile ? 180 : 240;
   }
 
-  if (isNarrowViewport() || isCoarsePointer()) {
-    return 200;
+  if (mobile) {
+    return 400;
   }
 
   return 500;

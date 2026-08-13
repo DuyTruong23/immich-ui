@@ -8,6 +8,7 @@
   import type { VirtualScrollManager } from '$lib/managers/VirtualScrollManager/VirtualScrollManager.svelte';
   import { uploadAssetsStore } from '$lib/stores/upload';
   import type { CommonPosition } from '$lib/utils/layout-utils';
+  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { shouldUseTimelineTransitions } from '$lib/utils/mobile-performance.svelte';
   import { fromTimelinePlainDate, getDateLocaleString } from '$lib/utils/timeline-util';
   import { Icon } from '@immich/ui';
@@ -68,7 +69,10 @@
   {@const isTimelineDaySelected = assetInteraction.selectedGroup.has(timelineDay.groupTitle)}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <section
-    class={[{ 'transition-all': transitionDuration > 0 && !timelineMonth.timelineManager.suspendTransitions }]}
+    class={[
+      { 'transition-all': transitionDuration > 0 && !timelineMonth.timelineManager.suspendTransitions },
+      { 'timeline-cv': !mediaQueryManager.pointerCoarse },
+    ]}
     style:transition-delay={timelineMonth.timelineManager.suspendTransitions ? undefined : `${transitionDuration}ms`}
     data-group
     style:position="absolute"
@@ -118,6 +122,10 @@
 
 <style>
   section {
+    contain: layout;
+  }
+
+  section.timeline-cv {
     contain: layout paint style;
     content-visibility: auto;
     contain-intrinsic-size: auto 300px;

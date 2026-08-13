@@ -7,7 +7,7 @@ import { handleFetch as handleAssetFetch } from './request';
 
 const ASSET_REQUEST_REGEX = /^\/api\/assets\/[a-f0-9-]+\/(original|thumbnail)/;
 const THUMBNAIL_PATH_REGEX = /\/api\/assets\/[a-f0-9-]+\/thumbnail/;
-const THUMB_CACHE = 'pg-thumbs-v1';
+const THUMB_CACHE = 'pg-thumbs-v2';
 
 type NetworkConnection = {
   saveData?: boolean;
@@ -49,7 +49,11 @@ const handleInstall = (event: ExtendableEvent) => {
 
 const cacheKeyFor = (request: Request) => {
   const url = new URL(request.url);
-  return new Request(`${url.origin}${url.pathname}`, { method: 'GET' });
+  const size = url.searchParams.get('size') ?? '';
+  const cacheBust = url.searchParams.get('c') ?? '';
+  return new Request(`${url.origin}${url.pathname}?size=${encodeURIComponent(size)}&c=${encodeURIComponent(cacheBust)}`, {
+    method: 'GET',
+  });
 };
 
 const pruneCache = async (cache: Cache) => {
@@ -71,12 +75,13 @@ const cacheFirstThumbnail = async (request: Request): Promise<Response> => {
   }
 
   const response = await handleAssetFetch(request);
-  if (response.ok || response.type === 'opaque') {
+  // Opaque responses hide 401/204 — caching them locks mobile Safari onto broken thumbs.
+  if (response.ok) {
     try {
       await cache.put(cacheKey, response.clone());
       await pruneCache(cache);
     } catch {
-      // Quota or opaque response — ignore
+      // Quota exceeded — ignore
     }
   }
 

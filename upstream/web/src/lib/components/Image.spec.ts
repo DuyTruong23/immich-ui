@@ -55,6 +55,12 @@ describe('Image component', () => {
     expect(cancelImageUrl).toHaveBeenCalledWith('/test.jpg');
   });
 
+  it('does not cancel thumbnail requests on unmount', () => {
+    const { unmount } = render(Image, { src: '/api/assets/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/thumbnail?size=thumbnail' });
+    unmount();
+    expect(cancelImageUrl).not.toHaveBeenCalled();
+  });
+
   it('does not call onLoad after unmount', async () => {
     const onLoad = vi.fn();
     const { baseElement, unmount } = render(Image, { src: '/test.jpg', onLoad });

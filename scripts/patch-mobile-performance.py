@@ -156,7 +156,7 @@ def patch_timeline_day(path: pathlib.Path) -> None:
         """    const expandedTop = visibleWindow.top - headerHeight - INTERSECTION_EXPAND_TOP - dayOffset;
     const expandedBottom = visibleWindow.bottom + headerHeight + INTERSECTION_EXPAND_BOTTOM - dayOffset;
 """,
-        """    const expand = getTimelineIntersectionExpand();
+        """    const expand = getTimelineIntersectionExpand({ scrolling: manager.scrolling });
     const expandedTop = visibleWindow.top - headerHeight - expand - dayOffset;
     const expandedBottom = visibleWindow.bottom + headerHeight + expand - dayOffset;
 """,
@@ -525,8 +525,8 @@ def main() -> None:
     web = root / 'upstream/web'
     patch_timeline(web / 'src/lib/components/timeline/Timeline.svelte')
 
-    # Keep timeline thumbnails on upstream Immich behavior; video-detail tweaks live in overrides.
-    print('==> Skip Thumbnail/ImageThumbnail patches (use upstream Immich thumbnail flow)')
+    # Keep timeline thumbnails on override Image/Thumbnail; video-detail tweaks live in overrides.
+    print('==> Skip Thumbnail/ImageThumbnail patches (overrides handle media auth + scroll-to-date thumbs)')
 
     if override_exists(root, 'managers/auth-manager.svelte.ts'):
         print('==> Skip auth-manager patch (override present)')
@@ -534,7 +534,10 @@ def main() -> None:
         patch_auth_manager_media_session(web / 'src/lib/managers/auth-manager.svelte.ts')
 
     patch_gallery_viewer(web / 'src/lib/components/shared-components/gallery-viewer/GalleryViewer.svelte')
-    patch_timeline_day(web / 'src/lib/managers/timeline-manager/timeline-day.svelte.ts')
+    if override_exists(root, 'managers/timeline-manager/timeline-day.svelte.ts'):
+        print('==> Skip timeline-day patch (override present)')
+    else:
+        patch_timeline_day(web / 'src/lib/managers/timeline-manager/timeline-day.svelte.ts')
     patch_utils_target_size(web / 'src/lib/utils.ts')
     patch_force_compressed_media(web)
     patch_app_html(web / 'src/app.html')

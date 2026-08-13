@@ -24,8 +24,14 @@ export function isInOrNearViewport(state: ViewportProximity): boolean {
   return state !== ViewportProximity.FarFromViewport;
 }
 
-function calculateViewportProximity(regionTop: number, regionBottom: number, windowTop: number, windowBottom: number) {
-  const expand = getTimelineIntersectionExpand();
+function calculateViewportProximity(
+  regionTop: number,
+  regionBottom: number,
+  windowTop: number,
+  windowBottom: number,
+  scrolling: boolean,
+) {
+  const expand = getTimelineIntersectionExpand({ scrolling });
   if (regionBottom < windowTop - expand || regionTop >= windowBottom + expand) {
     return ViewportProximity.FarFromViewport;
   }
@@ -43,6 +49,7 @@ export function updateTimelineMonthViewportProximity(timelineManager: TimelineMa
     month.top + month.height,
     timelineManager.visibleWindow.top,
     timelineManager.visibleWindow.bottom,
+    timelineManager.scrolling,
   );
 
   month.viewportProximity = proximity;
