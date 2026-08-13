@@ -70,6 +70,7 @@
     muted
     autoplay
     loop
+    playsinline
     preload="none"
     src={url}
     onplay={() => {

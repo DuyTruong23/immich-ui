@@ -8,6 +8,7 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { mediaCapabilitiesManager } from '$lib/managers/media-capabilities-manager.svelte';
   import { autoPlayVideo, lang, loopVideo as loopVideoPreference } from '$lib/stores/preferences.store';
+  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { getAssetHlsSessionUrl, getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
   import { AssetMediaSize, type AssetResponseDto } from '@immich/sdk';
   import { Icon, LoadingSpinner, shortcuts } from '@immich/ui';
@@ -77,8 +78,10 @@
   let videoPlayer: HTMLVideoElement | undefined = $state();
   let isLoading = $state(true);
   let hlsFallback = $state(false);
+  // Realtime HLS transcodes per-segment over the network — much slower on mobile/tunnel than pre-transcoded playback.
+  const isMobileDevice = $derived(mediaQueryManager.pointerCoarse);
   let assetFileUrl = $derived.by(() => {
-    if (featureFlagsManager.value.realtimeTranscoding && !hlsFallback) {
+    if (featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice) {
       return getAssetHlsUrl(assetId);
     }
 
@@ -88,7 +91,9 @@
 
     return getAssetPlaybackUrl({ id: assetId, cacheKey });
   });
-  const useHlsPlayback = $derived(featureFlagsManager.value.realtimeTranscoding && !hlsFallback);
+  const useHlsPlayback = $derived(
+    featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice,
+  );
   const aspectRatio = $derived(asset.width && asset.height ? `${asset.width} / ${asset.height}` : undefined);
   let showVideo = $state(false);
   let hasFocused = $state(false);
@@ -313,6 +318,10 @@
     }
   });
 
+  const handleLoadedMetadata = () => {
+    isLoading = false;
+  };
+
   const handleCanPlay = async (video: HTMLVideoElement) => {
     try {
       if (!video.paused) {
@@ -424,6 +433,7 @@
             playsinline
             {...useSwipe(onSwipe)}
             class="h-full object-contain"
+            onloadedmetadata={handleLoadedMetadata}
             oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
             onended={onVideoEnded}
             onseeking={onSeeking}
@@ -442,7 +452,6 @@
           <video
             bind:this={videoPlayer}
             slot="media"
-            src={assetFileUrl}
             loop={$loopVideoPreference && loopVideo}
             autoplay={$autoPlayVideo}
             preload="metadata"
@@ -450,6 +459,7 @@
             playsinline
             {...useSwipe(onSwipe)}
             class="h-full object-contain"
+            onloadedmetadata={handleLoadedMetadata}
             oncanplay={(e) => handleCanPlay(e.currentTarget)}
             onended={onVideoEnded}
             onseeking={onSeeking}
