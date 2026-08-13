@@ -7,24 +7,20 @@ import {
 } from './feature-updates-config.js';
 
 const BLOB_PATHNAME = 'feature-updates/config.json';
+const BLOB_API_URL = 'https://vercel.com/api/blob';
+const BLOB_API_VERSION = '7';
 const BLOB_READ_TIMEOUT_MS = 2500;
-const BLOB_WRITE_TIMEOUT_MS = 10000;
+const BLOB_WRITE_TIMEOUT_MS = 8000;
 
 let memoryConfig: FeatureUpdatesConfig | null = null;
 
-const withTimeout = async <T>(promise: Promise<T>, ms: number): Promise<T> => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+const fetchWithTimeout = async (url: string, init: RequestInit, ms: number): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
   try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('blob read timed out')), ms);
-      }),
-    ]);
+    return await fetch(url, { ...init, signal: controller.signal });
   } finally {
-    if (timer) {
-      clearTimeout(timer);
-    }
+    clearTimeout(timer);
   }
 };
 
@@ -37,16 +33,29 @@ const readEnvConfig = (): FeatureUpdatesConfig | null => {
   return parseFeatureUpdatesConfig(raw);
 };
 
+/** Token `vercel_blob_rw_<storeId>_<secret>` → public CDN URL, không cần SDK. */
+const publicBlobUrl = (token: string): string | null => {
+  const storeId = token.split('_')[3];
+  if (!storeId) {
+    return null;
+  }
+
+  return `https://${storeId}.public.blob.vercel-storage.com/${BLOB_PATHNAME}`;
+};
+
 const readBlobConfig = async (): Promise<FeatureUpdatesConfig | null> => {
   const token = getEnv('BLOB_READ_WRITE_TOKEN');
   if (!token) {
     return null;
   }
 
+  const url = publicBlobUrl(token);
+  if (!url) {
+    return null;
+  }
+
   try {
-    const { head } = await import('@vercel/blob');
-    const blob = await withTimeout(head(BLOB_PATHNAME, { token }), BLOB_READ_TIMEOUT_MS);
-    const response = await withTimeout(fetch(blob.url, { cache: 'no-store' }), BLOB_READ_TIMEOUT_MS);
+    const response = await fetchWithTimeout(url, { cache: 'no-store' }, BLOB_READ_TIMEOUT_MS);
     if (!response.ok) {
       return null;
     }
@@ -82,15 +91,28 @@ export const writeFeatureUpdatesConfig = async (config: FeatureUpdatesConfig): P
     throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
   }
 
-  const { put } = await import('@vercel/blob');
-  await withTimeout(
-    put(BLOB_PATHNAME, JSON.stringify(config, null, 2), {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'application/json',
-      token,
-    }),
+  const params = new URLSearchParams({ pathname: BLOB_PATHNAME });
+  const response = await fetchWithTimeout(
+    `${BLOB_API_URL}/?${params.toString()}`,
+    {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'x-api-version': BLOB_API_VERSION,
+        'x-content-type': 'application/json',
+        'x-add-random-suffix': '0',
+        'x-allow-overwrite': '1',
+        'x-vercel-blob-access': 'public',
+      },
+      body: JSON.stringify(config, null, 2),
+    },
     BLOB_WRITE_TIMEOUT_MS,
   );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Blob put failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+  }
+
   memoryConfig = config;
 };

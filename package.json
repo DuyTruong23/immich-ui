@@ -27,8 +27,5 @@
     "branch": "bash scripts/create-branch.sh",
     "check:range": "bash scripts/check-video-range.sh",
     "postinstall": "pnpm --filter @immich/sdk build"
-  },
-  "dependencies": {
-    "@vercel/blob": "^0.27.1"
   }
 }

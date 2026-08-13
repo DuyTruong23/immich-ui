@@ -1,4 +1,4 @@
-import { verifyAdminSessionFromRequest } from './_lib/immich-auth.js';
+import { verifyAdminSession } from './_lib/immich-auth.js';
 import {
   DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
@@ -7,9 +7,9 @@ import {
 import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
 import { json } from './_lib/email.js';
 
-/** Node.js — @vercel/blob dùng stream/undici, không được chạy Edge (làm hỏng middleware). */
+/** Edge — Node.js functions không được invoke trên static+middleware; Blob dùng fetch, không SDK. */
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'edge',
 };
 
 type FeatureUpdatesBody = {
@@ -49,7 +49,7 @@ export default async function handler(request: Request): Promise<Response> {
       return json({ error: 'Invalid JSON body' }, 400);
     }
 
-    const admin = await verifyAdminSessionFromRequest(request, body.accessToken);
+    const admin = await verifyAdminSession(body.accessToken, request.headers.get('cookie') ?? undefined);
     if (!admin) {
       return json({ error: 'Admin authentication required' }, 401);
     }

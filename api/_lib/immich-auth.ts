@@ -13,6 +13,25 @@ const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UP
 
 const isLocalDevRuntime = (): boolean => getEnv('VERCEL') !== '1';
 
+const AUTH_TIMEOUT_MS = 5000;
+
+const fetchImmichUser = async (url: string, headers: Record<string, string>): Promise<ImmichUser | null> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { headers, signal: controller.signal });
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as ImmichUser;
+  } catch (error) {
+    console.error('[immich-auth] fetchImmichUser failed:', error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 /** Xác minh session qua cùng origin request (middleware proxy → Immich). */
 export const verifySessionFromRequest = async (
   request: Request,
@@ -47,29 +66,23 @@ export const verifySessionFromRequest = async (
 export const verifySession = async (accessToken?: string, cookieHeader?: string): Promise<ImmichUser | null> => {
   const token = accessToken?.trim();
   if (token) {
-    const response = await fetch(`${getUpstreamBase()}/api/users/me`, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+    const user = await fetchImmichUser(`${getUpstreamBase()}/api/users/me`, {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
     });
-
-    if (response.ok) {
-      return (await response.json()) as ImmichUser;
+    if (user) {
+      return user;
     }
   }
 
   const cookies = cookieHeader?.trim();
   if (cookies) {
-    const response = await fetch(`${getUpstreamBase()}/api/users/me`, {
-      headers: {
-        Accept: 'application/json',
-        Cookie: cookies,
-      },
+    const user = await fetchImmichUser(`${getUpstreamBase()}/api/users/me`, {
+      Accept: 'application/json',
+      Cookie: cookies,
     });
-
-    if (response.ok) {
-      return (await response.json()) as ImmichUser;
+    if (user) {
+      return user;
     }
   }
 
