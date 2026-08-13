@@ -19,6 +19,11 @@ import {
   restoreDevSession,
 } from '$custom/hooks/ui-dev-mode';
 import { clearStoredAccessToken } from '$custom/hooks/access-token';
+import {
+  clearSessionExpiry,
+  isSessionExpired,
+  watchSessionExpiry,
+} from '$custom/hooks/session-expiry';
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
@@ -48,6 +53,7 @@ class AuthManager {
   #preferences = $state<UserPreferencesResponseDto>();
   #mediaSessionKey = $state<string | undefined>();
   #mediaSessionPromise: Promise<void> | undefined;
+  #expiryWatcherCleanup: (() => void) | undefined;
 
   get authenticated() {
     return !!(this.#user && this.#preferences);
@@ -74,13 +80,19 @@ class AuthManager {
       SessionDelete: () => goto(Route.logout()),
       AuthLogin: () => {
         void this.ensureMediaSessionKey();
+        this.#startSessionExpiryWatcher();
       },
     });
   }
 
   async load() {
+    if (this.#checkSessionExpiry()) {
+      return;
+    }
+
     if (authManager.authenticated) {
       await this.ensureMediaSessionKey();
+      this.#startSessionExpiryWatcher();
       return;
     }
 
@@ -125,6 +137,7 @@ class AuthManager {
 
       eventManager.emit('AuthUserLoaded', user);
       await this.ensureMediaSessionKey();
+      this.#startSessionExpiryWatcher();
     } catch {
       // noop
     }
@@ -210,11 +223,38 @@ class AuthManager {
     this.#preferences = undefined;
     this.#mediaSessionKey = undefined;
     this.#mediaSessionPromise = undefined;
+    this.#stopSessionExpiryWatcher();
     clearStoredAccessToken();
+    clearSessionExpiry();
 
     if (this.#isSessionOnlyAuth()) {
       clearSessionActive();
     }
+  }
+
+  #checkSessionExpiry(): boolean {
+    if (!browser || isUiDevMode() || !isSessionExpired()) {
+      return false;
+    }
+
+    void this.logout();
+    return true;
+  }
+
+  #startSessionExpiryWatcher() {
+    if (!browser || isUiDevMode()) {
+      return;
+    }
+
+    this.#stopSessionExpiryWatcher();
+    this.#expiryWatcherCleanup = watchSessionExpiry(() => {
+      void this.logout();
+    });
+  }
+
+  #stopSessionExpiryWatcher() {
+    this.#expiryWatcherCleanup?.();
+    this.#expiryWatcherCleanup = undefined;
   }
 
   #isSessionOnlyAuth() {

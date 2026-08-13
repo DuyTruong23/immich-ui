@@ -6,6 +6,7 @@
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
+  import { markSessionExpiry } from '$custom/hooks/session-expiry';
   import { goto } from '$app/navigation';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -64,6 +65,7 @@
 
   const onSuccess = async (user: LoginResponseDto) => {
     storeAccessToken(user.accessToken);
+    markSessionExpiry();
     password = '';
     email = '';
 
