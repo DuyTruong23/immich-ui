@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FEATURE_UPDATES } from '$custom/constants/feature-updates';
+  import { FEATURE_UPDATES, FEATURE_UPDATE_VERSION } from '$custom/constants/feature-updates';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
   import { Field, Button, HStack, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
   import { onDestroy, onMount } from 'svelte';
@@ -71,6 +71,12 @@
         Chế độ preview — dữ liệu mock cho local dev
       </Text>
     {/if}
+
+    <span
+      class="mb-3 inline-flex rounded-full bg-(--md-sys-color-primary-container) px-2.5 py-0.5 text-xs font-semibold tracking-wide text-(--md-sys-color-on-primary-container)"
+    >
+      {FEATURE_UPDATE_VERSION}
+    </span>
 
     <Text class="text-(--md-sys-color-on-surface-variant)">
       Gallery vừa được cập nhật với các thay đổi sau:

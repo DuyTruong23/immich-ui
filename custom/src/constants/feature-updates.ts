@@ -1,6 +1,9 @@
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { FEATURE_UPDATES_MOCK } from '$custom/mocks/feature-updates';
 
+/** Phiên bản hiển thị trên modal "Tính năng được cập nhật" sau đăng nhập */
+export const FEATURE_UPDATE_VERSION = 'v1.0.3';
+
 export const FEATURE_UPDATES = [
   'Modal thông báo tính năng mới sau đăng nhập — gửi góp ý trực tiếp cho admin',
   'Trang bảo trì thân thiện khi hệ thống không khả dụng (404, lỗi server)',
