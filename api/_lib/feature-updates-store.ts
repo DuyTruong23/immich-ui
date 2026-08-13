@@ -1,4 +1,3 @@
-import { head, put } from '@vercel/blob';
 import { getEnv } from './email.js';
 import {
   DEFAULT_FEATURE_UPDATES,
@@ -45,6 +44,7 @@ const readBlobConfig = async (): Promise<FeatureUpdatesConfig | null> => {
   }
 
   try {
+    const { head } = await import('@vercel/blob');
     const blob = await withTimeout(head(BLOB_PATHNAME, { token }), BLOB_READ_TIMEOUT_MS);
     const response = await withTimeout(fetch(blob.url, { cache: 'no-store' }), BLOB_READ_TIMEOUT_MS);
     if (!response.ok) {
@@ -82,6 +82,7 @@ export const writeFeatureUpdatesConfig = async (config: FeatureUpdatesConfig): P
     throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
   }
 
+  const { put } = await import('@vercel/blob');
   await withTimeout(
     put(BLOB_PATHNAME, JSON.stringify(config, null, 2), {
       access: 'public',

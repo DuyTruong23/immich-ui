@@ -7,8 +7,9 @@ import {
 import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
 import { json } from './_lib/email.js';
 
+/** Node.js — @vercel/blob dùng stream/undici, không được chạy Edge (làm hỏng middleware). */
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
 type FeatureUpdatesBody = {
