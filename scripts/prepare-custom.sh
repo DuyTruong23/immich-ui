@@ -45,4 +45,7 @@ fi
 source "$ROOT/scripts/restore-upstream-ui.sh"
 restore_upstream_ui "$ROOT"
 
+echo "==> Patch media URL routing (PUBLIC_IMMICH_MEDIA_URL)"
+python "$ROOT/scripts/patch-utils-media-url.py" "$ROOT"
+
 echo "Custom layer prepared."

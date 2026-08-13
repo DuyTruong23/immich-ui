@@ -1,0 +1,126 @@
+/*
+ * Material Design 3 — admin tables & data lists
+ * @immich/ui Table uses div layout (bg-dark-900 / odd:bg-dark-900), not semantic <table>.
+ * M3 bridge remaps dark-* to light surfaces in dark mode — override for readable contrast.
+ */
+
+@layer components {
+  /* @immich/ui Table header row */
+  .bg-dark-900.flex.w-full.place-items-center {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
+  /* @immich/ui Table striped body rows */
+  .flex.w-full.place-items-center.odd\:bg-dark-900 > div {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .flex.w-full.place-items-center.odd\:bg-dark-900:nth-child(odd) {
+    background-color: var(--md-sys-color-surface-container-low) !important;
+  }
+
+  .flex.w-full.place-items-center.even\:bg-dark-950:nth-child(even) {
+    background-color: var(--md-sys-color-surface-container) !important;
+  }
+
+  .flex.w-full.place-items-center.odd\:bg-dark-900 a {
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  .dark .flex.w-full.place-items-center.odd\:bg-dark-900:nth-child(odd) {
+    background-color: var(--md-sys-color-surface-container) !important;
+  }
+
+  .dark .flex.w-full.place-items-center.even\:bg-dark-950:nth-child(even) {
+    background-color: var(--md-sys-color-surface-container-low) !important;
+  }
+
+  /* Legacy / custom HTML tables (e.g. AlbumsTable, AdminCard folders) */
+  table thead {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
+  table tbody td {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  table tbody td a {
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  /* AdminCard inner tables — folders, exclusion patterns */
+  .dark .dark\:bg-light-100 table tbody tr,
+  table tbody tr.block {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .dark .dark\:bg-light-100 table tbody tr:last-child,
+  table tbody tr.block:last-child {
+    border-bottom: none;
+  }
+
+  .dark .dark\:bg-light-100 table tbody td {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .dark .dark\:bg-light-100 .font-monospace,
+  .dark .dark\:bg-light-100 [class*='font-monospace'] {
+    background-color: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-surface-container-high)) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  /* Server statistics cards (library detail, user detail, server status) */
+  .rounded-3xl.bg-subtle.text-primary {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    color: var(--md-sys-color-on-surface) !important;
+    box-shadow: var(--md-sys-elevation-1);
+  }
+
+  .rounded-3xl.bg-subtle.text-primary .text-gray-300,
+  .rounded-3xl.bg-subtle.text-primary .dark\:text-gray-600 {
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
+  .rounded-3xl.bg-subtle.text-primary .text-primary {
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  /* Empty placeholder (no libraries, empty folders) */
+  .rounded-3xl.bg-gray-50.dark\:bg-immich-dark-gray {
+    background-color: var(--md-sys-color-surface-container) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .rounded-3xl.bg-gray-50.dark\:bg-immich-dark-gray p {
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
+  /* Library list skeleton loader */
+  .skeleton-loader {
+    background-color: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 24%, transparent) !important;
+  }
+
+  .skeleton-loader::after {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--md-sys-color-on-surface) 16%, transparent) 50%,
+      transparent
+    ) !important;
+  }
+
+  @media (max-width: 767px) {
+    .flex.w-full.place-items-center.odd\:bg-dark-900 > div {
+      padding-block: 0.75rem;
+    }
+
+    /* AdminCard folder rows — stack path + actions on mobile */
+    .dark .dark\:bg-light-100 table tbody tr.block,
+    .dark .dark\:bg-light-100 table tbody tr[class*='md:table-row'] {
+      padding-block: 0.75rem;
+    }
+  }
+}

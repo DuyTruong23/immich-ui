@@ -24,6 +24,7 @@ import { init, register, t } from 'svelte-i18n';
 import { derived, get } from 'svelte/store';
 import { defaultLang, locales } from '$lib/constants';
 import { authManager } from '$lib/managers/auth-manager.svelte';
+import { getMediaBaseUrl } from '$lib/utils/media-base-url';
 import { downloadManager } from '$lib/managers/download-manager.svelte';
 import { alwaysLoadOriginalFile, lang } from '$lib/stores/preferences.store';
 import { isWebCompatibleImage } from '$lib/utils/asset-utils';
@@ -184,7 +185,7 @@ const createUrl = (path: string, parameters?: Record<string, unknown>) => {
   const url = new URL(path, 'https://example.com');
   url.search = searchParameters.toString();
 
-  return getBaseUrl() + url.pathname + url.search + url.hash;
+  return getMediaBaseUrl() + url.pathname + url.search + url.hash;
 };
 
 type AssetUrlOptions = { id: string; cacheKey?: string | null; edited?: boolean; size?: AssetMediaSize };

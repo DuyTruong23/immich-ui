@@ -15,20 +15,22 @@
   let width = $derived(fullWidth ? 'w-full' : 'w-1/2');
 
   const hoverClasses = onClick
-    ? `border dark:border-immich-dark-gray hover:bg-immich-primary/5 dark:hover:bg-immich-dark-primary/25`
-    : '';
+    ? 'border border-(--md-sys-color-outline-variant) hover:bg-(--md-state-primary-hover)'
+    : 'border border-(--md-sys-color-outline-variant)';
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <svelte:element
   this={onClick ? 'button' : 'div'}
   onclick={onClick}
-  class="{width} {className} flex flex-col place-content-center place-items-center rounded-3xl bg-gray-50 p-5 dark:bg-immich-dark-gray {hoverClasses}"
+  class="{width} {className} flex flex-col place-content-center place-items-center rounded-3xl p-5 {hoverClasses}"
+  style:background="var(--md-sys-color-surface-container)"
+  style:color="var(--md-sys-color-on-surface)"
 >
-  <img {src} alt="" width="500" draggable="false" />
+  <img {src} alt="" width="500" draggable="false" class="max-w-full" />
 
   {#if title}
     <h2 class="my-4 text-xl font-medium">{title}</h2>
   {/if}
-  <p class="text-immich-text-gray-500 text-center font-light dark:text-immich-dark-fg">{text}</p>
+  <p class="text-center font-light" style:color="var(--md-sys-color-on-surface-variant)">{text}</p>
 </svelte:element>

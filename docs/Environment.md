@@ -16,6 +16,7 @@ SvelteKit inject `PUBLIC_*` vào bundle lúc build. Thay đổi trên Vercel yê
 | Biến | Mặc định | Mô tả |
 |---|---|---|
 | `PUBLIC_IMMICH_SERVER_URL` | `""` | URL API production khi frontend/API khác origin |
+| `PUBLIC_IMMICH_MEDIA_URL` | `""` | URL tunnel trực tiếp cho video/ảnh (bypass Vercel proxy). Ví dụ `https://api.gallery-app.pp.ua` |
 | `PUBLIC_APP_NAME` | `Photo Gallery` | Tên app (title, dashboard) |
 | `PUBLIC_COMPANY_NAME` | `""` | Tên công ty |
 | `PUBLIC_THEME` | `system` | `light` \| `dark` \| `system` |

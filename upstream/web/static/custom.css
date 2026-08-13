@@ -7,6 +7,8 @@
 @import '/branding/theme-light.css';
 @import '/branding/theme-dark.css';
 @import '/branding/m3/components.css';
+@import '/branding/m3/admin.css';
+@import '/branding/m3/timeline.css';
 @import '/branding/m3/shell.css';
 @import '/branding/m3/states.css';
 @import '/branding/m3/media-chrome.css';

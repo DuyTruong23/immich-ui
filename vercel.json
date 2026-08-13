@@ -20,10 +20,6 @@
   ],
   "rewrites": [
     {
-      "source": "/api/((?!notify-login$).*)",
-      "destination": "https://immich.gallery-app.pp.ua/api/$1"
-    },
-    {
       "source": "/((?!api(?:/|$)|assets/|_app/|favicon|service-worker|manifest\\.json|custom\\.css|.*\\..*).*)",
       "destination": "/index.html"
     }

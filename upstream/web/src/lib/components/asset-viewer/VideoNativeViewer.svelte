@@ -163,7 +163,7 @@
     },
     useMediaCapabilities: false,
     xhrSetup: (xhr: XMLHttpRequest, url: string) => {
-      const authenticatedUrl = new URL(url, location.origin);
+      const authenticatedUrl = new URL(url, assetFileUrl || location.href);
       for (const [key, value] of Object.entries(authManager.params)) {
         if (value) {
           authenticatedUrl.searchParams.set(key, value as string);
@@ -419,6 +419,7 @@
             slot="media"
             loop={$loopVideoPreference && loopVideo}
             autoplay={$autoPlayVideo}
+            preload="metadata"
             disablePictureInPicture
             playsinline
             {...useSwipe(onSwipe)}
@@ -444,6 +445,7 @@
             src={assetFileUrl}
             loop={$loopVideoPreference && loopVideo}
             autoplay={$autoPlayVideo}
+            preload="metadata"
             disablePictureInPicture
             playsinline
             {...useSwipe(onSwipe)}

@@ -25,6 +25,7 @@ declare module '$env/static/public' {
   export const PUBLIC_IMMICH_PAY_HOST: string;
   export const PUBLIC_IMMICH_BUY_HOST: string;
   export const PUBLIC_IMMICH_SERVER_URL: string;
+  export const PUBLIC_IMMICH_MEDIA_URL: string;
   export const PUBLIC_APP_NAME: string;
   export const PUBLIC_COMPANY_NAME: string;
   export const PUBLIC_THEME: string;

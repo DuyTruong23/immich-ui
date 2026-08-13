@@ -1,0 +1,21 @@
+/*
+ * Material Design 3 — timeline / asset grid selection
+ */
+
+@layer components {
+  [data-asset][data-selected] {
+    background-color: var(--md-sys-color-primary-container) !important;
+    border-radius: var(--md-sys-shape-corner-small) !important;
+  }
+
+  [data-asset][data-selected] > div > div {
+    transform: scale(0.92) !important;
+    border-radius: var(--md-sys-shape-corner-small) !important;
+  }
+
+  @media (max-width: 767px) {
+    [data-asset][data-selected] > div > div {
+      transform: scale(0.94) !important;
+    }
+  }
+}

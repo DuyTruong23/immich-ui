@@ -12,7 +12,9 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
 | `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar |
-| `lib/commands.ts` | Ẩn Explore khỏi command palette |
+| `lib/components/asset-viewer/VideoNativeViewer.svelte` | `preload="metadata"`, HLS xhrSetup cross-origin |
+| `lib/components/assets/thumbnail/VideoThumbnail.svelte` | `preload="none"` cho hover preview |
+| `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
 
 | File (custom routes) | Thay thế |
 |---|---|

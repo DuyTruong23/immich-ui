@@ -64,6 +64,21 @@
     box-shadow: var(--md-sys-elevation-1);
   }
 
+  /* Card secondary — dark mode: bg-light-100 maps to a light surface via M3 bridge */
+  .dark .dark\:bg-light-100 {
+    background-color: var(--md-sys-color-surface-container) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .dark .dark\:bg-light-100 .dark\:text-white {
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .dark .dark\:bg-light-100 .text-gray-500,
+  .dark .dark\:bg-light-100 .dark\:text-gray-400 {
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
   /* ── Modals / dialogs ── */
   [data-dialog-content],
   [role='dialog'][class*='rounded'] {
