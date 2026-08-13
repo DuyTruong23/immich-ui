@@ -6,8 +6,8 @@ const getUpstreamBase = (): string => {
 };
 
 export const config = {
-  // Bỏ qua /api/notify-login — route serverless riêng, không proxy sang Immich
-  matcher: ['/api/:path((?!notify-login$).*)'],
+  // Bỏ qua các route serverless riêng — không proxy sang Immich
+  matcher: ['/api/:path((?!notify-login$|notify-deploy$).*)'],
 };
 
 /** Chạy trước static/rewrites — proxy /api → Immich tunnel */

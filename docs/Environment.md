@@ -80,6 +80,34 @@ LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
 
 Luồng: user login → client gửi `accessToken` tới `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
 
+## Thông báo deploy Vercel (email admin)
+
+Chỉ hoạt động trên **Vercel production** (`api/notify-deploy.ts`). Cấu hình webhook trong Vercel Dashboard → Settings → Webhooks.
+
+| Biến | Bắt buộc | Mô tả |
+|---|---|---|
+| `DEPLOY_NOTIFY_ENABLED` | Có | `true` để bật gửi email |
+| `DEPLOY_NOTIFY_WEBHOOK_SECRET` | Có | Secret hiển thị khi tạo webhook Vercel (xác minh `x-vercel-signature`) |
+| `RESEND_API_KEY` | Có | Dùng chung với login notify |
+| `ADMIN_NOTIFY_EMAIL` | Có | Email admin nhận thông báo |
+| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi (hoặc `DEPLOY_NOTIFY_FROM`) |
+
+**Webhook URL:** `https://<domain>/api/notify-deploy`
+
+**Events cần chọn:** `Deployment Succeeded`, `Deployment Error`
+
+Ví dụ Vercel:
+
+```env
+DEPLOY_NOTIFY_ENABLED=true
+DEPLOY_NOTIFY_WEBHOOK_SECRET=whsec_xxxxxxxx
+RESEND_API_KEY=re_xxxxxxxx
+ADMIN_NOTIFY_EMAIL=admin@example.com
+LOGIN_NOTIFY_FROM=Photo Gallery <noreply@yourdomain.com>
+```
+
+Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → gửi email qua Resend.
+
 ## Production tối thiểu (Vercel)
 
 Chỉ cần:

@@ -39,6 +39,7 @@ PUBLIC_DEFAULT_THEME=dark
 
 - **`middleware.ts`** (root) — **nguồn duy nhất** proxy `/api/*` → `IMMICH_SERVER_URL` (Edge Middleware, chạy trước SPA fallback)
 - **`api/notify-login.ts`** — route riêng, không proxy Immich media
+- **`api/notify-deploy.ts`** — webhook Vercel deploy success/fail → email Resend
 - **`vercel.json`** — chỉ SPA fallback; **không** rewrite `/api` (tránh trùng hardcode tunnel URL)
 
 Xem [CloudflareTunnel.md](./CloudflareTunnel.md) cho subdomain `api.gallery-app.pp.ua`.
