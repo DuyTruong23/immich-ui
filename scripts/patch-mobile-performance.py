@@ -471,14 +471,31 @@ def patch_auth_manager_media_session(path: pathlib.Path) -> None:
     path.write_text(text, encoding='utf-8')
 
 
+def override_exists(root: pathlib.Path, relative: str) -> bool:
+    return (root / 'overrides/lib' / relative).is_file()
+
+
 def main() -> None:
     root = pathlib.Path(sys.argv[1])
     web = root / 'upstream/web'
     patch_timeline(web / 'src/lib/components/timeline/Timeline.svelte')
-    patch_thumbnail(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
-    patch_thumbnail_media_auth(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
-    patch_image_thumbnail_reset(web / 'src/lib/components/assets/thumbnail/ImageThumbnail.svelte')
-    patch_auth_manager_media_session(web / 'src/lib/managers/auth-manager.svelte.ts')
+
+    if override_exists(root, 'components/assets/thumbnail/Thumbnail.svelte'):
+        print('==> Skip Thumbnail patches (override present)')
+    else:
+        patch_thumbnail(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
+        patch_thumbnail_media_auth(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
+
+    if override_exists(root, 'components/assets/thumbnail/ImageThumbnail.svelte'):
+        print('==> Skip ImageThumbnail patch (override present)')
+    else:
+        patch_image_thumbnail_reset(web / 'src/lib/components/assets/thumbnail/ImageThumbnail.svelte')
+
+    if override_exists(root, 'managers/auth-manager.svelte.ts'):
+        print('==> Skip auth-manager patch (override present)')
+    else:
+        patch_auth_manager_media_session(web / 'src/lib/managers/auth-manager.svelte.ts')
+
     patch_gallery_viewer(web / 'src/lib/components/shared-components/gallery-viewer/GalleryViewer.svelte')
     patch_timeline_day(web / 'src/lib/managers/timeline-manager/timeline-day.svelte.ts')
     patch_utils_target_size(web / 'src/lib/utils.ts')
