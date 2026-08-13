@@ -171,7 +171,7 @@
     </Field>
   </ModalBody>
 
-  <ModalFooter>
+  <ModalFooter class="feature-update-footer">
     <HStack fullWidth gap={3}>
       <Button shape="round" color="secondary" fullWidth onclick={handleDismiss}>Đóng</Button>
       <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!hasFeedback}>
@@ -186,9 +186,18 @@
     display: flex;
     flex-direction: column;
     max-height: min(88dvh, 640px);
+    overflow: hidden;
   }
 
-  :global(.pg-feature-update-modal > :last-child) {
+  /* Card inner column — must shrink so footer stays in viewport */
+  :global(.pg-feature-update-modal > div) {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  :global(.pg-feature-update-modal .feature-update-footer) {
     flex-shrink: 0;
   }
 

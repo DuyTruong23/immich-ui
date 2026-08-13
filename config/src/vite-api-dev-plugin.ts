@@ -7,10 +7,11 @@ import type { Plugin, ViteDevServer } from 'vite';
 const rootDir = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 
 /** Vercel serverless routes handled locally during Vite dev (not proxied to Immich). */
-export const DEV_API_ROUTES = ['/api/feature-updates'] as const;
+export const DEV_API_ROUTES = ['/api/feature-updates', '/api/notify-login'] as const;
 
 const DEV_API_HANDLERS: Record<string, string> = {
   '/api/feature-updates': path.resolve(rootDir, 'api/feature-updates.ts'),
+  '/api/notify-login': path.resolve(rootDir, 'api/notify-login.ts'),
 };
 
 export const isDevApiRoute = (url?: string): boolean => {
