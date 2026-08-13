@@ -47,7 +47,7 @@
 {#if showServerConnectionPage}
   <ServerConnectionErrorPage code={getServerConnectionErrorCode(error)} message={error?.message} />
 {:else}
-  <div class="flex h-dvh w-dvw flex-col">
+  <div class="flex h-dvh w-full flex-col">
     <section>
       <div class="flex place-items-center border-b px-6 py-4 dark:border-b-immich-dark-gray">
         <Link href="/photos">

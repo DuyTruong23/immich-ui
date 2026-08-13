@@ -96,9 +96,9 @@
 
   /* ── Inputs / text fields (outlined) ── */
   .immich-form-input,
-  input:not([type='checkbox']):not([type='radio']):not([type='range']),
-  textarea,
-  select {
+  .immich-form-input input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  form .immich-form-input textarea,
+  form .immich-form-input select {
     border-radius: var(--md-sys-shape-corner-extra-small) !important;
     border: 1px solid var(--md-sys-color-outline) !important;
     background-color: var(--md-sys-color-surface-container-highest) !important;
@@ -106,22 +106,21 @@
   }
 
   .immich-form-input:focus-within,
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
+  .immich-form-input input:focus-visible,
+  .immich-form-input textarea:focus-visible,
+  .immich-form-input select:focus-visible {
     border-color: var(--md-sys-color-primary) !important;
     outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 24%, transparent) !important;
     outline-offset: 0 !important;
   }
 
-  .immich-form-label,
-  label {
+  .immich-form-label {
     color: var(--md-sys-color-on-surface-variant) !important;
     font-size: var(--md-sys-typescale-body-medium-size);
   }
 
-  /* ── Badges / chips ── */
-  [class*='rounded-full'][class*='bg-'] {
+  /* ── Chips (text pills, not circular icon badges) ── */
+  [class*='rounded-full'][class*='px-'][class*='bg-']:not([class*='size-']):not([class*='h-']):not([class*='w-']) {
     border-radius: var(--md-sys-shape-corner-small) !important;
     font-size: var(--md-sys-typescale-label-medium-size);
     font-weight: var(--md-sys-typescale-label-medium-weight);
@@ -157,12 +156,7 @@
     box-shadow: var(--md-sys-elevation-3) !important;
   }
 
-  /* ── Search bar ── */
-  #search-input,
-  [id*='search'] input {
-    border-radius: var(--md-sys-shape-corner-full) !important;
-    background-color: var(--md-sys-color-surface-container-highest) !important;
-  }
+  /* Search bar keeps Immich Tailwind radius/background (pill + open-suggestions). */
 
   /* ── Setting accordion ── */
   [class*='rounded-2xl'][class*='border'][class*='bg-gray'] {

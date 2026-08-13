@@ -53,19 +53,18 @@
   );
 </script>
 
-<header>
+<div class="flex h-dvh flex-col overflow-hidden">
   {#if !hideNavbar}
-    <NavigationBar {onUploadClick} />
-    <UiDevModeBanner />
+    <header class="shrink-0">
+      <NavigationBar {onUploadClick} />
+      <UiDevModeBanner />
+    </header>
   {/if}
-</header>
-<div
-  tabindex="-1"
-  class="relative z-0 grid grid-cols-[--spacing(0)_auto] overflow-hidden sidebar:grid-cols-[--spacing(64)_auto]
-    {hideNavbar ? 'h-dvh' : 'h-[calc(100dvh-var(--navbar-height))] max-md:h-[calc(100dvh-var(--navbar-height-md))]'}
-    {hideNavbar ? 'pt-(--navbar-height)' : ''}
-    {hideNavbar ? 'max-md:pt-(--navbar-height-md)' : ''}"
->
+  <div
+    tabindex="-1"
+    class="relative z-0 grid min-h-0 flex-1 grid-cols-[--spacing(0)_auto] overflow-hidden sidebar:grid-cols-[--spacing(64)_auto]
+      {hideNavbar ? 'pt-(--navbar-height) max-md:pt-(--navbar-height-md)' : ''}"
+  >
   {#if sidebar}
     {@render sidebar()}
   {:else}
@@ -84,7 +83,7 @@
             <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>
           {/if}
           {#if description}
-            <p class="text-sm text-gray-400 dark:text-gray-600">{description}</p>
+            <p class="text-sm text-(--md-sys-color-on-surface-variant)">{description}</p>
           {/if}
         </div>
 
@@ -113,4 +112,5 @@
       </div>
     {/if}
   </main>
+  </div>
 </div>

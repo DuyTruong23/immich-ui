@@ -387,7 +387,7 @@
 {#if showVideo}
   <div
     transition:fade={{ duration: motionDuration(assetViewerFadeDuration) }}
-    class="flex h-full place-content-center place-items-center select-none"
+    class="relative flex h-full place-content-center place-items-center select-none"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
   >

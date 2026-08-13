@@ -6,7 +6,6 @@
 @layer components {
   /* ── Shared motion ── */
   button,
-  a[href],
   [role='button'],
   [role='menuitem'],
   [role='option'],
@@ -252,9 +251,9 @@
 
   /* ── Inputs hover ── */
   .immich-form-input:hover:not(:focus-within),
-  input:not([type='checkbox']):not([type='radio']):not([type='range']):hover:not(:focus-visible),
-  textarea:hover:not(:focus-visible),
-  select:hover:not(:focus-visible) {
+  .immich-form-input input:hover:not(:focus-visible),
+  .immich-form-input textarea:hover:not(:focus-visible),
+  .immich-form-input select:hover:not(:focus-visible) {
     border-color: var(--md-sys-color-on-surface) !important;
   }
 

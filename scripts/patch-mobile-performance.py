@@ -200,6 +200,51 @@ def patch_app_html(path: pathlib.Path) -> None:
         '    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />',
         'app.html viewport',
     )
+    text = replace_once(
+        text,
+        """      #stencil {
+        --stencil-width: 150px;
+        display: flex;
+        width: var(--stencil-width);
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: calc(50vh - var(--stencil-width) / 2);
+        margin-bottom: 100vh;
+        place-items: center;
+        justify-content: center;
+        overflow: hidden;
+        visibility: hidden;
+        animation:
+          0s linear 0.3s forwards delayedVisibility,
+          loadspin 8s linear infinite;
+      }""",
+        """      html:has(#stencil),
+      html:has(#stencil) body {
+        overflow: hidden;
+        height: 100%;
+      }
+
+      #stencil {
+        --stencil-width: 150px;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        margin: 0;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        visibility: hidden;
+        animation: 0s linear 0.3s forwards delayedVisibility;
+      }
+
+      #stencil svg {
+        width: var(--stencil-width);
+        height: auto;
+        animation: loadspin 8s linear infinite;
+      }""",
+        'app.html stencil loading scroll fix',
+    )
     path.write_text(text, encoding='utf-8')
 
 

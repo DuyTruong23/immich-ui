@@ -145,14 +145,25 @@
 <style>
   .skeleton-loader {
     position: relative;
-    border-radius: 4px;
     overflow: hidden;
+    border-radius: 4px;
+    background-color: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface-variant, #938f99) 24%,
+      transparent
+    );
   }
 
   .skeleton-loader::after {
     content: '';
     position: absolute;
     inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 16%, transparent) 50%,
+      transparent
+    );
     background-repeat: no-repeat;
     background-size: 200% 100%;
     background-position: 200% 0;

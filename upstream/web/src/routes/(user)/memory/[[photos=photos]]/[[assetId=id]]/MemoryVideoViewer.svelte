@@ -24,7 +24,7 @@
 </script>
 
 {#if showVideo}
-  <div class="bg-pink-9000 size-full" transition:fade={{ duration: assetViewerFadeDuration }}>
+  <div class="size-full bg-black" transition:fade={{ duration: assetViewerFadeDuration }}>
     <media-controller id="memory-video" nohotkeys class="size-full rounded-2xl object-contain transition-all">
       <!-- svelte-ignore a11y_media_has_caption -->
       <video

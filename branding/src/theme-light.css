@@ -1,7 +1,1 @@
-html.light {
-  --immich-primary: var(--immich-primary, 103 80 164);
-}
-
-html.dark {
-  --immich-primary: var(--immich-dark-primary, 208 188 255);
-}
+/* Light Immich RGB aliases — values come from m3/immich-bridge.css */

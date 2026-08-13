@@ -49,6 +49,7 @@
     --pg-primary-hover: #523c8b;
     --pg-surface: var(--md-sys-color-surface);
     --pg-surface-muted: var(--md-sys-color-surface-container);
+    --pg-surface-raised: var(--md-sys-color-surface-container-low);
     --pg-text: var(--md-sys-color-on-surface);
     --pg-text-muted: var(--md-sys-color-on-surface-variant);
     --pg-border: var(--md-sys-color-outline-variant);
@@ -102,6 +103,7 @@
     --pg-primary-hover: #e4d0ff;
     --pg-surface: var(--md-sys-color-surface);
     --pg-surface-muted: var(--md-sys-color-surface-container);
+    --pg-surface-raised: var(--md-sys-color-surface-container-high);
     --pg-text: var(--md-sys-color-on-surface);
     --pg-text-muted: var(--md-sys-color-on-surface-variant);
     --pg-border: var(--md-sys-color-outline-variant);

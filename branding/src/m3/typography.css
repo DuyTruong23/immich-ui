@@ -47,23 +47,4 @@
     background-color: var(--md-sys-color-surface);
     letter-spacing: 0.009em;
   }
-
-  h1 {
-    font-size: var(--md-sys-typescale-headline-large-size);
-    line-height: var(--md-sys-typescale-headline-large-line-height);
-    font-weight: var(--md-sys-typescale-headline-large-weight);
-  }
-
-  h2 {
-    font-size: var(--md-sys-typescale-title-large-size);
-    line-height: var(--md-sys-typescale-title-large-line-height);
-    font-weight: var(--md-sys-typescale-title-large-weight);
-  }
-
-  h3,
-  h4 {
-    font-size: var(--md-sys-typescale-title-medium-size);
-    line-height: var(--md-sys-typescale-title-medium-line-height);
-    font-weight: var(--md-sys-typescale-title-medium-weight);
-  }
 }

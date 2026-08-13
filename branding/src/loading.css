@@ -1,6 +1,24 @@
+html:has(#stencil),
+html:has(#stencil) body {
+  overflow: hidden;
+  height: 100%;
+}
+
 #stencil {
   --stencil-width: 120px;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
   background-color: var(--md-sys-color-surface, var(--pg-loading-bg));
+}
+
+#stencil svg {
+  width: var(--stencil-width);
+  height: auto;
 }
 
 #stencil svg .st0,

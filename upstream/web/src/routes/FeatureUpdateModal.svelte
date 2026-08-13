@@ -149,7 +149,7 @@
       <Text class="feature-updates-section__heading">Các mục tính năng</Text>
 
       <ul class="feature-updates-list">
-        {#each updates as item}
+        {#each updates as item, index (index)}
           <li class="feature-updates-item">
             <span class="feature-updates-item__icon" aria-hidden="true">
               <Icon icon={mdiCheckCircleOutline} size="18" />
@@ -301,12 +301,16 @@
     }
   }
 
-  :global(html[data-feature-update-modal='open'] [data-dialog-overlay]) {
+  :global(html[data-feature-update-modal='open'] [data-dialog-overlay]),
+  :global(html[data-feature-update-modal='open'] [data-slot='dialog-overlay']),
+  :global(html[data-feature-update-modal='open'] [data-bits-dialog-overlay]) {
     animation: pg-feature-update-backdrop-in var(--md-motion-duration-short, 200ms)
       var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)) both;
   }
 
-  :global(html[data-feature-update-modal='closing'] [data-dialog-overlay]) {
+  :global(html[data-feature-update-modal='closing'] [data-dialog-overlay]),
+  :global(html[data-feature-update-modal='closing'] [data-slot='dialog-overlay']),
+  :global(html[data-feature-update-modal='closing'] [data-bits-dialog-overlay]) {
     animation: pg-feature-update-backdrop-out 180ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
   }
 

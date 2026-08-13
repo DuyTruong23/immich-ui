@@ -151,36 +151,40 @@
 
           {#each items as item, index (index)}
             <div class="flex items-start gap-2">
-              <Input bind:value={items[index]} grow placeholder="Mô tả tính năng mới..." />
-              <IconButton
-                shape="round"
-                color="secondary"
-                variant="ghost"
-                size="small"
-                icon={mdiArrowUp}
-                aria-label="Di chuyển lên"
-                disabled={index === 0}
-                onclick={() => moveItem(index, -1)}
-              />
-              <IconButton
-                shape="round"
-                color="secondary"
-                variant="ghost"
-                size="small"
-                icon={mdiArrowDown}
-                aria-label="Di chuyển xuống"
-                disabled={index === items.length - 1}
-                onclick={() => moveItem(index, 1)}
-              />
-              <IconButton
-                shape="round"
-                color="secondary"
-                variant="ghost"
-                size="small"
-                icon={mdiTrashCanOutline}
-                aria-label="Xóa mục"
-                onclick={() => removeItem(index)}
-              />
+              <div class="min-w-0 flex-1">
+                <Input bind:value={items[index]} grow placeholder="Mô tả tính năng mới..." />
+              </div>
+              <div class="flex shrink-0 gap-1">
+                <IconButton
+                  shape="round"
+                  color="secondary"
+                  variant="ghost"
+                  size="small"
+                  icon={mdiArrowUp}
+                  aria-label="Di chuyển lên"
+                  disabled={index === 0}
+                  onclick={() => moveItem(index, -1)}
+                />
+                <IconButton
+                  shape="round"
+                  color="secondary"
+                  variant="ghost"
+                  size="small"
+                  icon={mdiArrowDown}
+                  aria-label="Di chuyển xuống"
+                  disabled={index === items.length - 1}
+                  onclick={() => moveItem(index, 1)}
+                />
+                <IconButton
+                  shape="round"
+                  color="secondary"
+                  variant="ghost"
+                  size="small"
+                  icon={mdiTrashCanOutline}
+                  aria-label="Xóa mục"
+                  onclick={() => removeItem(index)}
+                />
+              </div>
             </div>
           {/each}
 

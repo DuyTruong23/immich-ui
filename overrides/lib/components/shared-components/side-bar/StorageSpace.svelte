@@ -34,7 +34,7 @@
 </script>
 
 <div
-  class="ms-4 min-w-52 rounded-lg bg-light-100 p-4 text-sm dark:bg-gray-800 dark:text-white"
+  class="ms-4 min-w-52 rounded-lg bg-(--md-sys-color-surface-container) p-4 text-sm text-(--md-sys-color-on-surface)"
   title={$t('storage_usage', {
     values: {
       used: getByteUnitString(usedBytes, $locale, 3),
@@ -45,7 +45,7 @@
   {#if userInteraction.serverInfo}
     <Meter
       size="tiny"
-      class="bg-light-200 dark:bg-gray-700"
+      class="bg-(--md-sys-color-surface-container-highest)"
       containerClass="gap-2 leading-6"
       label={$t('storage')}
       valueLabel={$t('storage_usage', {
@@ -58,7 +58,7 @@
       {thresholds}
     />
   {:else}
-    <p class="mb-4 font-medium text-immich-dark-gray dark:text-white">{$t('storage')}</p>
+    <p class="mb-4 font-medium text-(--md-sys-color-on-surface)">{$t('storage')}</p>
     <LoadingSpinner />
   {/if}
 </div>

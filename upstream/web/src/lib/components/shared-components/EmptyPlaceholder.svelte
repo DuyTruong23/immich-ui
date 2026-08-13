@@ -12,7 +12,7 @@
 
   let { onClick = undefined, text, fullWidth = false, src = empty1Url, title, class: className }: Props = $props();
 
-  let width = $derived(fullWidth ? 'w-full' : 'w-1/2');
+  let width = $derived(fullWidth ? 'w-full' : 'w-full max-w-lg sm:w-1/2');
 
   const hoverClasses = onClick
     ? 'border border-(--md-sys-color-outline-variant) hover:bg-(--md-state-primary-hover)'
@@ -22,6 +22,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <svelte:element
   this={onClick ? 'button' : 'div'}
+  type={onClick ? 'button' : undefined}
   onclick={onClick}
   class="{width} {className} flex flex-col place-content-center place-items-center rounded-3xl p-5 {hoverClasses}"
   style:background="var(--md-sys-color-surface-container)"

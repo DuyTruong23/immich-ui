@@ -13,7 +13,7 @@
   let { title, children, withHeader = true, withBackdrop = true }: Props = $props();
 </script>
 
-<section class="relative isolate flex min-h-dvh min-w-dvw items-center justify-center">
+<section class="relative isolate flex min-h-dvh w-full items-center justify-center">
   {#if withBackdrop}
     <div class="absolute -z-10 flex size-full place-content-center place-items-center">
       <img
@@ -22,7 +22,7 @@
         alt=""
       />
       <div
-        class="absolute inset-s-0 top-0 h-[99%] w-full bg-transparent backdrop-blur-[200px] dark:bg-immich-dark-bg/20"
+        class="absolute inset-s-0 top-0 h-[99%] w-full bg-transparent backdrop-blur-2xl dark:bg-immich-dark-bg/20"
       ></div>
     </div>
   {/if}

@@ -61,7 +61,7 @@
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {#each statCards as card (card.label)}
-        <article class="rounded-2xl border border-(--pg-border) bg-(--pg-surface-raised, transparent) p-5">
+        <article class="rounded-2xl border border-(--pg-border) bg-(--pg-surface-raised) p-5">
           <div class="mb-3 flex items-center justify-between gap-3">
             <h2 class="text-sm font-medium text-(--pg-text-muted)">{card.label}</h2>
             <span class="inline-flex rounded-lg p-2 {toneClass[card.tone]}">
@@ -118,11 +118,13 @@
         <p class="mb-4 text-sm text-(--pg-text-muted)">Tổng hợp upload của tất cả người dùng trên hệ thống</p>
 
         {#if data.uploadHistory}
-          <CalendarHeatmap
-            data={data.uploadHistory}
-            itemLabel={({ date, count }) => `${count} ảnh/video ngày ${date}`}
-            totalLabel={(count) => `${count.toLocaleString('vi-VN')} upload`}
-          />
+          <div class="overflow-x-auto">
+            <CalendarHeatmap
+              data={data.uploadHistory}
+              itemLabel={({ date, count }) => `${count} ảnh/video ngày ${date}`}
+              totalLabel={(count) => `${count.toLocaleString('vi-VN')} upload`}
+            />
+          </div>
         {:else}
           <p class="text-sm text-(--pg-text-muted)">Chưa có dữ liệu upload.</p>
         {/if}

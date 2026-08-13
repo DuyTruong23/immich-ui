@@ -1,5 +1,5 @@
 /*
- * Fluent 2 — Photo / asset viewer chrome
+ * Asset viewer chrome — M3 tokens
  */
 
 @layer components {
@@ -7,39 +7,32 @@
     background-color: #000000;
   }
 
-  /* Viewer navbar */
   body.asset-viewer-open nav,
   body.asset-viewer-open [role='toolbar'] {
-    background-color: color-mix(in srgb, var(--colorNeutralBackground1) 8%, transparent);
+    background-color: color-mix(in srgb, var(--md-sys-color-surface, #000) 8%, transparent);
     backdrop-filter: blur(12px);
   }
 
-  /* Detail panel */
   body.asset-viewer-open aside,
+  body.asset-viewer-open #detail-panel,
   body.asset-viewer-open [data-testid='detail-panel'] {
-    background-color: var(--colorNeutralBackground1);
-    border-color: var(--colorNeutralStroke2);
+    background-color: var(--md-sys-color-surface-container, #1d1b20);
+    border-color: var(--md-sys-color-outline-variant, #49454f);
   }
 
-  /* Viewer controls — minimum touch targets on mobile */
-  body.asset-viewer-open button {
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  @media (max-width: 767px) {
-    body.asset-viewer-open button:not([aria-label]) {
-      min-width: 40px;
-      min-height: 40px;
+  @media (pointer: coarse) {
+    body.asset-viewer-open [data-testid='asset-viewer-navbar-actions'] button,
+    body.asset-viewer-open [role='toolbar'] button {
+      min-width: 44px;
+      min-height: 44px;
     }
   }
 }
 
-/* Safe area for mobile viewer controls */
 @supports (padding: env(safe-area-inset-bottom)) {
   @layer utilities {
-    body.asset-viewer-open .bottom-0,
-    body.asset-viewer-open [class*='bottom-'] {
+    body.asset-viewer-open media-control-bar,
+    body.asset-viewer-open .bottom-0 {
       padding-bottom: env(safe-area-inset-bottom);
     }
   }

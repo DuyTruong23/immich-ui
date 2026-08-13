@@ -178,7 +178,7 @@
   {#if publicEnv.uiDevMode}
     <Stack gap={4}>
       <div class="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
-        <div class="mb-2 flex items-center gap-2 text-amber-300">
+        <div class="mb-2 flex items-center gap-2 text-amber-800 dark:text-amber-300">
           <Icon icon={mdiPalette} size="20" />
           <Text fontWeight="medium">UI Dev Mode</Text>
         </div>
@@ -283,10 +283,10 @@
 
       {#if featureFlagsManager.value.oauth}
         {#if featureFlagsManager.value.passwordLogin}
-          <div class="my-4 inline-flex w-full items-center justify-center">
-            <hr class="my-4 h-px w-3/4 border-0 bg-gray-200 dark:bg-gray-600" />
+          <div class="relative my-4 inline-flex w-full items-center justify-center">
+            <hr class="my-4 h-px w-3/4 border-0 bg-(--md-sys-color-outline-variant)" />
             <span
-              class="absolute inset-s-1/2 -translate-x-1/2 bg-gray-50 px-3 font-medium text-gray-900 uppercase dark:bg-neutral-900 dark:text-white"
+              class="absolute inset-s-1/2 -translate-x-1/2 bg-(--md-sys-color-surface-container-high) px-3 font-medium text-(--md-sys-color-on-surface-variant) uppercase"
             >
               {$t('or')}
             </span>

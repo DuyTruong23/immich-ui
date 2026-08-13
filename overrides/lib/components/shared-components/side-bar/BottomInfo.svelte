@@ -5,7 +5,7 @@
   import StorageSpace from '$lib/components/shared-components/side-bar/StorageSpace.svelte';
 </script>
 
-{#if authManager.authenticated && authManager.user.isAdmin}
+{#if authManager.authenticated}
   <div class="mt-auto">
     <StorageSpace />
   </div>
