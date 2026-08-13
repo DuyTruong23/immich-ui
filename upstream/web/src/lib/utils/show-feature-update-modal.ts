@@ -17,7 +17,7 @@ export const showFeatureUpdateModal = async ({
   originElement = null,
 }: ShowFeatureUpdateModalOptions = {}) => {
   const preview = isUiDevMode();
-  const config = updates && version ? { version, items: [...updates] } : await fetchFeatureUpdatesConfig();
+  const config = updates && version ? { version, items: [...updates] } : await fetchFeatureUpdatesConfig({ force: true });
 
   return modalManager.show(FeatureUpdateModal, {
     accessToken: preview ? undefined : accessToken,

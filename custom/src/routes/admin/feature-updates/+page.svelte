@@ -9,9 +9,10 @@
   import {
     fetchFeatureUpdatesConfig,
     getDefaultFeatureUpdatesConfig,
+    invalidateFeatureUpdatesCache,
     saveFeatureUpdatesConfig,
   } from '$custom/services/feature-updates.service';
-  import { createSession } from '@immich/sdk';
+  import { getStoredAccessToken } from '$custom/hooks/access-token';
   import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, toastManager } from '@immich/ui';
   import { mdiArrowDown, mdiArrowUp, mdiPlus, mdiTrashCanOutline } from '@mdi/js';
   import { onMount } from 'svelte';
@@ -94,22 +95,15 @@
     errorMessage = '';
 
     try {
-      const session = await createSession({
-        sessionCreateDto: {
-          duration: 300,
-          deviceOS: 'Web',
-          deviceType: 'Browser',
-        },
-      });
-
       const saved = await saveFeatureUpdatesConfig(
         {
           version: version.trim(),
           items: items.map((item) => item.trim()).filter(Boolean),
         },
-        session.token,
+        getStoredAccessToken(),
       );
 
+      invalidateFeatureUpdatesCache();
       applyConfig(saved);
       toastManager.success('Đã lưu nội dung modal tính năng mới');
     } catch (error) {

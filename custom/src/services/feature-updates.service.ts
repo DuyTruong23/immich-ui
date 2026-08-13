@@ -27,7 +27,7 @@ export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): 
     return cachedConfig;
   }
 
-  if (isUiDevMode()) {
+  if (isUiDevMode() && !options?.force) {
     cachedConfig = getDefaultFeatureUpdatesConfig();
     return cachedConfig;
   }
@@ -54,10 +54,11 @@ export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): 
 
 export const saveFeatureUpdatesConfig = async (
   config: FeatureUpdatesConfig,
-  accessToken: string,
+  accessToken?: string,
 ): Promise<FeatureUpdatesConfig> => {
   const response = await fetch('/api/feature-updates', {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       accessToken,

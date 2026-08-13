@@ -18,6 +18,7 @@ import {
   isUiDevMode,
   restoreDevSession,
 } from '$custom/hooks/ui-dev-mode';
+import { clearStoredAccessToken } from '$custom/hooks/access-token';
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
@@ -206,6 +207,7 @@ class AuthManager {
     this.#preferences = undefined;
     this.#mediaSessionKey = undefined;
     this.#mediaSessionPromise = undefined;
+    clearStoredAccessToken();
 
     if (this.#isSessionOnlyAuth()) {
       clearSessionActive();

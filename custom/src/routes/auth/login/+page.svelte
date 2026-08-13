@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
   import { applyDevRole, isUiDevMode, type UiDevRole } from '$custom/hooks/ui-dev-mode';
+  import { storeAccessToken } from '$custom/hooks/access-token';
   import { loadFeatureUpdatesForDisplay } from '$custom/constants/feature-updates';
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
@@ -62,6 +63,10 @@
   };
 
   const onSuccess = async (user: LoginResponseDto) => {
+    storeAccessToken(user.accessToken);
+    password = '';
+    email = '';
+
     if (publicEnv.sessionOnlyAuth) {
       markSessionActive();
       await authManager.refresh();
@@ -231,9 +236,7 @@
 
       {#if featureFlagsManager.value.passwordLogin}
         <form
-          method="post"
-          action="/auth/login"
-          autocomplete="on"
+          autocomplete="off"
           {onsubmit}
           class="flex flex-col gap-4"
           hidden={oauthLoading}
@@ -251,6 +254,16 @@
               bind:value={email}
             />
           </Field>
+
+          <!-- Decoy field — ngăn trình duyệt hỏi lưu mật khẩu sau login -->
+          <input
+            type="password"
+            name="prevent-save-password"
+            autocomplete="new-password"
+            tabindex="-1"
+            aria-hidden="true"
+            class="pointer-events-none absolute size-0 opacity-0"
+          />
 
           <Field label={$t('password')} required="indicator">
             <Input

@@ -42,7 +42,7 @@ export default async function handler(request: Request): Promise<Response> {
       return json({ error: 'Invalid JSON body' }, 400);
     }
 
-    const admin = await verifyAdminSession(body.accessToken);
+    const admin = await verifyAdminSession(body.accessToken, request.headers.get('cookie') ?? undefined);
     if (!admin) {
       return json({ error: 'Admin authentication required' }, 401);
     }
