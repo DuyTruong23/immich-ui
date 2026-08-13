@@ -1,16 +1,8 @@
 import { getEnv, json, ResendSendError, sendViaResend } from './_lib/email.js';
+import { verifySessionFromRequest } from './_lib/immich-auth.js';
 
 export const config = {
   runtime: 'edge',
-};
-
-const DEFAULT_UPSTREAM = 'https://immich.gallery-app.pp.ua';
-
-type ImmichUser = {
-  id: string;
-  email: string;
-  name: string;
-  isAdmin: boolean;
 };
 
 type NotifyBody = {
@@ -18,9 +10,10 @@ type NotifyBody = {
   accessToken?: string;
 };
 
-const isEnabled = (): boolean => getEnv('LOGIN_NOTIFY_ENABLED') === 'true';
-
-const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
+const isEnabled = (): boolean => {
+  const value = getEnv('LOGIN_NOTIFY_ENABLED')?.toLowerCase();
+  return value === 'true' || value === '1';
+};
 
 const escapeHtml = (value: string): string =>
   value
@@ -29,35 +22,7 @@ const escapeHtml = (value: string): string =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 
-const verifySession = async (request: Request, accessToken?: string): Promise<ImmichUser | null> => {
-  const headers: Record<string, string> = { Accept: 'application/json' };
-
-  const token = accessToken?.trim();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  } else {
-    const cookie = request.headers.get('cookie');
-    if (!cookie) {
-      return null;
-    }
-    headers.cookie = cookie;
-  }
-
-  try {
-    const response = await fetch(`${getUpstreamBase()}/api/users/me`, { headers });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as ImmichUser;
-  } catch (error) {
-    console.error('[notify-login] verifySession failed:', error);
-    return null;
-  }
-};
-
-const buildEmailHtml = (user: ImmichUser, userAgent: string | undefined, appName: string): string => {
+const buildEmailHtml = (user: { name: string; email: string; isAdmin: boolean }, userAgent: string | undefined, appName: string): string => {
   const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
   const role = user.isAdmin ? 'Admin' : 'User';
 
@@ -114,18 +79,20 @@ export default async function handler(request: Request): Promise<Response> {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  const user = await verifySession(request, body.accessToken);
+  const user = await verifySessionFromRequest(request, body.accessToken);
   if (!user) {
     return json({ error: 'Unauthorized' }, 401);
   }
 
   try {
-    await sendViaResend({
+    const sent = await sendViaResend({
       to: adminEmail,
       from: fromEmail,
       subject: `[${appName}] Đăng nhập: ${user.name} (${user.email})`,
       html: buildEmailHtml(user, body.userAgent, appName),
     });
+
+    return json({ ok: true, sent: true, emailId: sent.id });
   } catch (error) {
     console.error('[notify-login]', error);
 
@@ -147,6 +114,4 @@ export default async function handler(request: Request): Promise<Response> {
 
     return json({ error: 'Failed to send notification email', reason: 'unexpected' }, 502);
   }
-
-  return json({ ok: true });
 }

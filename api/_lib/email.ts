@@ -40,7 +40,7 @@ export const sendViaResend = async (options: {
   from: string;
   subject: string;
   html: string;
-}): Promise<void> => {
+}): Promise<{ id?: string }> => {
   const apiKey = getEnv('RESEND_API_KEY');
   if (!apiKey) {
     throw new ResendSendError('RESEND_API_KEY is not configured');
@@ -63,5 +63,12 @@ export const sendViaResend = async (options: {
   if (!response.ok) {
     const detail = parseResendDetail(await response.text());
     throw new ResendSendError(`Resend API error (${response.status})`, response.status, detail);
+  }
+
+  try {
+    const payload = (await response.json()) as { id?: string };
+    return { id: payload.id };
+  } catch {
+    return {};
   }
 };

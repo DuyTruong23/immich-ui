@@ -1,4 +1,4 @@
-import { verifyAdminSession } from './_lib/immich-auth.js';
+import { verifyAdminSessionFromRequest } from './_lib/immich-auth.js';
 import {
   DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
@@ -6,6 +6,10 @@ import {
 } from './_lib/feature-updates-config.js';
 import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
 import { json } from './_lib/email.js';
+
+export const config = {
+  runtime: 'edge',
+};
 
 type FeatureUpdatesBody = {
   accessToken?: string;
@@ -44,7 +48,7 @@ export default async function handler(request: Request): Promise<Response> {
       return json({ error: 'Invalid JSON body' }, 400);
     }
 
-    const admin = await verifyAdminSession(body.accessToken, request.headers.get('cookie') ?? undefined);
+    const admin = await verifyAdminSessionFromRequest(request, body.accessToken);
     if (!admin) {
       return json({ error: 'Admin authentication required' }, 401);
     }

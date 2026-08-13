@@ -27,6 +27,17 @@ export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig =>
   cachedConfig ?? getDefaultFeatureUpdatesConfig();
 
 const FETCH_TIMEOUT_MS = 2500;
+const SAVE_TIMEOUT_MS = 15000;
+
+const mapSaveError = (payload: { error?: string; detail?: string }, status: number): string => {
+  if (status === 401) {
+    return 'Phiên đăng nhập hết hạn. Vui lòng đăng xuất và đăng nhập lại.';
+  }
+  if (status === 503 && payload.detail?.includes('BLOB_READ_WRITE_TOKEN')) {
+    return 'Chưa cấu hình BLOB_READ_WRITE_TOKEN trên Vercel — không thể lưu cho mọi người dùng.';
+  }
+  return payload.detail ?? payload.error ?? 'Không thể lưu cấu hình tính năng mới';
+};
 
 export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): Promise<FeatureUpdatesConfig> => {
   if (!options?.force && cachedConfig) {
@@ -66,16 +77,30 @@ export const saveFeatureUpdatesConfig = async (
   config: FeatureUpdatesConfig,
   accessToken?: string,
 ): Promise<FeatureUpdatesConfig> => {
-  const response = await fetch('/api/feature-updates', {
-    method: 'PUT',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      accessToken,
-      version: config.version.trim(),
-      items: config.items.map((item) => item.trim()).filter(Boolean),
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SAVE_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch('/api/feature-updates', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        accessToken,
+        version: config.version.trim(),
+        items: config.items.map((item) => item.trim()).filter(Boolean),
+      }),
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Máy chủ không phản hồi khi lưu. Kiểm tra deploy Vercel hoặc thử lại sau.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 
   const payload = (await response.json().catch(() => ({}))) as FeatureUpdatesConfig & {
     error?: string;
@@ -83,7 +108,7 @@ export const saveFeatureUpdatesConfig = async (
   };
 
   if (!response.ok) {
-    throw new Error(payload.detail ?? payload.error ?? 'Failed to save feature updates');
+    throw new Error(mapSaveError(payload, response.status));
   }
 
   cachedConfig = {

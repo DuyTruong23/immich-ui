@@ -1,3 +1,4 @@
+import { head, put } from '@vercel/blob';
 import { getEnv } from './email.js';
 import {
   DEFAULT_FEATURE_UPDATES,
@@ -8,6 +9,7 @@ import {
 
 const BLOB_PATHNAME = 'feature-updates/config.json';
 const BLOB_READ_TIMEOUT_MS = 2500;
+const BLOB_WRITE_TIMEOUT_MS = 10000;
 
 let memoryConfig: FeatureUpdatesConfig | null = null;
 
@@ -43,9 +45,8 @@ const readBlobConfig = async (): Promise<FeatureUpdatesConfig | null> => {
   }
 
   try {
-    const { head } = await import('@vercel/blob');
     const blob = await withTimeout(head(BLOB_PATHNAME, { token }), BLOB_READ_TIMEOUT_MS);
-    const response = await fetch(blob.url, { cache: 'no-store' });
+    const response = await withTimeout(fetch(blob.url, { cache: 'no-store' }), BLOB_READ_TIMEOUT_MS);
     if (!response.ok) {
       return null;
     }
@@ -81,12 +82,14 @@ export const writeFeatureUpdatesConfig = async (config: FeatureUpdatesConfig): P
     throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
   }
 
-  const { put } = await import('@vercel/blob');
-  await put(BLOB_PATHNAME, JSON.stringify(config, null, 2), {
-    access: 'public',
-    addRandomSuffix: false,
-    contentType: 'application/json',
-    token,
-  });
+  await withTimeout(
+    put(BLOB_PATHNAME, JSON.stringify(config, null, 2), {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+      token,
+    }),
+    BLOB_WRITE_TIMEOUT_MS,
+  );
   memoryConfig = config;
 };
