@@ -23,15 +23,11 @@
   import { getJustifiedLayoutFromAssets } from '$lib/utils/layout-utils';
   import { navigate } from '$lib/utils/navigation';
   import { isTimelineAsset, toTimelineAsset } from '$lib/utils/timeline-util';
-  import { TUNABLES } from '$lib/utils/tunables';
+  import { getTimelineIntersectionExpand, getTimelineLayoutOptions } from '$lib/utils/mobile-performance.svelte';
   import { AssetVisibility, type AssetResponseDto } from '@immich/sdk';
   import { modalManager } from '@immich/ui';
   import { debounce } from 'lodash-es';
   import { t } from 'svelte-i18n';
-
-  const {
-    TIMELINE: { INTERSECTION_EXPAND_TOP, INTERSECTION_EXPAND_BOTTOM },
-  } = TUNABLES;
 
   type Props = {
     assets: AssetResponseDto[];
@@ -71,7 +67,7 @@
     getJustifiedLayoutFromAssets(assets, {
       spacing: 2,
       heightTolerance: 0.5,
-      rowHeight: Math.floor(viewport.width) < 850 ? 100 : 235,
+      rowHeight: getTimelineLayoutOptions().rowHeight,
       rowWidth: Math.floor(viewport.width),
     }),
   );
@@ -90,8 +86,9 @@
   let scrollTop = $state(0);
 
   let slidingWindow = $derived.by(() => {
-    const top = (scrollTop || 0) - slidingWindowOffset - INTERSECTION_EXPAND_TOP;
-    const bottom = top + viewport.height + slidingWindowOffset + INTERSECTION_EXPAND_BOTTOM;
+    const expand = getTimelineIntersectionExpand();
+    const top = (scrollTop || 0) - slidingWindowOffset - expand;
+    const bottom = top + viewport.height + slidingWindowOffset + expand;
     return {
       top,
       bottom,

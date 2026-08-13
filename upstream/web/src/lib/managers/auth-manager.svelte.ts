@@ -1,4 +1,5 @@
 import {
+  createSession,
   getAboutInfo,
   getMyPreferences,
   getMyUser,
@@ -22,15 +23,30 @@ import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 import { Route } from '$lib/route';
+import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
 import { isSharedLinkRoute } from '$lib/utils/navigation';
+
+const MEDIA_SESSION_DURATION_SECONDS = 60 * 60;
 
 class AuthManager {
   isPurchased = $state(false);
   isSharedLink = $derived(isSharedLinkRoute(page.route?.id));
-  params = $derived(this.isSharedLink ? { key: page.params.key, slug: page.params.slug } : {});
+  params = $derived.by(() => {
+    if (this.isSharedLink) {
+      return { key: page.params.key, slug: page.params.slug };
+    }
+
+    if (isCrossOriginMediaBase() && this.#mediaSessionKey) {
+      return { sessionKey: this.#mediaSessionKey };
+    }
+
+    return {};
+  });
 
   #user = $state<UserAdminResponseDto>();
   #preferences = $state<UserPreferencesResponseDto>();
+  #mediaSessionKey = $state<string | undefined>();
+  #mediaSessionPromise: Promise<void> | undefined;
 
   get authenticated() {
     return !!(this.#user && this.#preferences);
@@ -60,6 +76,7 @@ class AuthManager {
 
   async load() {
     if (authManager.authenticated) {
+      await this.ensureMediaSessionKey();
       return;
     }
 
@@ -103,9 +120,44 @@ class AuthManager {
       }
 
       eventManager.emit('AuthUserLoaded', user);
+      await this.ensureMediaSessionKey();
     } catch {
       // noop
     }
+  }
+
+  /** Token cho media cross-subdomain — cookie login không gửi sang api.* */
+  async ensureMediaSessionKey(): Promise<void> {
+    if (!browser || this.isSharedLink || !this.authenticated || !isCrossOriginMediaBase()) {
+      return;
+    }
+
+    if (this.#mediaSessionKey) {
+      return;
+    }
+
+    if (this.#mediaSessionPromise) {
+      return this.#mediaSessionPromise;
+    }
+
+    this.#mediaSessionPromise = (async () => {
+      try {
+        const session = await createSession({
+          sessionCreateDto: {
+            duration: MEDIA_SESSION_DURATION_SECONDS,
+            deviceOS: 'Web',
+            deviceType: 'Browser',
+          },
+        });
+        this.#mediaSessionKey = session.token;
+      } catch (error) {
+        console.warn('Failed to create media session key', error);
+      } finally {
+        this.#mediaSessionPromise = undefined;
+      }
+    })();
+
+    return this.#mediaSessionPromise;
   }
 
   setUser(user: UserAdminResponseDto) {
@@ -152,6 +204,8 @@ class AuthManager {
   reset() {
     this.#user = undefined;
     this.#preferences = undefined;
+    this.#mediaSessionKey = undefined;
+    this.#mediaSessionPromise = undefined;
 
     if (this.#isSessionOnlyAuth()) {
       clearSessionActive();

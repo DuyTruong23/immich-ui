@@ -112,7 +112,7 @@
   let sharedLink = getSharedLink();
   let fullscreenElement = $state<Element>();
 
-  let isPlayingOriginalVideo = $state($alwaysLoadOriginalVideo);
+  let isPlayingOriginalVideo = $state(false);
   let slideshowStartAssetId = $state<string>();
 
   const setPlayOriginalVideo = (value: boolean) => {

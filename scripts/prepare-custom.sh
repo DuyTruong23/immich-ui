@@ -29,6 +29,11 @@ echo "==> Copy theme CSS and logo assets to static"
 mkdir -p upstream/web/static/branding
 copy_merge "branding/src/" "upstream/web/static/branding/"
 copy_merge "branding/assets/" "upstream/web/static/branding/"
+
+if [ -f branding/assets/manifest.json ]; then
+  echo "==> Copy PWA manifest to static root"
+  cp branding/assets/manifest.json upstream/web/static/manifest.json
+fi
 sed -e 's|@photo-gallery/branding/|/branding/|g' \
   -e "s|@import '../../../branding/src/|@import '/branding/|g" \
   custom/src/styles/custom.css > upstream/web/static/custom.css
@@ -52,5 +57,13 @@ python "$ROOT/scripts/patch-utils-media-url.py" "$ROOT"
 
 echo "==> Patch feature update modal into +layout.svelte"
 python "$ROOT/scripts/patch-layout-feature-modal.py" "$ROOT"
+
+echo "==> Patch mobile performance (timeline, thumbnails, viewport, network)"
+python "$ROOT/scripts/patch-mobile-performance.py" "$ROOT"
+
+if [ -f "$ROOT/custom/src/service-worker/index.ts" ]; then
+  echo "==> Apply custom service worker (cross-origin thumbnail cache)"
+  cp "$ROOT/custom/src/service-worker/index.ts" "$ROOT/upstream/web/src/service-worker/index.ts"
+fi
 
 echo "Custom layer prepared."

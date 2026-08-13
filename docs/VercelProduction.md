@@ -33,6 +33,8 @@ PUBLIC_THEME=system
 PUBLIC_DEFAULT_THEME=dark
 ```
 
+Tối ưu mobile **không cần biến mới**. Giữ đúng 4 biến trên; `PUBLIC_*` chỉ có hiệu lực sau **Redeploy**.
+
 > **Quan trọng:** Xóa hoặc để trống `PUBLIC_IMMICH_SERVER_URL`, thêm `IMMICH_SERVER_URL`, rồi **Redeploy**.
 
 ## Proxy API

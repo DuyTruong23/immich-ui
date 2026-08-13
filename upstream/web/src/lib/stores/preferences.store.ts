@@ -128,6 +128,12 @@ export const placesViewSettings = persisted<PlacesViewSettings>('places-view-set
 
 export const showDeleteModal = persisted<boolean>('delete-confirm-dialog', true, {});
 
+if (browser) {
+  localStorage.setItem('always-load-original-file', 'false');
+  localStorage.setItem('always-load-original-video', 'false');
+}
+
+
 export const alwaysLoadOriginalFile = persisted<boolean>('always-load-original-file', false, {});
 
 export const playVideoThumbnailOnHover = persisted<boolean>('play-video-thumbnail-on-hover', true, {});

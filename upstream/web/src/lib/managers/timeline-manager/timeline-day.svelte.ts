@@ -3,14 +3,10 @@ import { SvelteSet } from 'svelte/reactivity';
 import type { CommonLayoutOptions, CommonPosition } from '$lib/utils/layout-utils';
 import { getJustifiedLayoutFromAssets } from '$lib/utils/layout-utils';
 import { getOrderingDate, plainDateTimeCompare } from '$lib/utils/timeline-util';
-import { TUNABLES } from '$lib/utils/tunables';
+import { getTimelineIntersectionExpand } from '$lib/utils/mobile-performance.svelte';
 import type { TimelineMonth } from './timeline-month.svelte';
 import type { Direction, MoveAsset, TimelineAsset } from './types';
 import { ViewerAsset } from './viewer-asset.svelte';
-
-const {
-  TIMELINE: { INTERSECTION_EXPAND_TOP, INTERSECTION_EXPAND_BOTTOM },
-} = TUNABLES;
 
 function lowerBound(assets: ViewerAsset[], target: number, key: (pos: CommonPosition) => number): number {
   let lo = 0;
@@ -185,8 +181,9 @@ export class TimelineDay {
 
     const dayOffset = this.absoluteTimelineDayTop;
     const headerHeight = manager.headerHeight;
-    const expandedTop = visibleWindow.top - headerHeight - INTERSECTION_EXPAND_TOP - dayOffset;
-    const expandedBottom = visibleWindow.bottom + headerHeight + INTERSECTION_EXPAND_BOTTOM - dayOffset;
+    const expand = getTimelineIntersectionExpand();
+    const expandedTop = visibleWindow.top - headerHeight - expand - dayOffset;
+    const expandedBottom = visibleWindow.bottom + headerHeight + expand - dayOffset;
 
     const first = lowerBound(this.viewerAssets, expandedTop, (p) => p.top + p.height);
     const last = lowerBound(this.viewerAssets, expandedBottom, (p) => p.top) - 1;

@@ -27,6 +27,7 @@ import { authManager } from '$lib/managers/auth-manager.svelte';
 import { getMediaBaseUrl } from '$lib/utils/media-base-url';
 import { downloadManager } from '$lib/managers/download-manager.svelte';
 import { alwaysLoadOriginalFile, lang } from '$lib/stores/preferences.store';
+import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
 import { isWebCompatibleImage } from '$lib/utils/asset-utils';
 import { handleError } from '$lib/utils/handle-error';
 import { convertBCP47, langs } from '$lib/utils/i18n';
@@ -224,6 +225,9 @@ const forceUseOriginal = (asset: AssetResponseDto) => {
 };
 
 export const targetImageSize = (asset: AssetResponseDto, forceOriginal: boolean) => {
+  if (!forceOriginal && getNetworkQuality() !== 'fast' && !forceUseOriginal(asset)) {
+    return AssetMediaSize.Preview;
+  }
   if (forceOriginal || get(alwaysLoadOriginalFile) || forceUseOriginal(asset)) {
     return asset.type === AssetTypeEnum.Video || isWebCompatibleImage(asset)
       ? AssetMediaSize.Original

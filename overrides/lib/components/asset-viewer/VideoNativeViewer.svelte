@@ -3,14 +3,16 @@
   import VideoRemoteViewer from '$lib/components/asset-viewer/VideoRemoteViewer.svelte';
   import { assetViewerFadeDuration } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
+  import { authManager } from '$lib/managers/auth-manager.svelte';
   import { castManager } from '$lib/managers/cast-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
-  import { authManager } from '$lib/managers/auth-manager.svelte';
   import { mediaCapabilitiesManager } from '$lib/managers/media-capabilities-manager.svelte';
   import { autoPlayVideo, lang, loopVideo as loopVideoPreference } from '$lib/stores/preferences.store';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { getAssetHlsSessionUrl, getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
-  import { AssetMediaSize, type AssetResponseDto } from '@immich/sdk';
+  import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
+  import { getNetworkQuality, motionDuration, networkManager } from '$lib/utils/mobile-performance.svelte';
+  import { AssetMediaSize, getBaseUrl, type AssetResponseDto } from '@immich/sdk';
   import { Icon, LoadingSpinner, shortcuts } from '@immich/ui';
   import {
     mdiCheck,
@@ -25,9 +27,9 @@
     mdiVolumeMedium,
     mdiVolumeMute,
   } from '@mdi/js';
-  import 'hls-video-element';
   import type HlsVideoElement from 'hls-video-element';
-  import Hls, { AbrController, Events, type FragLoadedData, type FragLoadingData, type HlsConfig } from 'hls.js';
+  import type Hls from 'hls.js';
+  import type { HlsConfig } from 'hls.js';
   import 'media-chrome/media-control-bar';
   import 'media-chrome/media-controller';
   import 'media-chrome/media-fullscreen-button';
@@ -41,7 +43,7 @@
   import 'media-chrome/menu/media-settings-menu';
   import 'media-chrome/menu/media-settings-menu-button';
   import 'media-chrome/menu/media-settings-menu-item';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { useSwipe, type SwipeCustomEvent } from 'svelte-gestures';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
@@ -78,24 +80,40 @@
   let videoPlayer: HTMLVideoElement | undefined = $state();
   let isLoading = $state(true);
   let hlsFallback = $state(false);
+  let useSameOriginFallback = $state(false);
   // Realtime HLS transcodes per-segment over the network — much slower on mobile/tunnel than pre-transcoded playback.
   const isMobileDevice = $derived(mediaQueryManager.pointerCoarse);
-  let assetFileUrl = $derived.by(() => {
+  const videoPreload = $derived(isMobileDevice ? 'auto' : 'metadata');
+  const mediaAuthReady = $derived(
+    !isCrossOriginMediaBase() || authManager.isSharedLink || 'sessionKey' in authManager.params,
+  );
+  let resolvedFileUrl = $derived.by(() => {
+    networkManager.quality;
     if (featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice) {
       return getAssetHlsUrl(assetId);
     }
 
-    if (playOriginalVideo) {
+    if (playOriginalVideo && getNetworkQuality() === 'fast') {
       return getAssetMediaUrl({ id: assetId, size: AssetMediaSize.Original, cacheKey });
     }
 
     return getAssetPlaybackUrl({ id: assetId, cacheKey });
   });
-  const useHlsPlayback = $derived(
+  let assetFileUrl = $derived.by(() => {
+    if (!useSameOriginFallback) {
+      return resolvedFileUrl;
+    }
+
+    const url = new URL(resolvedFileUrl, location.href);
+    return getBaseUrl() + url.pathname + url.search;
+  });
+  const wantsHlsPlayback = $derived(
     featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice,
   );
+  let hlsRuntimeReady = $state(false);
+  const useHlsPlayback = $derived(wantsHlsPlayback && hlsRuntimeReady);
   const aspectRatio = $derived(asset.width && asset.height ? `${asset.width} / ${asset.height}` : undefined);
-  let showVideo = $state(false);
+  let showVideo = $state(true);
   let hasFocused = $state(false);
   let activeSession: { assetId: string; id: string } | undefined;
   let loadedSourceKey: string | undefined;
@@ -103,80 +121,8 @@
 
   const MAX_REBUILDS = 1;
   const SESSION_ID_REGEX = /\/video\/stream\/([0-9a-f-]{36})\//;
-
-  // hls.js can abandon fetching an in-flight fragment if it thinks it'll take too long, in which case
-  // it emergency switches to a different variant. This extends the delay even further due to
-  // cold starting another transcode, so let the fragment finish and have steady ABR decide the next level.
-  //
-  // It can also emergency switch between fragments: while a switch's first segment is still loading,
-  // it can run out of buffer and drop to a lower level for just one segment before continuing at the switched quality.
-  // This can cause multiple redundant transcoding restarts when it occurs.
-  // Hold the committed level until its first fragment lands, then resume normal ABR.
-  class NoAbandonAbrController extends AbrController {
-    private switchTarget = -1;
-
-    protected override onFragLoading(_event: Events.FRAG_LOADING, data: FragLoadingData) {
-      if (data.frag.sn === 'initSegment') {
-        this.switchTarget = data.frag.level;
-      }
-    }
-
-    protected override onFragLoaded(event: Events.FRAG_LOADED, data: FragLoadedData) {
-      if (data.frag.sn !== 'initSegment') {
-        this.switchTarget = -1;
-      }
-      super.onFragLoaded(event, data);
-    }
-
-    override get nextAutoLevel(): number {
-      const level = super.nextAutoLevel;
-      const target = this.hls.levels[this.switchTarget];
-      // Hold the committed level, but only while hls.js still considers it healthy.
-      if (target && level < this.switchTarget && target.loadError === 0 && target.fragmentError === 0) {
-        return this.switchTarget;
-      }
-      return level;
-    }
-
-    override set nextAutoLevel(level: number) {
-      super.nextAutoLevel = level;
-    }
-  }
-
-  const hlsConfig: Partial<HlsConfig> = {
-    abrController: NoAbandonAbrController,
-    highBufferWatchdogPeriod: 10,
-    detectStallWithCurrentTimeMs: 10_000,
-    maxBufferHole: 0.5,
-    maxBufferLength: 30,
-    maxMaxBufferLength: 60,
-    fragLoadPolicy: {
-      default: {
-        maxTimeToFirstByteMs: 30_000,
-        maxLoadTimeMs: 60_000,
-        timeoutRetry: { maxNumRetry: 5, retryDelayMs: 100, maxRetryDelayMs: 0 },
-        errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
-      },
-    },
-    levelLoadPolicy: {
-      default: {
-        maxTimeToFirstByteMs: 30_000,
-        maxLoadTimeMs: 60_000,
-        timeoutRetry: { maxNumRetry: 5, retryDelayMs: 100, maxRetryDelayMs: 0 },
-        errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
-      },
-    },
-    useMediaCapabilities: false,
-    xhrSetup: (xhr: XMLHttpRequest, url: string) => {
-      const authenticatedUrl = new URL(url, assetFileUrl || location.href);
-      for (const [key, value] of Object.entries(authManager.params)) {
-        if (value) {
-          authenticatedUrl.searchParams.set(key, value as string);
-        }
-      }
-      xhr.open('GET', authenticatedUrl.href);
-    },
-  };
+  let hlsConfig: Partial<HlsConfig> | undefined;
+  let HlsApi: typeof Hls | undefined;
 
   const releaseSession = () => {
     const session = activeSession;
@@ -194,7 +140,8 @@
 
   const wireHlsListeners = (el: HlsVideoElement, assetId: string, resumeTime?: number) => {
     const api = el.api;
-    if (!api) {
+    const HlsRuntime = HlsApi;
+    if (!api || !HlsRuntime) {
       return;
     }
 
@@ -210,7 +157,7 @@
     });
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    api.on(Hls.Events.MANIFEST_PARSED, async () => {
+    api.on(HlsRuntime.Events.MANIFEST_PARSED, async () => {
       // Defer hls.js's first fragment load until we filter out suboptimal variants
       api.stopLoad();
       const id = api.levels[0]?.url[0]?.match(SESSION_ID_REGEX)?.[1];
@@ -228,15 +175,15 @@
       api.startLoad(resumeTime);
     });
 
-    api.on(Hls.Events.FRAG_LOADED, () => (rebuildCount = 0));
+    api.on(HlsRuntime.Events.FRAG_LOADED, () => (rebuildCount = 0));
 
-    api.on(Hls.Events.ERROR, (_, data) => {
+    api.on(HlsRuntime.Events.ERROR, (_, data) => {
       // 404 on a playlist or segment can mean the server-side session has expired. Refetch
       // master for a new session, but give up if it still 404s.
       const isSession404 =
         data.response?.code === 404 &&
-        (data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
-          data.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR);
+        (data.details === HlsRuntime.ErrorDetails.FRAG_LOAD_ERROR ||
+          data.details === HlsRuntime.ErrorDetails.LEVEL_LOAD_ERROR);
 
       if (data.fatal && isSession404 && rebuildCount++ < MAX_REBUILDS) {
         console.warn('HLS session error, starting new session');
@@ -262,18 +209,42 @@
     });
   };
 
-  onMount(() => {
-    showVideo = true;
+  $effect(() => {
+    if (!wantsHlsPlayback || hlsRuntimeReady) {
+      return;
+    }
+
+    let cancelled = false;
+    void import('./hls-setup').then(async (mod) => {
+      await mod.loadHlsElement();
+      if (cancelled) {
+        return;
+      }
+      HlsApi = mod.Hls;
+      hlsConfig = mod.createHlsConfig(() => assetFileUrl);
+      hlsRuntimeReady = true;
+    });
+
+    return () => {
+      cancelled = true;
+    };
   });
 
   $effect(() => {
     assetId;
     hlsFallback = false;
+    useSameOriginFallback = false;
+  });
+
+  $effect(() => {
+    if (isCrossOriginMediaBase() && !authManager.isSharedLink && authManager.authenticated) {
+      void authManager.ensureMediaSessionKey();
+    }
   });
 
   $effect(() => {
     // reactive on `assetFileUrl` changes
-    if (!videoPlayer || !assetFileUrl) {
+    if (!videoPlayer || !assetFileUrl || !mediaAuthReady) {
       return;
     }
 
@@ -288,7 +259,7 @@
     rebuildCount = 0;
     isLoading = true;
 
-    if (isHlsElement(videoPlayer)) {
+    if (isHlsElement(videoPlayer) && hlsConfig) {
       videoPlayer.config = hlsConfig;
       videoPlayer.src = assetFileUrl;
       const el = videoPlayer;
@@ -319,6 +290,23 @@
   });
 
   const handleLoadedMetadata = () => {
+    isLoading = false;
+  };
+
+  const handleLoadedData = () => {
+    if (isMobileDevice) {
+      isLoading = false;
+    }
+  };
+
+  const handleVideoError = () => {
+    if (!useSameOriginFallback && isCrossOriginMediaBase()) {
+      console.warn('Cross-origin video failed, falling back to same-origin proxy');
+      useSameOriginFallback = true;
+      loadedSourceKey = undefined;
+      return;
+    }
+
     isLoading = false;
   };
 
@@ -398,7 +386,7 @@
 
 {#if showVideo}
   <div
-    transition:fade={{ duration: assetViewerFadeDuration }}
+    transition:fade={{ duration: motionDuration(assetViewerFadeDuration) }}
     class="flex h-full place-content-center place-items-center select-none"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
@@ -428,12 +416,14 @@
             slot="media"
             loop={$loopVideoPreference && loopVideo}
             autoplay={$autoPlayVideo}
-            preload="metadata"
+            preload={videoPreload}
             disablePictureInPicture
             playsinline
             {...useSwipe(onSwipe)}
             class="h-full object-contain"
             onloadedmetadata={handleLoadedMetadata}
+            onloadeddata={handleLoadedData}
+            onerror={handleVideoError}
             oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
             onended={onVideoEnded}
             onseeking={onSeeking}
@@ -454,12 +444,14 @@
             slot="media"
             loop={$loopVideoPreference && loopVideo}
             autoplay={$autoPlayVideo}
-            preload="metadata"
+            preload={videoPreload}
             disablePictureInPicture
             playsinline
             {...useSwipe(onSwipe)}
             class="h-full object-contain"
             onloadedmetadata={handleLoadedMetadata}
+            onloadeddata={handleLoadedData}
+            onerror={handleVideoError}
             oncanplay={(e) => handleCanPlay(e.currentTarget)}
             onended={onVideoEnded}
             onseeking={onSeeking}

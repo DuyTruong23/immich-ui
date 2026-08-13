@@ -4,7 +4,9 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { locale, playVideoThumbnailOnHover } from '$lib/stores/preferences.store';
+  import { networkManager, shouldLazyLoadThumbnails, shouldPlayVideoThumbnailOnHover } from '$lib/utils/mobile-performance.svelte';
   import { getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
+  import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
   import { moveFocus } from '$lib/utils/focus-util';
   import { currentUrlReplaceAssetId } from '$lib/utils/navigation';
   import { getAltText } from '$lib/utils/thumbnail-util';
@@ -74,6 +76,52 @@
   }: Props = $props();
 
   let usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
+  const lazyThumbnails = $derived.by(() => {
+    networkManager.quality;
+    return shouldLazyLoadThumbnails();
+  });
+  const allowVideoHover = $derived.by(() => {
+    networkManager.quality;
+    return shouldPlayVideoThumbnailOnHover() && $playVideoThumbnailOnHover;
+  });
+  const mediaAuthReady = $derived(
+    !isCrossOriginMediaBase() || authManager.isSharedLink || 'sessionKey' in authManager.params,
+  );
+  const thumbnailUrl = $derived.by(() => {
+    if (!mediaAuthReady) {
+      return;
+    }
+
+    return getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Thumbnail, cacheKey: asset.thumbhash });
+  });
+  const playbackUrl = $derived.by(() => {
+    if (!mediaAuthReady) {
+      return;
+    }
+
+    return getAssetPlaybackUrl({ id: asset.id, cacheKey: asset.thumbhash });
+  });
+  const livePhotoPlaybackUrl = $derived.by(() => {
+    if (!mediaAuthReady || !asset.livePhotoVideoId) {
+      return;
+    }
+
+    return getAssetPlaybackUrl({ id: asset.livePhotoVideoId, cacheKey: asset.thumbhash });
+  });
+  const gifUrl = $derived.by(() => {
+    if (!mediaAuthReady) {
+      return;
+    }
+
+    return getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Original, cacheKey: asset.thumbhash });
+  });
+
+  $effect(() => {
+    if (isCrossOriginMediaBase() && !authManager.isSharedLink && authManager.authenticated) {
+      void authManager.ensureMediaSessionKey();
+    }
+  });
+
   let element: HTMLElement | undefined = $state();
   let mouseOver = $state(false);
   let loaded = $state(false);
@@ -244,38 +292,41 @@
         { 'rounded-xl': selected },
       ]}
     >
-      <ImageThumbnail
-        class={['absolute group-focus-visible:rounded-lg', { 'rounded-xl': selected }, imageClass]}
-        brokenAssetClass={['z-1 absolute group-focus-visible:rounded-lg', selected && 'rounded-2xl', brokenAssetClass]}
-        url={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Thumbnail, cacheKey: asset.thumbhash })}
-        altText={$getAltText(asset)}
-        widthStyle="{width}px"
-        heightStyle="{height}px"
-        curve={selected}
-        onComplete={(errored) => {
-          const rect = element?.getBoundingClientRect();
-          skipFade = !rect || rect.bottom < 0 || rect.top > window.innerHeight;
-          loaded = true;
-          thumbError = errored;
-        }}
-      />
-      {#if asset.isVideo}
+      {#if thumbnailUrl}
+        <ImageThumbnail
+          class={['absolute group-focus-visible:rounded-lg', { 'rounded-xl': selected }, imageClass]}
+          brokenAssetClass={['z-1 absolute group-focus-visible:rounded-lg', selected && 'rounded-2xl', brokenAssetClass]}
+          url={thumbnailUrl}
+          altText={$getAltText(asset)}
+          widthStyle="{width}px"
+          heightStyle="{height}px"
+          curve={selected}
+          preload={!lazyThumbnails}
+          onComplete={(errored) => {
+            const rect = element?.getBoundingClientRect();
+            skipFade = !rect || rect.bottom < 0 || rect.top > window.innerHeight;
+            loaded = true;
+            thumbError = errored;
+          }}
+        />
+      {/if}
+      {#if asset.isVideo && playbackUrl}
         <div class="pointer-events-none absolute size-full group-focus-visible:rounded-lg">
           <VideoThumbnail
             class="group-focus-visible:rounded-lg"
-            url={getAssetPlaybackUrl({ id: asset.id, cacheKey: asset.thumbhash })}
-            enablePlayback={mouseOver && $playVideoThumbnailOnHover}
+            url={playbackUrl}
+            enablePlayback={mouseOver && allowVideoHover}
             curve={selected}
             durationInSeconds={asset.duration ? asset.duration / 1000 : 0}
             playbackOnIconHover={!$playVideoThumbnailOnHover}
           />
         </div>
-      {:else if asset.isImage && asset.livePhotoVideoId}
+      {:else if asset.isImage && asset.livePhotoVideoId && livePhotoPlaybackUrl}
         <div class="pointer-events-none absolute size-full group-focus-visible:rounded-lg">
           <VideoThumbnail
             class="group-focus-visible:rounded-lg"
-            url={getAssetPlaybackUrl({ id: asset.livePhotoVideoId, cacheKey: asset.thumbhash })}
-            enablePlayback={mouseOver && $playVideoThumbnailOnHover}
+            url={livePhotoPlaybackUrl}
+            enablePlayback={mouseOver && allowVideoHover}
             pauseIcon={mdiMotionPauseOutline}
             playIcon={mdiMotionPlayOutline}
             showTime={false}
@@ -283,13 +334,13 @@
             playbackOnIconHover={!$playVideoThumbnailOnHover}
           />
         </div>
-      {:else if asset.isImage && asset.duration && mouseOver}
+      {:else if asset.isImage && asset.duration && mouseOver && gifUrl}
         <!-- GIF -->
         <div class="pointer-events-none absolute size-full">
           <ImageThumbnail
             class={imageClass}
             {brokenAssetClass}
-            url={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Original, cacheKey: asset.thumbhash })}
+            url={gifUrl}
             altText={$getAltText(asset)}
             widthStyle="{width}px"
             heightStyle="{height}px"

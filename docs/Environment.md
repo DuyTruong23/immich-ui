@@ -156,4 +156,6 @@ IMMICH_SERVER_URL=https://immich.gallery-app.pp.ua
 PUBLIC_APP_NAME=Photo Gallery
 ```
 
+Tối ưu mobile / ép tắt video-ảnh gốc **không thêm biến mới**. Video trên điện thoại phụ thuộc `PUBLIC_IMMICH_MEDIA_URL` (đã có trên Vercel).
+
 **Không set** `PUBLIC_IMMICH_SERVER_URL` cross-origin — Immich không hỗ trợ CORS; REST qua `/api` proxy same-origin.

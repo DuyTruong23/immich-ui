@@ -1,4 +1,5 @@
 @import '../../../branding/src/fonts.css';
+@import '../../../branding/src/tokens/spacing.css';
 @import '../../../branding/src/m3/tokens.css';
 @import '../../../branding/src/m3/shape.css';
 @import '../../../branding/src/m3/elevation.css';
@@ -12,6 +13,8 @@
 @import '../../../branding/src/m3/shell.css';
 @import '../../../branding/src/m3/states.css';
 @import '../../../branding/src/m3/media-chrome.css';
+@import '../../../branding/src/fluent/responsive.css';
+@import '../../../branding/src/fluent/viewer.css';
 @import '../../../branding/src/loading.css';
 
 .pg-brand-accent {
@@ -21,6 +24,17 @@
 .pg-brand-surface {
   background-color: var(--md-sys-color-surface-container);
   color: var(--md-sys-color-on-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(.immich-allow-motion) *,
+  html:not(.immich-allow-motion) *::before,
+  html:not(.immich-allow-motion) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .pg-server-error {

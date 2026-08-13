@@ -21,6 +21,7 @@
   import { assetsSnapshot } from '$lib/managers/timeline-manager/utils.svelte';
   import { keyboardManager } from '$lib/stores/keyboard-manager.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
+  import { getTimelineLayoutOptions, networkManager } from '$lib/utils/mobile-performance.svelte';
   import { isAssetViewerRoute, navigate } from '$lib/utils/navigation';
   import { getTimes, type ScrubberListener } from '$lib/utils/timeline-util';
   import { type AlbumResponseDto, type PersonResponseDto, type UserResponseDto } from '@immich/sdk';
@@ -106,16 +107,9 @@
   const usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
 
   $effect(() => {
-    const layoutOptions = maxMd
-      ? {
-          rowHeight: 100,
-          headerHeight: 32,
-        }
-      : {
-          rowHeight: 235,
-          headerHeight: 48,
-        };
-    timelineManager.setLayoutOptions(layoutOptions);
+    maxMd;
+    networkManager.quality;
+    timelineManager.setLayoutOptions(getTimelineLayoutOptions());
   });
 
   $effect(() => {
