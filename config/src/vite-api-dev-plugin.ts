@@ -35,7 +35,8 @@ export const isDevApiRoute = (url?: string): boolean => {
 };
 
 /** Proxy context: match /api/* except local dev serverless routes. */
-export const immichApiProxyPattern = '^/api/(?!feature-updates(?:[/?]|$))';
+export const immichApiProxyPattern =
+  '^/api/(?!feature-updates(?:[/?]|$)|notify-login(?:[/?]|$)|notify-deploy(?:[/?]|$)|feedback(?:[/?]|$))';
 
 const readRequestBody = (request: IncomingMessage): Promise<Uint8Array | undefined> =>
   new Promise((resolve, reject) => {

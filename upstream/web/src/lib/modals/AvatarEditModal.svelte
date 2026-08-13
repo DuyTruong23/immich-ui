@@ -59,9 +59,19 @@
       img.src = objectUrl;
       await img.decode();
 
+      const side = Math.min(img.width, img.height);
+      if (side <= 0) {
+        throw new Error('Could not create profile image.');
+      }
+
+      const maxSize = 512;
+      const output = Math.min(side, maxSize);
+      const sx = (img.width - side) / 2;
+      const sy = (img.height - side) / 2;
+
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = output;
+      canvas.height = output;
 
       const context = canvas.getContext('2d');
       if (!context) {
@@ -69,8 +79,8 @@
       }
 
       context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(img, 0, 0);
+      context.fillRect(0, 0, output, output);
+      context.drawImage(img, sx, sy, side, side, 0, 0, output, output);
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((result) => {
@@ -79,7 +89,7 @@
             return;
           }
           reject(new Error('Could not create profile image.'));
-        }, 'image/jpeg', 0.92);
+        }, 'image/jpeg', 0.9);
       });
 
       return new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });

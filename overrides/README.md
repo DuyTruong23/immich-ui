@@ -11,6 +11,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/side-bar/StorageSpace.svelte` | Sửa dark mode cho Storage space |
 | `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
 | `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |
+| `lib/components/shared-components/UserAvatar.svelte` | URL avatar kèm `sessionKey` khi media cross-origin |
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar |
 | `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile preload, HLS lazy-load, cross-origin fallback |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |

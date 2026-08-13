@@ -99,7 +99,6 @@ export default async function handler(request: Request): Promise<Response> {
   const adminEmail = getEnv('ADMIN_NOTIFY_EMAIL');
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM');
   const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
-  const skipAdmin = getEnv('LOGIN_NOTIFY_SKIP_ADMIN') !== 'false';
 
   if (!adminEmail || !fromEmail) {
     return json({ error: 'Email notification is not configured' }, 503);
@@ -118,10 +117,6 @@ export default async function handler(request: Request): Promise<Response> {
   const user = await verifySession(request, body.accessToken);
   if (!user) {
     return json({ error: 'Unauthorized' }, 401);
-  }
-
-  if (skipAdmin && user.isAdmin) {
-    return json({ ok: true, skipped: true, reason: 'admin_login' });
   }
 
   try {

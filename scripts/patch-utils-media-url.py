@@ -19,11 +19,21 @@ def patch_utils(utils_path: pathlib.Path) -> None:
 
     old = '  return getBaseUrl() + url.pathname + url.search + url.hash;'
     new = '  return getMediaBaseUrl() + url.pathname + url.search + url.hash;'
-    if old not in text:
-        if new in text:
-            return
+    if old in text:
+        text = text.replace(old, new, 1)
+    elif new not in text:
         raise SystemExit(f"Cannot find createUrl return in {utils_path}")
-    text = text.replace(old, new, 1)
+
+    old_profile = (
+        'createUrl(getUserProfileImagePath(user.id), { updatedAt: user.profileChangedAt });'
+    )
+    new_profile = (
+        'createUrl(getUserProfileImagePath(user.id), { ...authManager.params, updatedAt: user.profileChangedAt });'
+    )
+    if old_profile in text:
+        text = text.replace(old_profile, new_profile, 1)
+    elif new_profile not in text:
+        raise SystemExit(f'Cannot find getProfileImageUrl in {utils_path}')
 
     utils_path.write_text(text, encoding='utf-8')
 

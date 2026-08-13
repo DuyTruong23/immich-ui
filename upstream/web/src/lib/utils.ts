@@ -257,7 +257,7 @@ export const getAssetHlsSessionUrl = (id: string, sessionId: string) => {
 };
 
 export const getProfileImageUrl = (user: UserResponseDto) =>
-  createUrl(getUserProfileImagePath(user.id), { updatedAt: user.profileChangedAt });
+  createUrl(getUserProfileImagePath(user.id), { ...authManager.params, updatedAt: user.profileChangedAt });
 
 export const getPeopleThumbnailUrl = (person: PersonResponseDto, updatedAt?: string) =>
   createUrl(getPeopleThumbnailPath(person.id), { updatedAt: updatedAt ?? person.updatedAt });

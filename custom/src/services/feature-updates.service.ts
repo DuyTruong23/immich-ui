@@ -22,6 +22,12 @@ export const getDefaultFeatureUpdatesConfig = (): FeatureUpdatesConfig => ({
   items: isUiDevMode() ? [...FEATURE_UPDATES_MOCK] : [...DEFAULT_FEATURE_UPDATE_ITEMS],
 });
 
+/** Config đã cache, hoặc mặc định — không chờ network (dùng khi mở modal). */
+export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig =>
+  cachedConfig ?? getDefaultFeatureUpdatesConfig();
+
+const FETCH_TIMEOUT_MS = 2500;
+
 export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): Promise<FeatureUpdatesConfig> => {
   if (!options?.force && cachedConfig) {
     return cachedConfig;
@@ -32,8 +38,11 @@ export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): 
     return cachedConfig;
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
-    const response = await fetch('/api/feature-updates', { cache: 'no-store' });
+    const response = await fetch('/api/feature-updates', { cache: 'no-store', signal: controller.signal });
     if (response.ok) {
       const data = (await response.json()) as FeatureUpdatesConfig;
       if (data.version && Array.isArray(data.items) && data.items.length > 0) {
@@ -46,10 +55,11 @@ export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): 
     }
   } catch (error) {
     console.warn('[feature-updates] Failed to load config', error);
+  } finally {
+    clearTimeout(timer);
   }
 
-  cachedConfig = DEFAULT_CONFIG;
-  return cachedConfig;
+  return cachedConfig ?? DEFAULT_CONFIG;
 };
 
 export const saveFeatureUpdatesConfig = async (

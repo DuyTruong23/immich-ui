@@ -1,4 +1,4 @@
-import { fetchFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
+import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import FeatureUpdateModal from '../../routes/FeatureUpdateModal.svelte';
 import { modalManager } from '@immich/ui';
@@ -17,7 +17,15 @@ export const showFeatureUpdateModal = async ({
   originElement = null,
 }: ShowFeatureUpdateModalOptions = {}) => {
   const preview = isUiDevMode();
-  const config = updates && version ? { version, items: [...updates] } : await fetchFeatureUpdatesConfig({ force: true });
+  const config =
+    updates && version ? { version, items: [...updates] } : peekFeatureUpdatesConfig();
+
+  void fetchFeatureUpdatesConfig({ force: true });
+
+  // Yield so the originating click does not dismiss the dialog as an outside click.
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
 
   return modalManager.show(FeatureUpdateModal, {
     accessToken: preview ? undefined : accessToken,

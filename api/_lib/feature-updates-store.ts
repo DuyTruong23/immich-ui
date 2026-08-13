@@ -7,8 +7,25 @@ import {
 } from './feature-updates-config.js';
 
 const BLOB_PATHNAME = 'feature-updates/config.json';
+const BLOB_READ_TIMEOUT_MS = 2500;
 
 let memoryConfig: FeatureUpdatesConfig | null = null;
+
+const withTimeout = async <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('blob read timed out')), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+};
 
 const readEnvConfig = (): FeatureUpdatesConfig | null => {
   const raw = getEnv('FEATURE_UPDATES_CONFIG');
@@ -27,7 +44,7 @@ const readBlobConfig = async (): Promise<FeatureUpdatesConfig | null> => {
 
   try {
     const { head } = await import('@vercel/blob');
-    const blob = await head(BLOB_PATHNAME, { token });
+    const blob = await withTimeout(head(BLOB_PATHNAME, { token }), BLOB_READ_TIMEOUT_MS);
     const response = await fetch(blob.url, { cache: 'no-store' });
     if (!response.ok) {
       return null;
