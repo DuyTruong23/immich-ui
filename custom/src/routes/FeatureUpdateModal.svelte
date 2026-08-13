@@ -1,48 +1,112 @@
 <script lang="ts">
-  import { FEATURE_UPDATES, FEATURE_UPDATE_VERSION } from '$custom/constants/feature-updates';
+  import {
+    DEFAULT_FEATURE_UPDATE_ITEMS,
+    DEFAULT_FEATURE_UPDATE_VERSION,
+  } from '$custom/constants/feature-updates';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
   import { Field, Button, HStack, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   type Props = {
     onClose: () => void;
     accessToken?: string;
+    version?: string;
     updates?: readonly string[];
     preview?: boolean;
+    originElement?: HTMLElement | null;
   };
 
-  const { onClose, accessToken, updates = FEATURE_UPDATES, preview = false }: Props = $props();
+  const {
+    onClose,
+    accessToken,
+    version = DEFAULT_FEATURE_UPDATE_VERSION,
+    updates = DEFAULT_FEATURE_UPDATE_ITEMS,
+    preview = false,
+    originElement = null,
+  }: Props = $props();
 
-  const AUTO_CLOSE_MS = 5000;
+  const CLOSE_MS = 200;
+  const MODAL_CLASS = 'pg-feature-update-modal';
 
   let feedback = $state('');
-  let autoClosePaused = $state(false);
   let sentFeedback = $state(false);
-  let timerId: ReturnType<typeof setTimeout> | undefined;
+  let isClosing = $state(false);
 
   const hasFeedback = $derived(feedback.trim().length > 0);
 
-  const pauseAutoClose = () => {
-    if (autoClosePaused) {
+  const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const setTransformOrigin = () => {
+    const card = document.querySelector<HTMLElement>(`.${MODAL_CLASS}`);
+    if (!card || !originElement) {
       return;
     }
 
-    autoClosePaused = true;
+    const cardRect = card.getBoundingClientRect();
+    const originRect = originElement.getBoundingClientRect();
+    const originX = originRect.left + originRect.width / 2 - cardRect.left;
+    const originY = originRect.top + originRect.height / 2 - cardRect.top;
 
-    if (timerId !== undefined) {
-      clearTimeout(timerId);
-      timerId = undefined;
-    }
+    card.style.transformOrigin = `${originX}px ${originY}px`;
   };
 
+  onMount(() => {
+    document.documentElement.dataset.featureUpdateModal = 'open';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(setTransformOrigin);
+    });
+
+    return () => {
+      delete document.documentElement.dataset.featureUpdateModal;
+    };
+  });
+
   const handleDismiss = () => {
-    pauseAutoClose();
-    onClose();
+    if (isClosing) {
+      return;
+    }
+
+    isClosing = true;
+    document.documentElement.dataset.featureUpdateModal = 'closing';
+
+    if (prefersReducedMotion()) {
+      onClose();
+      return;
+    }
+
+    let finished = false;
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+      onClose();
+    };
+
+    const card = document.querySelector<HTMLElement>(`.${MODAL_CLASS}`);
+    const fallbackTimer = window.setTimeout(finish, CLOSE_MS + 40);
+
+    if (!card) {
+      return;
+    }
+
+    const onAnimationEnd = (event: AnimationEvent) => {
+      if (event.target !== card) {
+        return;
+      }
+
+      card.removeEventListener('animationend', onAnimationEnd);
+      window.clearTimeout(fallbackTimer);
+      finish();
+    };
+
+    card.addEventListener('animationend', onAnimationEnd);
   };
 
   const handleSendFeedback = () => {
-    pauseAutoClose();
-
     const trimmed = feedback.trim();
     if (!trimmed || sentFeedback) {
       return;
@@ -52,19 +116,15 @@
     sentFeedback = true;
     handleDismiss();
   };
-
-  onMount(() => {
-    timerId = setTimeout(handleDismiss, AUTO_CLOSE_MS);
-  });
-
-  onDestroy(() => {
-    if (timerId !== undefined) {
-      clearTimeout(timerId);
-    }
-  });
 </script>
 
-<Modal size="medium" title="Tính năng được cập nhật" onClose={handleDismiss} icon={false}>
+<Modal
+  size="medium"
+  title="Tính năng được cập nhật"
+  onClose={handleDismiss}
+  icon={false}
+  class="{MODAL_CLASS}{isClosing ? ` ${MODAL_CLASS}--closing` : ''}"
+>
   <ModalBody>
     {#if preview}
       <Text size="tiny" class="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
@@ -75,7 +135,7 @@
     <span
       class="mb-3 inline-flex rounded-full bg-(--md-sys-color-primary-container) px-2.5 py-0.5 text-xs font-semibold tracking-wide text-(--md-sys-color-on-primary-container)"
     >
-      {FEATURE_UPDATE_VERSION}
+      {version}
     </span>
 
     <Text class="text-(--md-sys-color-on-surface-variant)">
@@ -94,16 +154,8 @@
         grow
         rows={4}
         placeholder="Chia sẻ trải nghiệm hoặc góp ý của bạn..."
-        onfocus={pauseAutoClose}
-        oninput={pauseAutoClose}
       />
     </Field>
-
-    {#if !autoClosePaused}
-      <Text size="tiny" class="mt-3 text-(--md-sys-color-on-surface-variant)">
-        Modal sẽ tự đóng sau 5 giây
-      </Text>
-    {/if}
   </ModalBody>
 
   <ModalFooter>
@@ -115,3 +167,69 @@
     </HStack>
   </ModalFooter>
 </Modal>
+
+<style>
+  :global(html[data-feature-update-modal='open'] [data-dialog-overlay]) {
+    animation: pg-feature-update-backdrop-in var(--md-motion-duration-short, 200ms)
+      var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)) both;
+  }
+
+  :global(html[data-feature-update-modal='closing'] [data-dialog-overlay]) {
+    animation: pg-feature-update-backdrop-out 180ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
+  }
+
+  :global(.pg-feature-update-modal:not(.pg-feature-update-modal--closing)) {
+    will-change: transform, opacity;
+    animation: pg-feature-update-content-in var(--md-motion-duration-short, 200ms)
+      var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)) both;
+  }
+
+  :global(.pg-feature-update-modal--closing) {
+    will-change: transform, opacity;
+    animation: pg-feature-update-content-out 180ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
+  }
+
+  @keyframes pg-feature-update-content-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pg-feature-update-content-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+
+  @keyframes pg-feature-update-backdrop-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pg-feature-update-backdrop-out {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+</style>

@@ -17,8 +17,9 @@
   import { notificationManager } from '$lib/stores/notification-manager.svelte';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
   import { shouldShowNotifications } from '$lib/utils/user-restrictions';
+  import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import { ActionButton, Button, IconButton } from '@immich/ui';
-  import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiTrayArrowUp } from '@mdi/js';
+  import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiNewBox, mdiTrayArrowUp } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import ThemeButton from '../ThemeButton.svelte';
@@ -51,6 +52,12 @@
   });
 
   const { Cast } = $derived(getGlobalActions($t));
+
+  const openFeatureUpdateModal = (event: MouseEvent) => {
+    showFeatureUpdateModal({ originElement: event.currentTarget as HTMLElement }).catch((error) => {
+      console.error('[NavigationBar] Failed to open feature update modal', error);
+    });
+  };
 </script>
 
 <svelte:window bind:innerWidth />
@@ -131,6 +138,17 @@
         {/if}
 
         <ThemeButton />
+
+        <IconButton
+          shape="round"
+          color="secondary"
+          variant="ghost"
+          size="medium"
+          icon={mdiNewBox}
+          onclick={openFeatureUpdateModal}
+          title="Tính năng mới"
+          aria-label="Tính năng mới"
+        />
 
         {#if showNotifications}
           <div

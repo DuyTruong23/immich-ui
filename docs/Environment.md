@@ -112,11 +112,18 @@ Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → g
 
 ## Modal cập nhật tính năng sau login
 
-Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công. Modal tự đóng sau 5 giây; nếu user focus hoặc nhập vào ô **Đóng góp ý kiến**, timer auto-close sẽ dừng.
+Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công (và qua nút **Tính năng mới** trên navbar).
 
-**Cập nhật danh sách:** sửa mảng `FEATURE_UPDATES` trong `custom/src/constants/feature-updates.ts`, rồi redeploy.
+**Admin UI:** `/admin/feature-updates` — tab **Tính năng cập nhật** trong sidebar admin. Chỉnh phiên bản và danh sách mục, bấm **Lưu thay đổi**.
 
-Chi tiết luồng, preview dev, và trang **"Hệ thống đang cập nhật dữ liệu."**: [UserMessaging.md](./UserMessaging.md).
+| Biến | Bắt buộc | Mô tả |
+|---|---|---|
+| `BLOB_READ_WRITE_TOKEN` | Có (để lưu) | Token Vercel Blob — lưu config cho mọi user |
+| `FEATURE_UPDATES_CONFIG` | Không | JSON fallback chỉ đọc khi chưa có blob. Ví dụ: `{"version":"v1.0.4","items":["Mục 1"]}` |
+
+Fallback mặc định: `custom/src/constants/feature-updates.ts`.
+
+Chi tiết luồng, preview dev: [UserMessaging.md](./UserMessaging.md).
 
 ### Gửi góp ý qua email (Vercel)
 

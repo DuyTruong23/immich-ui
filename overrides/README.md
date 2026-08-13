@@ -26,6 +26,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 |---|---|
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |
+| `custom/src/routes/admin/feature-updates/` | Admin tùy chỉnh modal tính năng mới |
 | `custom/src/service-worker/index.ts` | Cache thumbnail cross-origin |
+| `lib/components/layouts/AdminPageLayout.svelte` | Thêm tab admin **Tính năng cập nhật** |
 
 Alias trong `config/src/vite.integration.ts` (backup). **Thực tế:** `pnpm prepare:custom` merge `overrides/lib/` → `upstream/web/src/lib/`.

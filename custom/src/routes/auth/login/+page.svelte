@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getAppConfig } from '@photo-gallery/config';
   import { applyDevRole, isUiDevMode, type UiDevRole } from '$custom/hooks/ui-dev-mode';
-  import { getFeatureUpdatesForDisplay } from '$custom/constants/feature-updates';
+  import { loadFeatureUpdatesForDisplay } from '$custom/constants/feature-updates';
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
@@ -48,10 +48,12 @@
     } as LoginResponseDto);
   };
 
-  const previewFeatureModal = () => {
+  const previewFeatureModal = async () => {
+    const config = await loadFeatureUpdatesForDisplay();
     modalManager
       .show(FeatureUpdateModal, {
-        updates: getFeatureUpdatesForDisplay(),
+        version: config.version,
+        updates: config.items,
         preview: isUiDevMode(),
       })
       .catch((error) => {
