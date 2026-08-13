@@ -4,15 +4,7 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { locale, playVideoThumbnailOnHover } from '$lib/stores/preferences.store';
-  import {
-    networkManager,
-    shouldLazyLoadThumbnails,
-    shouldLoadAnimatedPreview,
-    shouldLoadLivePhotoPreview,
-    shouldPlayVideoThumbnailOnHover,
-  } from '$lib/utils/mobile-performance.svelte';
   import { getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
-  import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
   import { moveFocus } from '$lib/utils/focus-util';
   import { currentUrlReplaceAssetId } from '$lib/utils/navigation';
   import { getAltText } from '$lib/utils/thumbnail-util';
@@ -82,52 +74,6 @@
   }: Props = $props();
 
   let usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
-  const lazyThumbnails = $derived.by(() => {
-    networkManager.quality;
-    return shouldLazyLoadThumbnails();
-  });
-  const allowVideoHover = $derived.by(() => {
-    networkManager.quality;
-    return shouldPlayVideoThumbnailOnHover() && $playVideoThumbnailOnHover;
-  });
-  const mediaAuthReady = $derived(
-    !isCrossOriginMediaBase() || authManager.isSharedLink || 'sessionKey' in authManager.params,
-  );
-  const thumbnailUrl = $derived.by(() => {
-    if (!mediaAuthReady) {
-      return;
-    }
-
-    return getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Thumbnail, cacheKey: asset.thumbhash });
-  });
-  const playbackUrl = $derived.by(() => {
-    if (!mediaAuthReady || !asset.isVideo) {
-      return;
-    }
-
-    return getAssetPlaybackUrl({ id: asset.id, cacheKey: asset.thumbhash });
-  });
-  const livePhotoPlaybackUrl = $derived.by(() => {
-    if (!mediaAuthReady || !asset.livePhotoVideoId || !shouldLoadLivePhotoPreview()) {
-      return;
-    }
-
-    return getAssetPlaybackUrl({ id: asset.livePhotoVideoId, cacheKey: asset.thumbhash });
-  });
-  const gifUrl = $derived.by(() => {
-    if (!mediaAuthReady || !shouldLoadAnimatedPreview()) {
-      return;
-    }
-
-    return getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Original, cacheKey: asset.thumbhash });
-  });
-
-  $effect(() => {
-    if (isCrossOriginMediaBase() && !authManager.isSharedLink && authManager.authenticated) {
-      void authManager.ensureMediaSessionKey();
-    }
-  });
-
   let element: HTMLElement | undefined = $state();
   let mouseOver = $state(false);
   let loaded = $state(false);
@@ -205,6 +151,7 @@
       startX = evt.clientX;
       startY = evt.clientY;
       didPress = false;
+      // 350ms for longpress. For reference: iOS uses 500ms for default long press, or 200ms for fast long press.
       timer = setTimeout(() => {
         onLongPress();
         element.addEventListener('contextmenu', preventContextMenu, { once: true });
@@ -297,41 +244,38 @@
         { 'rounded-xl': selected },
       ]}
     >
-      {#if thumbnailUrl}
-        <ImageThumbnail
-          class={['absolute group-focus-visible:rounded-lg', { 'rounded-xl': selected }, imageClass]}
-          brokenAssetClass={['z-1 absolute group-focus-visible:rounded-lg', selected && 'rounded-2xl', brokenAssetClass]}
-          url={thumbnailUrl}
-          altText={$getAltText(asset)}
-          widthStyle="{width}px"
-          heightStyle="{height}px"
-          curve={selected}
-          preload={!lazyThumbnails}
-          onComplete={(errored) => {
-            const rect = element?.getBoundingClientRect();
-            skipFade = !rect || rect.bottom < 0 || rect.top > window.innerHeight;
-            loaded = true;
-            thumbError = errored;
-          }}
-        />
-      {/if}
-      {#if asset.isVideo && playbackUrl}
+      <ImageThumbnail
+        class={['absolute group-focus-visible:rounded-lg', { 'rounded-xl': selected }, imageClass]}
+        brokenAssetClass={['z-1 absolute group-focus-visible:rounded-lg', selected && 'rounded-2xl', brokenAssetClass]}
+        url={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Thumbnail, cacheKey: asset.thumbhash })}
+        altText={$getAltText(asset)}
+        widthStyle="{width}px"
+        heightStyle="{height}px"
+        curve={selected}
+        onComplete={(errored) => {
+          const rect = element?.getBoundingClientRect();
+          skipFade = !rect || rect.bottom < 0 || rect.top > window.innerHeight;
+          loaded = true;
+          thumbError = errored;
+        }}
+      />
+      {#if asset.isVideo}
         <div class="pointer-events-none absolute size-full group-focus-visible:rounded-lg">
           <VideoThumbnail
             class="group-focus-visible:rounded-lg"
-            url={playbackUrl}
-            enablePlayback={mouseOver && allowVideoHover}
+            url={getAssetPlaybackUrl({ id: asset.id, cacheKey: asset.thumbhash })}
+            enablePlayback={mouseOver && $playVideoThumbnailOnHover}
             curve={selected}
             durationInSeconds={asset.duration ? asset.duration / 1000 : 0}
             playbackOnIconHover={!$playVideoThumbnailOnHover}
           />
         </div>
-      {:else if asset.isImage && asset.livePhotoVideoId && livePhotoPlaybackUrl}
+      {:else if asset.isImage && asset.livePhotoVideoId}
         <div class="pointer-events-none absolute size-full group-focus-visible:rounded-lg">
           <VideoThumbnail
             class="group-focus-visible:rounded-lg"
-            url={livePhotoPlaybackUrl}
-            enablePlayback={mouseOver && allowVideoHover}
+            url={getAssetPlaybackUrl({ id: asset.livePhotoVideoId, cacheKey: asset.thumbhash })}
+            enablePlayback={mouseOver && $playVideoThumbnailOnHover}
             pauseIcon={mdiMotionPauseOutline}
             playIcon={mdiMotionPlayOutline}
             showTime={false}
@@ -339,13 +283,13 @@
             playbackOnIconHover={!$playVideoThumbnailOnHover}
           />
         </div>
-      {:else if asset.isImage && asset.duration && mouseOver && gifUrl}
+      {:else if asset.isImage && asset.duration && mouseOver}
         <!-- GIF -->
         <div class="pointer-events-none absolute size-full">
           <ImageThumbnail
             class={imageClass}
             {brokenAssetClass}
-            url={gifUrl}
+            url={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Original, cacheKey: asset.thumbhash })}
             altText={$getAltText(asset)}
             widthStyle="{width}px"
             heightStyle="{height}px"
@@ -370,6 +314,7 @@
 
       <!-- icon overlay -->
       <div class="absolute inset-0 z-2">
+        <!-- Gradient overlay on hover -->
         {#if !usingMobileDevice && !disabled && !asset.isVideo}
           <div
             class={[
@@ -379,6 +324,7 @@
           ></div>
         {/if}
 
+        <!-- Dimmed support -->
         {#if dimmed && !mouseOver}
           <div
             id="a"
@@ -386,6 +332,7 @@
           ></div>
         {/if}
 
+        <!-- Favorite asset star -->
         {#if !authManager.isSharedLink && asset.isFavorite}
           <div class="absolute inset-s-2 bottom-2 z-2">
             <Icon data-icon-favorite icon={mdiHeart} size="24" class="text-white" />
@@ -422,6 +369,7 @@
           </div>
         {/if}
 
+        <!-- Stacked asset -->
         {#if asset.stack && showStackedIcon}
           <div
             class={[
@@ -437,6 +385,7 @@
         {/if}
       </div>
 
+      <!-- lazy show the url on mouse over-->
       {#if !usingMobileDevice && mouseOver && !disableLinkMouseOver}
         <a
           class="absolute inset-y-0 z-2 w-full"
@@ -458,6 +407,7 @@
       ></div>
     {/if}
 
+    <!-- Select asset button  -->
     {#if !readonly && (mouseOver || selected || selectionCandidate)}
       <button
         type="button"
@@ -480,6 +430,7 @@
       </button>
     {/if}
 
+    <!-- Preview asset button (visible on hover when any asset is selected) -->
     {#if mouseOver && onPreview}
       <button
         type="button"
@@ -497,6 +448,7 @@
       </button>
     {/if}
 
+    <!-- Outline on focus -->
     <div
       class={[
         'pointer-events-none absolute z-1 size-full outline-immich-primary group-focus-visible:outline-4 group-focus-visible:-outline-offset-4 dark:outline-immich-dark-primary',

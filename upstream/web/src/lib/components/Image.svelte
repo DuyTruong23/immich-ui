@@ -18,14 +18,6 @@
   let loaded = $state(false);
   let destroyed = false;
 
-  const isThumbnailRequest = (url: string) => {
-    try {
-      return /\/assets\/[0-9a-f-]+\/thumbnail(?:\?|$)/i.test(new URL(url, location.href).pathname);
-    } catch {
-      return false;
-    }
-  };
-
   $effect(() => {
     if (src === undefined || capturedSource !== undefined) {
       return;
@@ -39,7 +31,7 @@
 
   onDestroy(() => {
     destroyed = true;
-    if (capturedSource !== undefined && !isThumbnailRequest(capturedSource)) {
+    if (capturedSource !== undefined) {
       cancelImageUrl(capturedSource);
     }
   });

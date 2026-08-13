@@ -480,16 +480,8 @@ def main() -> None:
     web = root / 'upstream/web'
     patch_timeline(web / 'src/lib/components/timeline/Timeline.svelte')
 
-    if override_exists(root, 'components/assets/thumbnail/Thumbnail.svelte'):
-        print('==> Skip Thumbnail patches (override present)')
-    else:
-        patch_thumbnail(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
-        patch_thumbnail_media_auth(web / 'src/lib/components/assets/thumbnail/Thumbnail.svelte')
-
-    if override_exists(root, 'components/assets/thumbnail/ImageThumbnail.svelte'):
-        print('==> Skip ImageThumbnail patch (override present)')
-    else:
-        patch_image_thumbnail_reset(web / 'src/lib/components/assets/thumbnail/ImageThumbnail.svelte')
+    # Keep timeline thumbnails on upstream Immich behavior; video-detail tweaks live in overrides.
+    print('==> Skip Thumbnail/ImageThumbnail patches (use upstream Immich thumbnail flow)')
 
     if override_exists(root, 'managers/auth-manager.svelte.ts'):
         print('==> Skip auth-manager patch (override present)')

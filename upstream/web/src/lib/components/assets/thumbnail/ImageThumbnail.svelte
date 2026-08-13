@@ -45,16 +45,6 @@
 
   let loaded = $state(false);
   let errored = $state(false);
-  let retryCount = $state(0);
-
-  const MAX_RETRIES = 2;
-
-  $effect(() => {
-    url;
-    loaded = false;
-    errored = false;
-    retryCount = 0;
-  });
 
   const setLoaded = () => {
     loaded = true;
@@ -62,13 +52,6 @@
   };
 
   const setErrored = () => {
-    if (retryCount < MAX_RETRIES) {
-      retryCount += 1;
-      loaded = false;
-      errored = false;
-      return;
-    }
-
     errored = true;
     onComplete?.(true);
   };
@@ -91,21 +74,17 @@
 {#if errored}
   <BrokenAsset class={[sharedClasses, brokenAssetClass]} width={widthStyle} height={heightStyle} />
 {:else}
-  {#key `${url}-${retryCount}`}
-    <Image
-      src={url}
-      onLoad={setLoaded}
-      onError={setErrored}
-      class={['bg-gray-300 object-cover dark:bg-gray-700', sharedClasses, imageClass]}
-      {style}
-      alt={loaded || errored ? altText : ''}
-      draggable={false}
-      title={title ?? undefined}
-      loading={preload ? 'eager' : 'lazy'}
-      decoding="async"
-      fetchpriority={preload ? 'high' : 'low'}
-    />
-  {/key}
+  <Image
+    src={url}
+    onLoad={setLoaded}
+    onError={setErrored}
+    class={['bg-gray-300 object-cover dark:bg-gray-700', sharedClasses, imageClass]}
+    {style}
+    alt={loaded || errored ? altText : ''}
+    draggable={false}
+    title={title ?? undefined}
+    loading={preload ? 'eager' : 'lazy'}
+  />
 {/if}
 
 {#if hidden}
