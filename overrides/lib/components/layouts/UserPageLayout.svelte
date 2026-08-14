@@ -4,7 +4,6 @@
 
 <script lang="ts">
   import { useActions, type ActionArray } from '$lib/actions/use-actions';
-  import FeatureUpdatePin from '$custom/components/FeatureUpdatePin.svelte';
   import NavigationBar from '$lib/components/shared-components/navigation-bar/NavigationBar.svelte';
   import MobileThumbnailHint from '../shared-components/MobileThumbnailHint.svelte';
   import PwaInstallHint from '../shared-components/PwaInstallHint.svelte';
@@ -118,5 +117,4 @@
     {/if}
   </main>
   </div>
-  <FeatureUpdatePin belowNavbar={!hideNavbar} />
 </div>

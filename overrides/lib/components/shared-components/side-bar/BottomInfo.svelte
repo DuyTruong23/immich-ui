@@ -2,13 +2,10 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import PurchaseInfo from '$lib/components/shared-components/side-bar/PurchaseInfo.svelte';
   import ServerStatus from '$lib/components/shared-components/side-bar/ServerStatus.svelte';
-  import StorageSpace from '$lib/components/shared-components/side-bar/StorageSpace.svelte';
 </script>
 
 {#if authManager.authenticated}
-  <div class="mt-auto">
-    <StorageSpace />
-  </div>
+  <div class="mt-auto"></div>
 {/if}
 
 <PurchaseInfo />

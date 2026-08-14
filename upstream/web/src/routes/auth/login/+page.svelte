@@ -19,7 +19,7 @@
   import { login, type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Icon, IconButton, Input, Stack, Text, modalManager } from '@immich/ui';
   import { mdiAccountCog, mdiAccountOutline, mdiEyeOffOutline, mdiEyeOutline, mdiPalette } from '@mdi/js';
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
@@ -39,12 +39,38 @@
   let passwordVisible = $state(false);
   let blockAutofill = $state(true);
   let loginFieldsMounted = $state(true);
+  let autofillUnlockTimer: ReturnType<typeof setTimeout> | undefined;
 
   const serverConfig = $derived(serverConfigManager.value);
   const passwordToggleLabel = $derived(passwordVisible ? $t('hide_password') : $t('show_password'));
+  const loginIdName = `pg-ident-${Math.random().toString(36).slice(2, 10)}`;
+  const loginSecretName = `pg-secret-${Math.random().toString(36).slice(2, 10)}`;
 
-  const unlockAutofill = () => {
+  const unlockAutofill = (event?: Event) => {
+    if (!blockAutofill) {
+      return;
+    }
+
+    if (autofillUnlockTimer !== undefined) {
+      clearTimeout(autofillUnlockTimer);
+      autofillUnlockTimer = undefined;
+    }
+
+    const input = event?.target instanceof HTMLInputElement ? event.target : null;
+    input?.removeAttribute('readonly');
     blockAutofill = false;
+  };
+
+  const scheduleUnlockAutofill = () => {
+    if (!blockAutofill || autofillUnlockTimer !== undefined) {
+      return;
+    }
+
+    // Chrome quét autofill ngay lúc focus — giữ readonly qua nhịp đó.
+    autofillUnlockTimer = setTimeout(() => {
+      autofillUnlockTimer = undefined;
+      unlockAutofill();
+    }, 200);
   };
 
   const stripPasswordManagerSignals = () => {
@@ -153,6 +179,12 @@
     oauthLoading = false;
   });
 
+  onDestroy(() => {
+    if (autofillUnlockTimer !== undefined) {
+      clearTimeout(autofillUnlockTimer);
+    }
+  });
+
   const handleLogin = async () => {
     if (loading) {
       return;
@@ -210,6 +242,11 @@
 
     event.preventDefault();
     void handleLogin();
+  };
+
+  const onFieldKeydown = (event: KeyboardEvent) => {
+    unlockAutofill(event);
+    onLoginKeydown(event);
   };
 </script>
 
@@ -288,52 +325,71 @@
           {/if}
 
           {#if loginFieldsMounted}
-            <Field label={$t('email')} required="indicator">
-              <Input
-                id="pg-login-email"
-                name="pg-login-email"
-                type="text"
-                inputmode="email"
-                autocapitalize="none"
-                autocorrect="off"
-                spellcheck={false}
-                autocomplete="off"
-                readonly={blockAutofill}
-                onfocus={unlockAutofill}
-                onkeydown={onLoginKeydown}
-                bind:value={email}
-              />
-            </Field>
-
-            <Field label={$t('password')} required="indicator">
-              <div class:pg-login-password-masked={!passwordVisible}>
+            <Field required="indicator">
+              <div class="flex w-full flex-col gap-1">
+                <div class="inline-block">
+                  <span class="text-sm font-medium">{$t('email')}</span>
+                  <span aria-hidden="true" class="text-danger">*</span>
+                </div>
                 <Input
-                  id="pg-login-password"
-                  name="pg-login-password"
+                  name={loginIdName}
                   type="text"
                   autocapitalize="none"
                   autocorrect="off"
                   spellcheck={false}
-                  autocomplete="off"
+                  autocomplete="nope"
+                  aria-label={$t('email')}
+                  data-1p-ignore
+                  data-lpignore="true"
+                  data-bwignore
+                  data-form-type="other"
                   readonly={blockAutofill}
-                  onfocus={unlockAutofill}
-                  onkeydown={onLoginKeydown}
-                  bind:value={password}
-                >
-                  {#snippet trailingIcon()}
-                    <IconButton
-                      variant="ghost"
-                      shape="round"
-                      color="secondary"
-                      size="small"
-                      class="me-1"
-                      icon={passwordVisible ? mdiEyeOffOutline : mdiEyeOutline}
-                      onclick={() => (passwordVisible = !passwordVisible)}
-                      title={passwordToggleLabel}
-                      aria-label={passwordToggleLabel}
-                    />
-                  {/snippet}
-                </Input>
+                  onfocus={scheduleUnlockAutofill}
+                  onkeydown={onFieldKeydown}
+                  bind:value={email}
+                />
+              </div>
+            </Field>
+
+            <Field required="indicator">
+              <div class="flex w-full flex-col gap-1">
+                <div class="inline-block">
+                  <span class="text-sm font-medium">{$t('password')}</span>
+                  <span aria-hidden="true" class="text-danger">*</span>
+                </div>
+                <div class:pg-login-password-masked={!passwordVisible}>
+                  <Input
+                    name={loginSecretName}
+                    type="text"
+                    autocapitalize="none"
+                    autocorrect="off"
+                    spellcheck={false}
+                    autocomplete="nope"
+                    aria-label={$t('password')}
+                    data-1p-ignore
+                    data-lpignore="true"
+                    data-bwignore
+                    data-form-type="other"
+                    readonly={blockAutofill}
+                    onfocus={scheduleUnlockAutofill}
+                    onkeydown={onFieldKeydown}
+                    bind:value={password}
+                  >
+                    {#snippet trailingIcon()}
+                      <IconButton
+                        variant="ghost"
+                        shape="round"
+                        color="secondary"
+                        size="small"
+                        class="me-1"
+                        icon={passwordVisible ? mdiEyeOffOutline : mdiEyeOutline}
+                        onclick={() => (passwordVisible = !passwordVisible)}
+                        title={passwordToggleLabel}
+                        aria-label={passwordToggleLabel}
+                      />
+                    {/snippet}
+                  </Input>
+                </div>
               </div>
             </Field>
           {/if}
