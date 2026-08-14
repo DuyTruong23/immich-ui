@@ -73,6 +73,7 @@ const attachLocalSubscriberAdapter = async (server: ViteDevServer): Promise<void
 export const DEV_API_ROUTES = [
   '/api/feature-updates',
   '/api/feature-update-subscribe',
+  '/api/feature-update-email',
   '/api/feature-update-notify',
   '/api/notify-login',
   '/api/partner-favorites',
@@ -81,6 +82,7 @@ export const DEV_API_ROUTES = [
 const DEV_API_HANDLERS: Record<string, string> = {
   '/api/feature-updates': path.resolve(rootDir, 'api/feature-updates.ts'),
   '/api/feature-update-subscribe': path.resolve(rootDir, 'api/feature-update-subscribe.ts'),
+  '/api/feature-update-email': path.resolve(rootDir, 'api/feature-update-email.ts'),
   '/api/feature-update-notify': path.resolve(rootDir, 'api/feature-update-notify.ts'),
   '/api/notify-login': path.resolve(rootDir, 'api/notify-login.ts'),
   '/api/partner-favorites': path.resolve(rootDir, 'api/partner-favorites.ts'),
@@ -93,7 +95,7 @@ export const isDevApiRoute = (url?: string): boolean => {
 
 /** Proxy context: match /api/* except local dev serverless routes. */
 export const immichApiProxyPattern =
-  '^/api/(?!feature-updates(?:[/?]|$)|feature-update-subscribe(?:[/?]|$)|feature-update-notify(?:[/?]|$)|notify-login(?:[/?]|$)|notify-deploy(?:[/?]|$)|feedback(?:[/?]|$)|partner-favorites(?:[/?]|$))';
+  '^/api/(?!feature-updates(?:[/?]|$)|feature-update-subscribe(?:[/?]|$)|feature-update-email(?:[/?]|$)|feature-update-notify(?:[/?]|$)|notify-login(?:[/?]|$)|notify-deploy(?:[/?]|$)|feedback(?:[/?]|$)|partner-favorites(?:[/?]|$))';
 
 const readRequestBody = (request: IncomingMessage): Promise<Uint8Array | undefined> =>
   new Promise((resolve, reject) => {
@@ -208,7 +210,11 @@ const handleDevApi = async (
       return true;
     }
 
-    if (pathname === '/api/feature-update-subscribe' || pathname === '/api/feature-update-notify') {
+    if (
+      pathname === '/api/feature-update-subscribe' ||
+      pathname === '/api/feature-update-email' ||
+      pathname === '/api/feature-update-notify'
+    ) {
       await attachLocalSubscriberAdapter(server);
     }
 

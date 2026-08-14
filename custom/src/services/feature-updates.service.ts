@@ -50,7 +50,7 @@ export const fetchFeatureUpdateSubscribers = async (
   accessToken?: string,
 ): Promise<FeatureUpdateSubscriberList> => {
   const token = accessToken?.trim() || getStoredAccessToken();
-  const response = await fetch('/api/feature-update-subscribe?list=1', {
+  const response = await fetch('/api/feature-update-email?list=1', {
     credentials: 'include',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });

@@ -138,13 +138,8 @@
     }
   };
 
-  const handleDismiss = async () => {
-    if (isClosing || savingNotifyEmail) {
-      return;
-    }
-
-    const saved = await persistNotifyEmail();
-    if (!saved) {
+  const closeModal = () => {
+    if (isClosing) {
       return;
     }
 
@@ -190,23 +185,34 @@
     card.addEventListener('animationend', onAnimationEnd);
   };
 
-  const handleSendFeedback = async () => {
-    if (!canSubmit || sentFeedback || savingNotifyEmail) {
+  const handleDismiss = async () => {
+    if (isClosing || savingNotifyEmail) {
       return;
     }
 
-    const saved = await persistNotifyEmail();
-    if (!saved) {
+    if (showNotifyEmail && hasValidNotifyEmail) {
+      await persistNotifyEmail();
+    }
+
+    closeModal();
+  };
+
+  const handleSendFeedback = async () => {
+    if (!canSubmit || sentFeedback || savingNotifyEmail) {
       return;
     }
 
     const trimmed = feedback.trim();
     if (trimmed) {
       submitFeedback(trimmed, accessToken);
+      sentFeedback = true;
     }
 
-    sentFeedback = true;
-    await handleDismiss();
+    if (showNotifyEmail && hasValidNotifyEmail) {
+      await persistNotifyEmail();
+    }
+
+    closeModal();
   };
 </script>
 
