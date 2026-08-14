@@ -232,7 +232,7 @@ User nhập **Email nhận thông báo** trên modal. Danh sách lưu private tr
 
 | Biến | Bắt buộc | Mô tả |
 |---|---|---|
-| `BLOB_READ_WRITE_TOKEN` | Có | Lưu danh sách email (private blob) |
+| `BLOB_READ_WRITE_TOKEN` | Có | Lưu danh sách email. Vercel → Storage → Blob → Create → Connect project (tự thêm env, rồi redeploy) |
 | `RESEND_API_KEY` | Có | Gửi changelog |
 | `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi |
 | `PUBLIC_APP_URL` | Không | Link "Mở Gallery" / hủy đăng ký trong email. Fallback `VERCEL_PROJECT_PRODUCTION_URL` |
