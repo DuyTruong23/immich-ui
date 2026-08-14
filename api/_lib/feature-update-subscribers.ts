@@ -1,10 +1,15 @@
 import { getEnv } from './email.js';
+import {
+  blobPathnameCandidates,
+  getBlobToken,
+  listBlobs,
+  privateBlobFileUrl,
+  putBlobJson,
+  readBlobJson,
+} from './vercel-blob.js';
 
 const BLOB_PATHNAME = 'feature-updates/subscribers.json';
-const BLOB_API_URL = 'https://vercel.com/api/blob';
-const BLOB_API_VERSION = '7';
 const BLOB_READ_TIMEOUT_MS = 3000;
-const BLOB_WRITE_TIMEOUT_MS = 8000;
 
 const isVercelRuntime = (): boolean => getEnv('VERCEL') === '1';
 
@@ -28,16 +33,6 @@ let localAdapter: SubscriberStoreAdapter | null = null;
 /** Vite dev gắn adapter filesystem — không import node:* trong Edge. */
 export const setLocalSubscriberStoreAdapter = (adapter: SubscriberStoreAdapter | null): void => {
   localAdapter = adapter;
-};
-
-const fetchWithTimeout = async (url: string, init: RequestInit, ms: number): Promise<Response> => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
 };
 
 export const normalizeNotifyEmail = (value: string): string => value.trim().toLowerCase();
@@ -65,88 +60,53 @@ const normalizeStore = (value: unknown): FeatureUpdateSubscriberStore => {
   return lastNotifiedVersion ? { emails, lastNotifiedVersion } : { emails };
 };
 
-const parseBlobStoreId = (token: string): string | undefined => {
-  const parts = token.split('_');
-  if (parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw' && parts[3]) {
-    return parts[3];
+const readStoredJson = async (
+  url: string,
+  token: string,
+): Promise<FeatureUpdateSubscriberStore | null> => {
+  const result = await readBlobJson<unknown>(url, token, { timeoutMs: BLOB_READ_TIMEOUT_MS });
+  if (!result.ok) {
+    return result.status === 404 ? { ...EMPTY_STORE } : null;
   }
 
-  return undefined;
-};
-
-const privateBlobFileUrl = (token: string): string | undefined => {
-  const storeId = parseBlobStoreId(token);
-  return storeId ? `https://${storeId}.private.blob.vercel-storage.com/${BLOB_PATHNAME}` : undefined;
-};
-
-const readBlobJson = async (url: string, token: string): Promise<FeatureUpdateSubscriberStore | null> => {
-  const fileResponse = await fetchWithTimeout(
-    url,
-    {
-      cache: 'no-store',
-      headers: { authorization: `Bearer ${token}` },
-    },
-    BLOB_READ_TIMEOUT_MS,
-  );
-
-  if (fileResponse.status === 404) {
-    return { ...EMPTY_STORE };
-  }
-
-  if (!fileResponse.ok) {
-    return null;
-  }
-
-  return normalizeStore(await fileResponse.json());
+  return normalizeStore(result.value);
 };
 
 const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => {
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  const token = getBlobToken();
   if (!token) {
     return null;
   }
 
   try {
-    const directUrl = privateBlobFileUrl(token);
-    if (directUrl) {
-      const direct = await readBlobJson(directUrl, token);
-      if (direct) {
-        return direct;
+    for (const pathname of blobPathnameCandidates(BLOB_PATHNAME)) {
+      const directUrl = privateBlobFileUrl(pathname, token);
+      if (directUrl) {
+        const direct = await readStoredJson(directUrl, token);
+        if (direct) {
+          return direct;
+        }
       }
     }
 
-    const listParams = new URLSearchParams({ prefix: 'feature-updates/', limit: '20' });
-    const listResponse = await fetchWithTimeout(
-      `${BLOB_API_URL}?${listParams.toString()}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-          'x-api-version': BLOB_API_VERSION,
-        },
-      },
-      BLOB_READ_TIMEOUT_MS,
-    );
-
-    if (!listResponse.ok) {
-      return null;
-    }
-
-    const listed = (await listResponse.json()) as { blobs?: Array<{ pathname?: string; url?: string }> };
-    const blob = listed.blobs?.find(
-      (item) => item.pathname === BLOB_PATHNAME || item.pathname?.endsWith(`/${BLOB_PATHNAME}`),
+    const listed = await listBlobs('feature-updates', { limit: 20, timeoutMs: BLOB_READ_TIMEOUT_MS });
+    const blob = listed.find((item) =>
+      blobPathnameCandidates(BLOB_PATHNAME).some(
+        (pathname) => item.pathname === pathname || item.pathname?.endsWith(`/${pathname}`),
+      ),
     );
     if (!blob?.url) {
       return { ...EMPTY_STORE };
     }
 
-    return (await readBlobJson(blob.url, token)) ?? { ...EMPTY_STORE };
+    return (await readStoredJson(blob.url, token)) ?? { ...EMPTY_STORE };
   } catch {
     return null;
   }
 };
 
 export const getSubscriberStorage = (): 'blob' | 'local' | 'none' => {
-  if (getEnv('BLOB_READ_WRITE_TOKEN')) {
+  if (getBlobToken()) {
     return 'blob';
   }
 
@@ -160,7 +120,7 @@ export const getSubscriberStorage = (): 'blob' | 'local' | 'none' => {
 export const hasSubscriberPersistence = (): boolean => getSubscriberStorage() !== 'none';
 
 export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  const token = getBlobToken();
   if (token) {
     const stored = await readBlobStore();
     if (stored) {
@@ -190,31 +150,10 @@ export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubsc
 
 export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
   const next = normalizeStore(store);
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  const token = getBlobToken();
 
   if (token) {
-    const params = new URLSearchParams({ pathname: BLOB_PATHNAME });
-    const response = await fetchWithTimeout(
-      `${BLOB_API_URL}/?${params.toString()}`,
-      {
-        method: 'PUT',
-        headers: {
-          authorization: `Bearer ${token}`,
-          'x-api-version': BLOB_API_VERSION,
-          'x-content-type': 'application/json',
-          'x-add-random-suffix': '0',
-          'x-allow-overwrite': '1',
-          'x-vercel-blob-access': 'private',
-        },
-        body: JSON.stringify(next, null, 2),
-      },
-      BLOB_WRITE_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => '');
-      throw new Error(`Blob put failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
-    }
+    await putBlobJson(BLOB_PATHNAME, next, { access: 'private' });
 
     memoryStore = next;
     if (!isVercelRuntime() && localAdapter) {
