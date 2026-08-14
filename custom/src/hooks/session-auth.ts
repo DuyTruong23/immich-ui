@@ -45,13 +45,13 @@ export const clearSessionActive = (): void => {
   sessionStorage.removeItem(SESSION_KEY);
 };
 
-/** Admin — giữ session tab qua reload khi bật PUBLIC_SESSION_ONLY_AUTH */
+/** Admin — giữ phiên qua đóng tab / F5 khi bật PUBLIC_SESSION_ONLY_AUTH (localStorage, không phải sessionStorage) */
 export const markAdminPersistentSession = (): void => {
   if (typeof window === 'undefined') {
     return;
   }
 
-  sessionStorage.setItem(ADMIN_PERSISTENT_SESSION_KEY, '1');
+  localStorage.setItem(ADMIN_PERSISTENT_SESSION_KEY, '1');
   markSessionActive();
 };
 
@@ -60,7 +60,17 @@ export const isAdminPersistentSession = (): boolean => {
     return false;
   }
 
-  return sessionStorage.getItem(ADMIN_PERSISTENT_SESSION_KEY) === '1';
+  if (localStorage.getItem(ADMIN_PERSISTENT_SESSION_KEY) === '1') {
+    return true;
+  }
+
+  if (sessionStorage.getItem(ADMIN_PERSISTENT_SESSION_KEY) === '1') {
+    localStorage.setItem(ADMIN_PERSISTENT_SESSION_KEY, '1');
+    sessionStorage.removeItem(ADMIN_PERSISTENT_SESSION_KEY);
+    return true;
+  }
+
+  return false;
 };
 
 export const clearAdminPersistentSession = (): void => {
@@ -68,5 +78,6 @@ export const clearAdminPersistentSession = (): void => {
     return;
   }
 
+  localStorage.removeItem(ADMIN_PERSISTENT_SESSION_KEY);
   sessionStorage.removeItem(ADMIN_PERSISTENT_SESSION_KEY);
 };

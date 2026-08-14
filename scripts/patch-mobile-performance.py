@@ -540,7 +540,40 @@ def patch_asset_viewer_swipe_back(path: pathlib.Path) -> None:
 """,
         'AssetViewer SwipeBackEdge markup',
     )
+    if "event.detail.direction === 'bottom'" not in text:
+        text = text.replace(
+            """    if (event.detail.direction === 'left') {
+      navigateAsset('next');
+    } else if (event.detail.direction === 'right') {
+      navigateAsset('previous');
+    }
+""",
+            """    if (event.detail.direction === 'left') {
+      navigateAsset('next');
+    } else if (event.detail.direction === 'right') {
+      navigateAsset('previous');
+    } else if (event.detail.direction === 'bottom') {
+      closeViewer();
+    }
+""",
+        )
+    if 'nextAsset={cursor.nextAsset}' not in text:
+        text = text.replace(
+            '        playOriginalVideo={isPlayingOriginalVideo}\n',
+            '        playOriginalVideo={isPlayingOriginalVideo}\n'
+            '        nextAsset={cursor.nextAsset}\n'
+            '        previousAsset={cursor.previousAsset}\n'
+            '        {onSwipe}\n',
+        )
     path.write_text(text, encoding='utf-8')
+
+
+def patch_viewport_dvh(path: pathlib.Path) -> None:
+    text = path.read_text(encoding='utf-8')
+    updated = text.replace('100vh', '100dvh')
+    if updated == text:
+        return
+    path.write_text(updated, encoding='utf-8')
 
 
 def patch_user_layout_back_guard(path: pathlib.Path) -> None:
@@ -597,6 +630,8 @@ def main() -> None:
     patch_layout_head(web / 'src/routes/+layout.svelte')
     patch_asset_viewer_swipe_back(web / 'src/lib/components/asset-viewer/AssetViewer.svelte')
     patch_user_layout_back_guard(web / 'src/routes/(user)/+layout.svelte')
+    patch_viewport_dvh(web / 'src/routes/(user)/memory/[[photos=photos]]/[[assetId=id]]/MemoryViewer.svelte')
+    patch_viewport_dvh(web / 'src/lib/components/asset-viewer/editor/transform-tool/CropArea.svelte')
 
 
 if __name__ == '__main__':

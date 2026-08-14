@@ -115,7 +115,7 @@ class AuthManager {
     if (this.#isSessionOnlyAuth()) {
       beginBrowserSession();
       if (!isActiveBrowserSession() && !isAdminPersistentSession()) {
-        return;
+        return this.#restoreAdminFromCookie();
       }
     }
 
@@ -139,6 +139,8 @@ class AuthManager {
 
       if (user.isAdmin) {
         enableAdminSessionPersistence();
+      } else {
+        clearAdminPersistentSession();
       }
 
       if (user.license?.activatedAt) {
@@ -266,6 +268,21 @@ class AuthManager {
     if (this.#isSessionOnlyAuth()) {
       clearSessionActive();
     }
+  }
+
+  /** Đóng tab xóa sessionStorage — cookie Immich vẫn còn. Chỉ restore nếu đúng admin. */
+  async #restoreAdminFromCookie() {
+    if (!this.#hasAuthCookie()) {
+      return;
+    }
+
+    await this.refresh();
+
+    if (this.#user?.isAdmin) {
+      return;
+    }
+
+    this.reset();
   }
 
   #checkSessionExpiry(): boolean {

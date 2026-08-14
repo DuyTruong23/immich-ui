@@ -4,18 +4,20 @@
   import OnEvents from '$lib/components/OnEvents.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/EmptyPlaceholder.svelte';
   import SingleGridRow from '$lib/components/shared-components/SingleGridRow.svelte';
+  import Portal from '$lib/elements/Portal.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { Route } from '$lib/route';
-  import { getAssetMediaUrl, getPeopleThumbnailUrl } from '$lib/utils';
-  import { getAssetInfo, AssetMediaSize, type SearchExploreResponseDto } from '@immich/sdk';
-  import { authManager } from '$lib/managers/auth-manager.svelte';
+  import { getAssetMediaUrl, getPeopleThumbnailUrl, handlePromiseError } from '$lib/utils';
+  import { getNextAsset, getPreviousAsset } from '$lib/utils/asset-utils';
+  import { closeAssetViewerLikeBackArrow } from '$lib/utils/mobile-back-navigation';
+  import { navigate } from '$lib/utils/navigation';
+  import { getAltText } from '$lib/utils/thumbnail-util';
+  import { toTimelineAsset } from '$lib/utils/timeline-util';
+  import { AssetMediaSize, type SearchExploreResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiHeart } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
-  import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { getAltText } from '$lib/utils/thumbnail-util';
-  import Portal from '$lib/elements/Portal.svelte';
 
   interface Props {
     data: PageData;
@@ -35,6 +37,7 @@
   let people = $state(data.response.people);
 
   let hasPeople = $derived(data.response.total > 0);
+  let recentAssets = $derived(recents.map((item) => item.data));
 
   const onPersonThumbnailReady = ({ id }: { id: string }) => {
     for (const person of people) {
@@ -45,12 +48,17 @@
   };
 
   const onViewAsset = async (id: string) => {
-    const asset = await getAssetInfo({ ...authManager.params, id });
-    assetViewerManager.setAsset(asset);
+    await navigate({ targetRoute: 'current', assetId: id });
+  };
+
+  const onCloseViewer = () => {
+    handlePromiseError(closeAssetViewerLikeBackArrow());
   };
 
   const assetCursor = $derived({
     current: assetViewerManager.asset!,
+    nextAsset: getNextAsset(recentAssets, assetViewerManager.asset),
+    previousAsset: getPreviousAsset(recentAssets, assetViewerManager.asset),
   });
 </script>
 
@@ -139,7 +147,7 @@
           <button
             type="button"
             class="relative h-full flex-auto"
-            onclick={() => onViewAsset(item.data.id)}
+            onclick={() => handlePromiseError(onViewAsset(item.data.id))}
             draggable="false"
           >
             <img
@@ -161,11 +169,7 @@
 {#if assetViewerManager.isViewing}
   {#await import('$lib/components/asset-viewer/AssetViewer.svelte') then { default: AssetViewer }}
     <Portal target="body">
-      <AssetViewer
-        cursor={assetCursor}
-        showNavigation={false}
-        onClose={() => assetViewerManager.showAssetViewer(false)}
-      />
+      <AssetViewer cursor={assetCursor} onClose={onCloseViewer} />
     </Portal>
   {/await}
 {/if}

@@ -22,6 +22,11 @@ body {
   overscroll-behavior-x: none;
 }
 
+/* Chỉ vùng ảnh/video — không áp lên navbar, detail panel, stack strip */
+#immich-asset-viewer [data-viewer-content] {
+  touch-action: pan-y pinch-zoom;
+}
+
 .pg-brand-accent {
   color: var(--md-sys-color-primary);
 }

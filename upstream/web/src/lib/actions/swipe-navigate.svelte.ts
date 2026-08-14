@@ -4,20 +4,25 @@ export type SwipeNavigateDirection = 'next' | 'previous';
 
 type SwipeNavigateOptions = {
   getWidth: () => number;
-  canStart: () => boolean;
+  getHeight?: () => number;
+  canStart: (event: PointerEvent) => boolean;
   hasNext: () => boolean;
   hasPrevious: () => boolean;
   onCommit: (direction: SwipeNavigateDirection) => void;
+  onDismiss?: () => void;
 };
 
 const LOCK_PX = 10;
 const COMMIT_RATIO = 0.22;
 const COMMIT_VELOCITY = 0.5;
+const DISMISS_PX = 96;
+const DISMISS_VELOCITY = 0.45;
 const RUBBER = 0.34;
 const SETTLE_MS = 280;
 
 export class SwipeNavigate {
   offset = $state(0);
+  offsetY = $state(0);
   animating = $state(false);
 
   #options: SwipeNavigateOptions;
@@ -45,7 +50,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (!this.#options.canStart()) {
+    if (!this.#options.canStart(event)) {
       return;
     }
 
@@ -66,7 +71,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (!this.#options.canStart()) {
+    if (!this.#options.canStart(event)) {
       this.#cancel();
       return;
     }
@@ -80,11 +85,22 @@ export class SwipeNavigate {
       }
 
       this.#lock = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
-      if (this.#lock === 'v') {
+      if (this.#lock === 'v' && !this.#options.onDismiss) {
         return;
       }
 
       event.currentTarget instanceof HTMLElement && event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
+    if (this.#lock === 'v') {
+      if (dy <= 0) {
+        this.offsetY = 0;
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      this.offsetY = dy * 0.62;
+      return;
     }
 
     if (this.#lock !== 'h') {
@@ -105,8 +121,30 @@ export class SwipeNavigate {
     this.#pointerId = null;
     this.#lock = null;
 
+    if (lock === 'v') {
+      const elapsed = Math.max(performance.now() - this.#startTime, 1);
+      const velocityY = (event.clientY - this.#startY) / elapsed;
+      const shouldDismiss =
+        Boolean(this.#options.onDismiss) && (this.offsetY >= DISMISS_PX || velocityY >= DISMISS_VELOCITY);
+
+      this.animating = true;
+      if (shouldDismiss) {
+        const height = Math.max(this.#options.getHeight?.() ?? 0, 1);
+        this.offsetY = height;
+        this.#commitTimer = setTimeout(() => {
+          this.#commitTimer = undefined;
+          this.#options.onDismiss?.();
+        }, motionDuration(SETTLE_MS));
+        return;
+      }
+
+      this.offsetY = 0;
+      return;
+    }
+
     if (lock !== 'h') {
       this.offset = 0;
+      this.offsetY = 0;
       return;
     }
 
@@ -151,6 +189,7 @@ export class SwipeNavigate {
     this.#lock = null;
     this.animating = false;
     this.offset = 0;
+    this.offsetY = 0;
   }
 
   #rubber(dx: number) {
@@ -167,6 +206,7 @@ export class SwipeNavigate {
     this.#lock = null;
     this.animating = true;
     this.offset = 0;
+    this.offsetY = 0;
   }
 
   #clearCommit() {

@@ -12,22 +12,30 @@
     previousAsset?: AssetResponseDto;
     sharedLink?: SharedLinkResponseDto;
     disabled?: boolean;
+    canStart?: (event: PointerEvent) => boolean;
     onSwipe?: (event: SwipeCustomEvent) => void;
     children?: Snippet;
   }
 
-  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, onSwipe, children }: Props = $props();
+  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, canStart, onSwipe, children }: Props = $props();
 
   let width = $state(0);
+  let height = $state(0);
 
   const swipe = new SwipeNavigate({
     getWidth: () => width,
-    canStart: () => !disabled,
+    getHeight: () => height,
+    canStart: (event) => !disabled && (canStart?.(event) ?? true),
     hasNext: () => Boolean(nextAsset),
     hasPrevious: () => Boolean(previousAsset),
     onCommit: (direction) => {
       onSwipe?.({
         detail: { direction: direction === 'next' ? 'left' : 'right' },
+      } as SwipeCustomEvent);
+    },
+    onDismiss: () => {
+      onSwipe?.({
+        detail: { direction: 'bottom' },
       } as SwipeCustomEvent);
     },
   });
@@ -51,6 +59,7 @@
 <div
   class="relative size-full overflow-hidden overscroll-x-contain"
   bind:clientWidth={width}
+  bind:clientHeight={height}
   onpointerdown={swipe.onPointerDown}
   onpointermove={swipe.onPointerMove}
   onpointerup={swipe.onPointerUp}
@@ -58,7 +67,8 @@
 >
   <div
     class="absolute inset-0 will-change-transform"
-    style:transform="translate3d({swipe.offset}px, 0, 0)"
+    style:transform="translate3d({swipe.offset}px, {swipe.offsetY}px, 0)"
+    style:opacity={swipe.offsetY > 0 ? Math.max(0.35, 1 - swipe.offsetY / 420) : 1}
     style:transition={swipe.animating ? `transform ${settleMs}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none'}
   >
     {#if previousAsset}

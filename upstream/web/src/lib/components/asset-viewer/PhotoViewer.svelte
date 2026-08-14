@@ -96,6 +96,14 @@
       ocrManager.showOverlay,
   );
 
+  // zoom-image.ts gán touch-action: none lúc mount — ghi đè theo zoom, không sửa action.
+  $effect(() => {
+    if (!element) {
+      return;
+    }
+    element.style.touchAction = assetViewerManager.zoom <= 1 ? 'pan-y pinch-zoom' : 'none';
+  });
+
   const onCopy = async () => {
     if (!canCopyImageToClipboard() || !assetViewerManager.imgRef) {
       return;

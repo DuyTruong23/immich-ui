@@ -1,6 +1,7 @@
 <script lang="ts">
   import FaceEditor from '$lib/components/asset-viewer/face-editor/FaceEditor.svelte';
   import PhotoBlurBackdrop from '$lib/components/asset-viewer/PhotoBlurBackdrop.svelte';
+  import PhotoSwipeTrack from '$lib/components/asset-viewer/PhotoSwipeTrack.svelte';
   import VideoRemoteViewer from '$lib/components/asset-viewer/VideoRemoteViewer.svelte';
   import { assetViewerFadeDuration } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
@@ -8,7 +9,9 @@
   import { castManager } from '$lib/managers/cast-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { mediaCapabilitiesManager } from '$lib/managers/media-capabilities-manager.svelte';
+  import { ocrManager } from '$lib/stores/ocr.svelte';
   import { autoPlayVideo, lang, loopVideo as loopVideoPreference } from '$lib/stores/preferences.store';
+  import { SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { getAssetHlsSessionUrl, getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
   import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
@@ -45,7 +48,7 @@
   import 'media-chrome/menu/media-settings-menu-button';
   import 'media-chrome/menu/media-settings-menu-item';
   import { onDestroy } from 'svelte';
-  import { useSwipe, type SwipeCustomEvent } from 'svelte-gestures';
+  import type { SwipeCustomEvent } from 'svelte-gestures';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
   import './immich-time-range';
@@ -57,11 +60,14 @@
     cacheKey: string | null;
     playOriginalVideo: boolean;
     extendedControls?: boolean;
+    nextAsset?: AssetResponseDto;
+    previousAsset?: AssetResponseDto;
     onPreviousAsset?: () => void;
     onNextAsset?: () => void;
     onVideoEnded?: () => void;
     onVideoStarted?: () => void;
     onClose?: () => void;
+    onSwipe?: (event: SwipeCustomEvent) => void;
   }
 
   let {
@@ -71,11 +77,14 @@
     cacheKey,
     playOriginalVideo,
     extendedControls = false,
+    nextAsset,
+    previousAsset,
     onPreviousAsset = () => {},
     onNextAsset = () => {},
     onVideoEnded = () => {},
     onVideoStarted = () => {},
     onClose = () => {},
+    onSwipe,
   }: Props = $props();
 
   let videoPlayer: HTMLVideoElement | undefined = $state();
@@ -342,7 +351,34 @@
     }
   };
 
-  const onSwipe = (event: SwipeCustomEvent) => {
+  const VIDEO_SWIPE_BLOCK =
+    'media-control-bar, immich-time-range, media-settings-menu, media-volume-range, .volume-wrapper, media-play-button, media-mute-button, media-fullscreen-button, media-settings-menu-button, media-time-display';
+
+  let isSeeking = $state(false);
+
+  const { slideshowState } = slideshowStore;
+
+  const swipeDisabled = $derived(
+    assetViewerManager.zoom > 1 ||
+      assetViewerManager.isFaceEditMode ||
+      assetViewerManager.isShowEditor ||
+      $slideshowState !== SlideshowState.None ||
+      ocrManager.showOverlay,
+  );
+
+  const canStartVideoSwipe = (event: PointerEvent) => {
+    if (isSeeking) {
+      return false;
+    }
+    const target = event.target;
+    return !(target instanceof Element && target.closest(VIDEO_SWIPE_BLOCK));
+  };
+
+  const handleSwipe = (event: SwipeCustomEvent) => {
+    if (onSwipe) {
+      onSwipe(event);
+      return;
+    }
     if (event.detail.direction === 'left') {
       onNextAsset();
     } else if (event.detail.direction === 'right') {
@@ -361,7 +397,14 @@
 
   // The time is only refreshed on HLS fragment decode by default,
   // so manually emit events on seek to update it immediately.
-  const onSeeking = (event: Event) => event.currentTarget?.dispatchEvent(new Event('timeupdate'));
+  const onSeeking = (event: Event) => {
+    isSeeking = true;
+    event.currentTarget?.dispatchEvent(new Event('timeupdate'));
+  };
+
+  const onSeeked = () => {
+    isSeeking = false;
+  };
 </script>
 
 <svelte:body
@@ -392,6 +435,14 @@
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
   >
+    <PhotoSwipeTrack
+      currentId={assetId}
+      {nextAsset}
+      {previousAsset}
+      disabled={swipeDisabled}
+      canStart={canStartVideoSwipe}
+      onSwipe={handleSwipe}
+    >
     <PhotoBlurBackdrop {asset} />
     {#if castManager.isCasting}
       <div class="h-full place-content-center place-items-center">
@@ -421,7 +472,6 @@
             preload={videoPreload}
             disablePictureInPicture
             playsinline
-            {...useSwipe(onSwipe)}
             class="h-full object-contain"
             onloadedmetadata={handleLoadedMetadata}
             onloadeddata={handleLoadedData}
@@ -429,6 +479,7 @@
             oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
             onended={onVideoEnded}
             onseeking={onSeeking}
+            onseeked={onSeeked}
             onplaying={(e: Event) => {
               if (hasFocused) {
                 return;
@@ -449,7 +500,6 @@
             preload={videoPreload}
             disablePictureInPicture
             playsinline
-            {...useSwipe(onSwipe)}
             class="h-full object-contain"
             onloadedmetadata={handleLoadedMetadata}
             onloadeddata={handleLoadedData}
@@ -457,6 +507,7 @@
             oncanplay={(e) => handleCanPlay(e.currentTarget)}
             onended={onVideoEnded}
             onseeking={onSeeking}
+            onseeked={onSeeked}
             onplaying={(e) => {
               if (hasFocused) {
                 return;
@@ -538,6 +589,7 @@
         <FaceEditor htmlElement={videoPlayer} {containerWidth} {containerHeight} {assetId} />
       {/if}
     {/if}
+    </PhotoSwipeTrack>
   </div>
 {/if}
 
