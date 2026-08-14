@@ -41,6 +41,7 @@ export type FeatureUpdateSubscriberList = {
   emails: string[];
   count: number;
   lastNotifiedVersion?: string | null;
+  storage?: 'blob' | 'local' | 'none';
   error?: string;
   detail?: string;
 };
@@ -50,9 +51,14 @@ export const fetchFeatureUpdateSubscribers = async (
   accessToken?: string,
 ): Promise<FeatureUpdateSubscriberList> => {
   const token = accessToken?.trim() || getStoredAccessToken();
-  const response = await fetch('/api/feature-update-email?list=1', {
+  const response = await fetch('/api/feature-update-email', {
+    method: 'POST',
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      list: true,
+      ...(token ? { accessToken: token } : {}),
+    }),
   });
 
   const payload = (await response.json().catch(() => ({}))) as FeatureUpdateSubscriberList;
@@ -64,6 +70,7 @@ export const fetchFeatureUpdateSubscribers = async (
     emails: Array.isArray(payload.emails) ? payload.emails : [],
     count: typeof payload.count === 'number' ? payload.count : payload.emails?.length ?? 0,
     lastNotifiedVersion: payload.lastNotifiedVersion ?? null,
+    storage: payload.storage,
   };
 };
 
