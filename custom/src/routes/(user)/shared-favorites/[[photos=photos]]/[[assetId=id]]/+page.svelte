@@ -12,7 +12,7 @@
   import { handlePromiseError } from '$lib/utils';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
+  import { AssetTypeEnum, getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -29,6 +29,7 @@
   let assetsById = $state(new Map<string, TimelineAsset>());
   let loadingAssets = $state(true);
   let errorMessage = $state('');
+  let thumbSize = $state(0);
 
   const myId = $derived(partnerFavoritesStore.me?.id);
 
@@ -151,12 +152,12 @@
   const loadMissingAssets = async (assetIds: string[], isCancelled: () => boolean) => {
     const unique = [...new Set(assetIds)].filter((id) => !assetsById.has(id));
 
-    for (let index = 0; index < unique.length; index += 12) {
+    for (let index = 0; index < unique.length; index += 6) {
       if (isCancelled()) {
         return;
       }
 
-      const chunk = unique.slice(index, index + 12);
+      const chunk = unique.slice(index, index + 6);
       const results = await Promise.allSettled(chunk.map((id) => getAssetInfo({ id })));
       if (isCancelled()) {
         return;
@@ -173,11 +174,48 @@
     }
   };
 
+  const measureThumbCell = (node: HTMLElement) => {
+    const update = () => {
+      const styles = getComputedStyle(node);
+      const cols = styles.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      const gap = Number.parseFloat(styles.columnGap) || 0;
+      thumbSize = Math.max(1, Math.floor((node.clientWidth - gap * Math.max(cols - 1, 0)) / cols));
+    };
+
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    update();
+    return {
+      destroy() {
+        observer.disconnect();
+      },
+    };
+  };
+
+  const toCursorAsset = (asset: TimelineAsset | undefined): AssetResponseDto | undefined => {
+    if (!asset) {
+      return undefined;
+    }
+
+    const width = 1000;
+    const height = Math.max(1, Math.round(width / (asset.ratio || 1)));
+    return {
+      id: asset.id,
+      ownerId: asset.ownerId,
+      thumbhash: asset.thumbhash,
+      type: asset.isVideo ? AssetTypeEnum.Video : AssetTypeEnum.Image,
+      width,
+      height,
+      livePhotoVideoId: asset.livePhotoVideoId,
+      duration: asset.duration,
+      visibility: asset.visibility,
+    } as AssetResponseDto;
+  };
+
   const neighborAsset = (delta: 1 | -1): AssetResponseDto | undefined => {
     const currentId = assetViewerManager.asset?.id;
     const index = currentId ? visibleAssets.findIndex((asset) => asset.id === currentId) : -1;
-    const neighbor = index >= 0 ? visibleAssets[index + delta] : undefined;
-    return neighbor ? ({ id: neighbor.id } as AssetResponseDto) : undefined;
+    return toCursorAsset(index >= 0 ? visibleAssets[index + delta] : undefined);
   };
 
   onMount(() => {
@@ -188,15 +226,26 @@
       errorMessage = '';
 
       try {
+        let resolveFirstBucket = () => {};
+        const firstBucket = new Promise<void>((resolve) => {
+          resolveFirstBucket = resolve;
+        });
+
         const favoriteIdsPromise = partnerFavoritesStore.loadFavoriteBuckets((assets) => {
           if (cancelled) {
             return;
           }
           mergeAssets(assets);
           revealGrid();
+          resolveFirstBucket();
         });
+        void favoriteIdsPromise.then(() => resolveFirstBucket());
 
         await partnerFavoritesStore.ensureLoaded();
+        if (cancelled) {
+          return;
+        }
+        await firstBucket;
         if (cancelled) {
           return;
         }
@@ -258,7 +307,7 @@
   });
 </script>
 
-<UserPageLayout title={data.meta.title}>
+<UserPageLayout title={data.meta.title} hideNavbar={assetViewerManager.isViewing}>
   <p class="mb-4 text-sm text-(--pg-text-muted)">
     {$t('shared_favorites_description')}
   </p>
@@ -293,12 +342,21 @@
   {:else if visibleAssets.length === 0}
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    <div
+      class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+      use:measureThumbCell
+    >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetsById.get(item.assetId)}
         {#if asset}
           <div class="relative aspect-square overflow-hidden rounded-xl">
-            <Thumbnail {asset} readonly onClick={() => handlePromiseError(onViewAsset(asset))} />
+            <Thumbnail
+              {asset}
+              thumbnailSize={thumbSize || undefined}
+              imageClass="size-full"
+              readonly
+              onClick={() => handlePromiseError(onViewAsset(asset))}
+            />
             <div class="pointer-events-none absolute inset-e-2 bottom-2 z-3 flex">
               {#each item.favoritedBy as user, index (user.id)}
                 <div
