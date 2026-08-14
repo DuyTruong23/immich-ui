@@ -59,6 +59,41 @@ const normalizeStore = (value: unknown): FeatureUpdateSubscriberStore => {
   return lastNotifiedVersion ? { emails, lastNotifiedVersion } : { emails };
 };
 
+const parseBlobStoreId = (token: string): string | undefined => {
+  const parts = token.split('_');
+  if (parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw' && parts[3]) {
+    return parts[3];
+  }
+
+  return undefined;
+};
+
+const privateBlobFileUrl = (token: string): string | undefined => {
+  const storeId = parseBlobStoreId(token);
+  return storeId ? `https://${storeId}.private.blob.vercel-storage.com/${BLOB_PATHNAME}` : undefined;
+};
+
+const readBlobJson = async (url: string, token: string): Promise<FeatureUpdateSubscriberStore | null> => {
+  const fileResponse = await fetchWithTimeout(
+    url,
+    {
+      cache: 'no-store',
+      headers: { authorization: `Bearer ${token}` },
+    },
+    BLOB_READ_TIMEOUT_MS,
+  );
+
+  if (fileResponse.status === 404) {
+    return { ...EMPTY_STORE };
+  }
+
+  if (!fileResponse.ok) {
+    return null;
+  }
+
+  return normalizeStore(await fileResponse.json());
+};
+
 const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => {
   const token = getEnv('BLOB_READ_WRITE_TOKEN');
   if (!token) {
@@ -66,7 +101,15 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
   }
 
   try {
-    const listParams = new URLSearchParams({ prefix: BLOB_PATHNAME, limit: '20' });
+    const directUrl = privateBlobFileUrl(token);
+    if (directUrl) {
+      const direct = await readBlobJson(directUrl, token);
+      if (direct) {
+        return direct;
+      }
+    }
+
+    const listParams = new URLSearchParams({ prefix: 'feature-updates/', limit: '20' });
     const listResponse = await fetchWithTimeout(
       `${BLOB_API_URL}?${listParams.toString()}`,
       {
@@ -90,27 +133,25 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
       return { ...EMPTY_STORE };
     }
 
-    const fileResponse = await fetchWithTimeout(
-      blob.url,
-      {
-        cache: 'no-store',
-        headers: { authorization: `Bearer ${token}` },
-      },
-      BLOB_READ_TIMEOUT_MS,
-    );
-
-    if (!fileResponse.ok) {
-      return fileResponse.status === 404 ? { ...EMPTY_STORE } : null;
-    }
-
-    return normalizeStore(await fileResponse.json());
+    return (await readBlobJson(blob.url, token)) ?? { ...EMPTY_STORE };
   } catch {
     return null;
   }
 };
 
-export const hasSubscriberPersistence = (): boolean =>
-  Boolean(getEnv('BLOB_READ_WRITE_TOKEN')) || (!isVercelRuntime() && localAdapter !== null);
+export const getSubscriberStorage = (): 'blob' | 'local' | 'none' => {
+  if (getEnv('BLOB_READ_WRITE_TOKEN')) {
+    return 'blob';
+  }
+
+  if (!isVercelRuntime() && localAdapter) {
+    return 'local';
+  }
+
+  return 'none';
+};
+
+export const hasSubscriberPersistence = (): boolean => getSubscriberStorage() !== 'none';
 
 export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
   if (memoryStore) {

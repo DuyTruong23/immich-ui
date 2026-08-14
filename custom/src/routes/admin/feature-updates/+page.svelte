@@ -24,6 +24,7 @@
   let loadingSubscribers = $state(false);
   let subscriberEmails = $state<string[]>([]);
   let lastNotifiedVersion = $state<string | null>(null);
+  let subscriberStorage = $state<'blob' | 'local' | 'none' | ''>('');
   let subscribersError = $state('');
 
   const previewModal = () => {
@@ -61,6 +62,7 @@
       const result = await fetchFeatureUpdateSubscribers(getStoredAccessToken());
       subscriberEmails = result.emails;
       lastNotifiedVersion = result.lastNotifiedVersion ?? null;
+      subscriberStorage = result.storage ?? '';
     } catch (error) {
       console.error('[feature-updates-admin] load subscribers failed', error);
       subscribersError =
@@ -174,7 +176,13 @@
           </Button>
         </div>
 
-        {#if subscribersError}
+        {#if subscriberStorage === 'none'}
+          <Alert
+            color="warning"
+            title={$t('admin.feature_updates_subscribers_need_blob_title')}
+            description={$t('admin.feature_updates_subscribers_need_blob')}
+          />
+        {:else if subscribersError}
           <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')} description={subscribersError} />
         {:else if loadingSubscribers && subscriberEmails.length === 0}
           <Text size="small" class="text-(--md-sys-color-on-surface-variant)">

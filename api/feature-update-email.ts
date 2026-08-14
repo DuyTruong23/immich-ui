@@ -1,7 +1,13 @@
 import { getEnv, json, sendViaResend } from './_lib/email.js';
-import { verifyAdminSession, verifySession, type ImmichUser } from './_lib/immich-auth.js';
+import {
+  verifyAdminSession,
+  verifyAdminSessionFromRequest,
+  verifySession,
+  type ImmichUser,
+} from './_lib/immich-auth.js';
 import {
   addFeatureUpdateSubscriber,
+  getSubscriberStorage,
   isValidNotifyEmail,
   readFeatureUpdateSubscribers,
   removeFeatureUpdateSubscriber,
@@ -16,6 +22,7 @@ type SubscribeBody = {
   accessToken?: string;
   version?: string;
   unsubscribe?: boolean;
+  list?: boolean;
 };
 
 const parseBody = async (request: Request): Promise<SubscribeBody | null> => {
@@ -67,6 +74,45 @@ const notifyAdminNewSubscriber = async (email: string, user: ImmichUser): Promis
   });
 };
 
+const resolveAdmin = async (request: Request, accessToken?: string): Promise<ImmichUser | null> => {
+  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const token = bearer || accessToken?.trim() || undefined;
+  const cookie = request.headers.get('cookie') ?? undefined;
+
+  return (
+    (await verifyAdminSession(token, cookie)) ?? (await verifyAdminSessionFromRequest(request, token))
+  );
+};
+
+const listResponse = async (request: Request, accessToken?: string): Promise<Response> => {
+  const admin = await resolveAdmin(request, accessToken);
+  if (!admin) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+
+  const storage = getSubscriberStorage();
+  try {
+    const store = await readFeatureUpdateSubscribers();
+    return json({
+      ok: true,
+      emails: store.emails,
+      count: store.emails.length,
+      lastNotifiedVersion: store.lastNotifiedVersion ?? null,
+      storage,
+    });
+  } catch (error) {
+    console.error('[feature-update-email] list failed', error);
+    return json({
+      ok: true,
+      emails: [],
+      count: 0,
+      lastNotifiedVersion: null,
+      storage,
+      detail: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+};
+
 const unsubscribeResponse = async (email: string): Promise<Response> => {
   if (!isValidNotifyEmail(email)) {
     return json({ error: 'Valid email is required' }, 400);
@@ -96,27 +142,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
 
     if (url.searchParams.get('list') === '1') {
-      const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
-      const admin = await verifyAdminSession(
-        bearer || url.searchParams.get('accessToken') || undefined,
-        request.headers.get('cookie') ?? undefined,
-      );
-      if (!admin) {
-        return json({ error: 'Unauthorized' }, 401);
-      }
-
-      try {
-        const store = await readFeatureUpdateSubscribers();
-        return json({
-          ok: true,
-          emails: store.emails,
-          count: store.emails.length,
-          lastNotifiedVersion: store.lastNotifiedVersion ?? null,
-        });
-      } catch (error) {
-        console.error('[feature-update-email] list failed', error);
-        return json({ ok: true, emails: [], count: 0, lastNotifiedVersion: null });
-      }
+      return listResponse(request, url.searchParams.get('accessToken') ?? undefined);
     }
 
     return json({ error: 'Method not allowed' }, 405);
@@ -129,6 +155,10 @@ export default async function handler(request: Request): Promise<Response> {
   const body = await parseBody(request);
   if (!body) {
     return json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  if (body.list) {
+    return listResponse(request, body.accessToken);
   }
 
   const email = body.email ?? '';

@@ -96,6 +96,8 @@
     "feature_updates_move_up": "Move up",
     "feature_updates_page_description": "The modal reads custom/src/data/feature-updates.json. Prepend a version to releases, then merge develop → main. Use this page to preview the modal, review subscribed emails, or email the current changelog.",
     "feature_updates_preview_modal": "Preview modal",
+    "feature_updates_subscribers_need_blob": "Create a Blob store in Vercel → Storage → Blob, connect this project, then redeploy. Emails registered before that were only sent to the admin inbox and are not in this list.",
+    "feature_updates_subscribers_need_blob_title": "BLOB_READ_WRITE_TOKEN is not set",
     "feature_updates_subscribers_count": "{count} subscribed email(s)",
     "feature_updates_subscribers_empty": "No subscribed notification emails yet.",
     "feature_updates_subscribers_last_notified": "Last emailed {version}",
