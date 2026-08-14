@@ -5,6 +5,10 @@ import {
 } from '$custom/constants/feature-updates';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { FEATURE_UPDATES_MOCK } from '$custom/mocks/feature-updates';
+import {
+  normalizeFeatureUpdatesConfig,
+  type FeatureUpdateItem,
+} from '$custom/utils/feature-update-items';
 
 const DEFAULT_CONFIG: FeatureUpdatesConfig = {
   version: DEFAULT_FEATURE_UPDATE_VERSION,
@@ -56,11 +60,9 @@ export const fetchFeatureUpdatesConfig = async (options?: { force?: boolean }): 
     const response = await fetch('/api/feature-updates', { cache: 'no-store', signal: controller.signal });
     if (response.ok) {
       const data = (await response.json()) as FeatureUpdatesConfig;
-      if (data.version && Array.isArray(data.items) && data.items.length > 0) {
-        cachedConfig = {
-          version: data.version,
-          items: data.items.map((item) => String(item).trim()).filter(Boolean),
-        };
+      const normalized = normalizeFeatureUpdatesConfig(data);
+      if (normalized) {
+        cachedConfig = normalized;
         return cachedConfig;
       }
     }
@@ -90,7 +92,12 @@ export const saveFeatureUpdatesConfig = async (
       body: JSON.stringify({
         accessToken,
         version: config.version.trim(),
-        items: config.items.map((item) => item.trim()).filter(Boolean),
+        items: config.items
+          .map((item) => ({
+            title: item.title.trim(),
+            ...(item.detail?.trim() ? { detail: item.detail.trim() } : {}),
+          }))
+          .filter((item) => item.title.length > 0),
       }),
     });
   } catch (error) {
@@ -113,7 +120,7 @@ export const saveFeatureUpdatesConfig = async (
 
   cachedConfig = {
     version: payload.version,
-    items: payload.items,
+    items: payload.items as FeatureUpdateItem[],
   };
 
   return cachedConfig;

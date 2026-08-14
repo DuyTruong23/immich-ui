@@ -15,7 +15,7 @@ export const config = {
 type FeatureUpdatesBody = {
   accessToken?: string;
   version?: string;
-  items?: string[];
+  items?: unknown[];
 };
 
 const parseBody = async (request: Request): Promise<FeatureUpdatesBody | null> => {

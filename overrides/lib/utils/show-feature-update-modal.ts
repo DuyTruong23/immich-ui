@@ -1,12 +1,13 @@
 import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
+import type { FeatureUpdateItem } from '$custom/utils/feature-update-items';
 import FeatureUpdateModal from '../../routes/FeatureUpdateModal.svelte';
 import { modalManager } from '@immich/ui';
 
 type ShowFeatureUpdateModalOptions = {
   accessToken?: string;
   version?: string;
-  updates?: readonly string[];
+  updates?: readonly FeatureUpdateItem[];
   originElement?: HTMLElement | null;
 };
 
