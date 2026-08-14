@@ -1,4 +1,7 @@
+import { markAdminPersistentSession } from '$custom/hooks/session-auth';
+
 const SESSION_EXPIRY_KEY = 'pg_session_expires_at';
+const SESSION_NO_EXPIRY_KEY = 'pg_session_no_expiry';
 
 /** Thời gian phiên làm việc — 30 phút kể từ lúc login */
 export const SESSION_DURATION_MS = 30 * 60 * 1000;
@@ -9,7 +12,39 @@ export const markSessionExpiry = (): void => {
     return;
   }
 
+  clearSessionNoExpiry();
   sessionStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
+};
+
+/** Admin — không giới hạn thời gian phiên và giữ session qua reload tab */
+export const enableAdminSessionPersistence = (): void => {
+  markSessionNoExpiry();
+  markAdminPersistentSession();
+};
+
+export const markSessionNoExpiry = (): void => {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+
+  sessionStorage.setItem(SESSION_NO_EXPIRY_KEY, '1');
+  sessionStorage.removeItem(SESSION_EXPIRY_KEY);
+};
+
+export const clearSessionNoExpiry = (): void => {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+
+  sessionStorage.removeItem(SESSION_NO_EXPIRY_KEY);
+};
+
+export const isSessionNoExpiry = (): boolean => {
+  if (typeof sessionStorage === 'undefined') {
+    return false;
+  }
+
+  return sessionStorage.getItem(SESSION_NO_EXPIRY_KEY) === '1';
 };
 
 export const clearSessionExpiry = (): void => {
@@ -23,6 +58,10 @@ export const clearSessionExpiry = (): void => {
 /** Chưa có timestamp hoặc chưa hết hạn → false */
 export const isSessionExpired = (): boolean => {
   if (typeof sessionStorage === 'undefined') {
+    return false;
+  }
+
+  if (isSessionNoExpiry()) {
     return false;
   }
 
@@ -41,7 +80,7 @@ export const isSessionExpired = (): boolean => {
 
 /** Tự logout khi hết hạn — trả về hàm dọn dẹp timer/listener */
 export const watchSessionExpiry = (onExpired: () => void): (() => void) => {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || isSessionNoExpiry()) {
     return () => {};
   }
 

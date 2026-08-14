@@ -6,7 +6,7 @@
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
-  import { markSessionExpiry } from '$custom/hooks/session-expiry';
+  import { enableAdminSessionPersistence, markSessionExpiry } from '$custom/hooks/session-expiry';
   import { goto } from '$app/navigation';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -43,6 +43,9 @@
   const enterAs = async (role: UiDevRole) => {
     loadingRole = role;
     applyDevRole(role);
+    if (role === 'admin') {
+      enableAdminSessionPersistence();
+    }
     await goto(data.continueUrl, { invalidateAll: true });
     eventManager.emit('AuthLogin', {
       accessToken: `dev-${role}`,
@@ -65,14 +68,22 @@
 
   const onSuccess = async (user: LoginResponseDto) => {
     storeAccessToken(user.accessToken);
-    markSessionExpiry();
+
+    if (user.isAdmin) {
+      enableAdminSessionPersistence();
+      if (publicEnv.sessionOnlyAuth) {
+        await authManager.refresh();
+      }
+    } else {
+      markSessionExpiry();
+      if (publicEnv.sessionOnlyAuth) {
+        markSessionActive();
+        await authManager.refresh();
+      }
+    }
+
     password = '';
     email = '';
-
-    if (publicEnv.sessionOnlyAuth) {
-      markSessionActive();
-      await authManager.refresh();
-    }
 
     await notifyAdminOnLogin(user.accessToken);
     await goto(data.continueUrl, { invalidateAll: true });

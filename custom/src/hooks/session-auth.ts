@@ -1,4 +1,5 @@
 const SESSION_KEY = 'pg_session_active';
+const ADMIN_PERSISTENT_SESSION_KEY = 'pg_admin_persistent_session';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -42,4 +43,30 @@ export const clearSessionActive = (): void => {
   }
 
   sessionStorage.removeItem(SESSION_KEY);
+};
+
+/** Admin — giữ session tab qua reload khi bật PUBLIC_SESSION_ONLY_AUTH */
+export const markAdminPersistentSession = (): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  sessionStorage.setItem(ADMIN_PERSISTENT_SESSION_KEY, '1');
+  markSessionActive();
+};
+
+export const isAdminPersistentSession = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return sessionStorage.getItem(ADMIN_PERSISTENT_SESSION_KEY) === '1';
+};
+
+export const clearAdminPersistentSession = (): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  sessionStorage.removeItem(ADMIN_PERSISTENT_SESSION_KEY);
 };
