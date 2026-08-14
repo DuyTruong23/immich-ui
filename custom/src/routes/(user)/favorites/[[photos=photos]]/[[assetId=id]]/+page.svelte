@@ -22,6 +22,8 @@
   import { TimelineManager } from '$lib/managers/timeline-manager/timeline-manager.svelte';
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { handleError } from '$lib/utils/handle-error';
+  import { toTimelineAsset } from '$lib/utils/timeline-util';
+  import { getAssetInfo } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Switch } from '@immich/ui';
   import { mdiDotsVertical } from '@mdi/js';
   import { onMount } from 'svelte';
@@ -42,11 +44,80 @@
     features.sharedFavorites && !assetMultiSelectManager.selectionActive && !authManager.user.isAdmin,
   );
 
+  const mergedOverlayIds = new Set<string>();
+
+  const mergeMineOverlayFavorites = async (tm: TimelineManager, isCancelled: () => boolean) => {
+    const overlayIds = partnerFavoritesStore.mineAssetIds.filter((id) => {
+      if (mergedOverlayIds.has(id)) {
+        return false;
+      }
+      if (tm.getTimelineMonthByAssetId(id)) {
+        mergedOverlayIds.add(id);
+        return false;
+      }
+      return true;
+    });
+
+    for (let index = 0; index < overlayIds.length; index += 6) {
+      if (isCancelled()) {
+        return;
+      }
+
+      const chunk = overlayIds.slice(index, index + 6);
+      const results = await Promise.allSettled(chunk.map((id) => getAssetInfo({ id })));
+      if (isCancelled()) {
+        return;
+      }
+
+      const incoming = [];
+      for (const result of results) {
+        if (result.status !== 'fulfilled' || result.value.isTrashed) {
+          continue;
+        }
+
+        incoming.push({ ...toTimelineAsset(result.value), isFavorite: true });
+        mergedOverlayIds.add(result.value.id);
+      }
+
+      for (const asset of incoming) {
+        await tm.loadTimelineMonth(
+          { year: asset.localDateTime.year, month: asset.localDateTime.month },
+          { cancelable: false },
+        );
+        if (isCancelled()) {
+          return;
+        }
+      }
+      tm.upsertAssets(incoming);
+    }
+  };
+
   onMount(() => {
     if (!features.sharedFavorites) {
       return;
     }
-    void partnerFavoritesStore.ensureLoaded();
+
+    let cancelled = false;
+
+    const syncOverlayFavorites = async () => {
+      await partnerFavoritesStore.ensureLoaded();
+      const started = Date.now();
+      while (!cancelled && !timelineManager?.isInitialized) {
+        if (Date.now() - started > 10_000) {
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (cancelled || !timelineManager) {
+        return;
+      }
+      await mergeMineOverlayFavorites(timelineManager, () => cancelled);
+    };
+
+    void syncOverlayFavorites();
+    return () => {
+      cancelled = true;
+    };
   });
 
   const handleShareToggle = async (enabled: boolean) => {
