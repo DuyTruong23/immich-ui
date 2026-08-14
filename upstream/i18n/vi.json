@@ -1176,7 +1176,7 @@
   "feature_updates_notify_email_failed": "Không lưu được email nhận thông báo. Thử lại.",
   "feature_updates_notify_email_hint": "Nhận email khi Gallery có phiên bản mới kèm changelog.",
   "feature_updates_notify_email_label": "Email nhận thông báo",
-  "feature_updates_notify_email_placeholder": "ban@email.com",
+  "feature_updates_notify_email_placeholder": "you@domain.com",
   "feature_updates_notify_email_saved": "Đã lưu email nhận thông báo",
   "feature_updates_notify_email_saving": "Đang lưu...",
   "feature_updates_hide_next_login": "Không hiện modal cho lần đăng nhập sau",

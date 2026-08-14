@@ -38,16 +38,8 @@ const readStoredNotifyEmail = (): StoredNotifyEmail | null => {
 
 export const getStoredNotifyEmail = (): string => readStoredNotifyEmail()?.email ?? '';
 
-/** Email đã lưu, hoặc email tài khoản — điền sẵn để user đổi nếu muốn. */
-export const getDefaultNotifyEmail = (accountEmail?: string): string => {
-  const stored = getStoredNotifyEmail();
-  if (stored) {
-    return stored;
-  }
-
-  const fallback = accountEmail?.trim() ?? '';
-  return isValidNotifyEmail(fallback) ? fallback : '';
-};
+/** Chỉ điền khi user đã lưu email nhận thông báo — không lấy email tài khoản. */
+export const getDefaultNotifyEmail = (): string => getStoredNotifyEmail();
 
 export const hasStoredNotifyEmail = (): boolean => isValidNotifyEmail(getStoredNotifyEmail());
 

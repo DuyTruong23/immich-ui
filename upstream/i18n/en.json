@@ -1177,7 +1177,7 @@
   "feature_updates_notify_email_failed": "Could not save the notification email. Please try again.",
   "feature_updates_notify_email_hint": "We'll email this address when Gallery has a new version and changelog.",
   "feature_updates_notify_email_label": "Notification email",
-  "feature_updates_notify_email_placeholder": "you@email.com",
+  "feature_updates_notify_email_placeholder": "you@domain.com",
   "feature_updates_notify_email_saved": "Notification email saved",
   "feature_updates_notify_email_saving": "Saving...",
   "feature_updates_hide_next_login": "Don't show this modal on next login",
