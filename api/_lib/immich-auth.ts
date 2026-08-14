@@ -7,6 +7,9 @@ export type ImmichUser = {
   email: string;
   name: string;
   isAdmin: boolean;
+  avatarColor?: string;
+  profileImagePath?: string;
+  profileChangedAt?: string;
 };
 
 const getUpstreamBase = (): string => (getEnv('IMMICH_SERVER_URL') ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
