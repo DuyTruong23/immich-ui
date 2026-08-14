@@ -57,19 +57,31 @@ export const sendViaResend = async (options: {
     throw new ResendSendError('RESEND_API_KEY is not configured');
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json; charset=utf-8',
-    },
-    body: JSON.stringify({
-      from: options.from,
-      to: [options.to],
-      subject: options.subject,
-      html: wrapEmailHtml(options.html),
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  let response: Response;
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify({
+        from: options.from,
+        to: [options.to],
+        subject: options.subject,
+        html: wrapEmailHtml(options.html),
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    throw new ResendSendError(
+      error instanceof Error && error.name === 'AbortError' ? 'Resend request timed out' : 'Resend request failed',
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
     const detail = parseResendDetail(await response.text());

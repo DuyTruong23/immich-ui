@@ -3,8 +3,8 @@ import { getEnv } from './email.js';
 const BLOB_PATHNAME = 'feature-updates/subscribers.json';
 const BLOB_API_URL = 'https://vercel.com/api/blob';
 const BLOB_API_VERSION = '7';
-const BLOB_READ_TIMEOUT_MS = 8000;
-const BLOB_WRITE_TIMEOUT_MS = 8000;
+const BLOB_READ_TIMEOUT_MS = 3000;
+const BLOB_WRITE_TIMEOUT_MS = 4000;
 
 const isVercelRuntime = (): boolean => getEnv('VERCEL') === '1';
 
