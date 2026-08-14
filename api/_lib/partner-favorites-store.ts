@@ -153,6 +153,41 @@ const normalizeStore = (value: unknown): PartnerFavoriteStore => {
   return { users, favorites, shareWithEveryone };
 };
 
+const parseBlobStoreId = (token: string): string | undefined => {
+  const parts = token.split('_');
+  if (parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw' && parts[3]) {
+    return parts[3];
+  }
+
+  return undefined;
+};
+
+const privateBlobFileUrl = (token: string): string | undefined => {
+  const storeId = parseBlobStoreId(token);
+  return storeId ? `https://${storeId}.private.blob.vercel-storage.com/${BLOB_PATHNAME}` : undefined;
+};
+
+const readBlobJson = async (url: string, token: string): Promise<PartnerFavoriteStore | null> => {
+  const fileResponse = await fetchWithTimeout(
+    url,
+    {
+      cache: 'no-store',
+      headers: { authorization: `Bearer ${token}` },
+    },
+    BLOB_READ_TIMEOUT_MS,
+  );
+
+  if (fileResponse.status === 404) {
+    return { users: {}, favorites: {}, shareWithEveryone: {} };
+  }
+
+  if (!fileResponse.ok) {
+    return null;
+  }
+
+  return normalizeStore(await fileResponse.json());
+};
+
 const readBlobStore = async (): Promise<PartnerFavoriteStore | null> => {
   const token = getEnv('BLOB_READ_WRITE_TOKEN');
   if (!token) {
@@ -160,6 +195,14 @@ const readBlobStore = async (): Promise<PartnerFavoriteStore | null> => {
   }
 
   try {
+    const directUrl = privateBlobFileUrl(token);
+    if (directUrl) {
+      const direct = await readBlobJson(directUrl, token);
+      if (direct) {
+        return direct;
+      }
+    }
+
     const listParams = new URLSearchParams({ prefix: BLOB_PATHNAME, limit: '20' });
     const listResponse = await fetchWithTimeout(
       `${BLOB_API_URL}?${listParams.toString()}`,
@@ -184,20 +227,7 @@ const readBlobStore = async (): Promise<PartnerFavoriteStore | null> => {
       return { users: {}, favorites: {}, shareWithEveryone: {} };
     }
 
-    const fileResponse = await fetchWithTimeout(
-      blob.url,
-      {
-        cache: 'no-store',
-        headers: { authorization: `Bearer ${token}` },
-      },
-      BLOB_READ_TIMEOUT_MS,
-    );
-
-    if (!fileResponse.ok) {
-      return fileResponse.status === 404 ? { users: {}, favorites: {}, shareWithEveryone: {} } : null;
-    }
-
-    return normalizeStore(await fileResponse.json());
+    return (await readBlobJson(blob.url, token)) ?? { users: {}, favorites: {}, shareWithEveryone: {} };
   } catch {
     return null;
   }

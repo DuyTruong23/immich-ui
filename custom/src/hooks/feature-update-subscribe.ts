@@ -74,15 +74,21 @@ export const subscribeFeatureUpdateEmail = async (
   email: string,
   accessToken?: string,
   version?: string,
+  previousEmail?: string,
 ): Promise<void> => {
   const trimmed = email.trim();
   if (!isValidNotifyEmail(trimmed)) {
     throw new Error('Valid email is required');
   }
 
+  const previous = previousEmail?.trim() ?? '';
+
   if (isUiDevMode()) {
     persistNotifyEmail(trimmed, true);
-    console.info('[feature-update-subscribe] Dev mode — email nhận thông báo:', trimmed);
+    console.info(
+      '[feature-update-subscribe] Dev mode — email nhận thông báo:',
+      previous && previous.toLowerCase() !== trimmed.toLowerCase() ? `${previous} → ${trimmed}` : trimmed,
+    );
     return;
   }
 
@@ -94,6 +100,7 @@ export const subscribeFeatureUpdateEmail = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: trimmed,
+      ...(previous && isValidNotifyEmail(previous) ? { previousEmail: previous } : {}),
       ...(token ? { accessToken: token } : {}),
       version,
     }),

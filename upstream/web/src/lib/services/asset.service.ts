@@ -37,6 +37,7 @@ import {
   mdiTune,
 } from '@mdi/js';
 import type { MessageFormatter } from 'svelte-i18n';
+import { getAppConfig } from '@photo-gallery/config';
 import { goto } from '$app/navigation';
 import { ProjectionType } from '$lib/constants';
 import { assetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
@@ -388,19 +389,38 @@ export const handleDownloadAsset = async (asset: AssetResponseDto, { edited }: {
   }
 };
 
+const syncPartnerFavorite = async (assetId: string, favorite: boolean): Promise<void> => {
+  const { features } = getAppConfig();
+  if (!features.sharedFavorites) {
+    return;
+  }
+
+  await partnerFavoritesStore.setFavorite(assetId, favorite);
+};
+
 const handleFavorite = async (asset: AssetResponseDto) => {
   const $t = await getFormatter();
   const isOwner = authManager.authenticated && authManager.user.id === asset.ownerId;
 
   try {
-    const response = isOwner
-      ? await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: true } })
-      : { ...asset, isFavorite: true };
-    await partnerFavoritesStore.setFavorite(asset.id, true);
+    let response: AssetResponseDto = { ...asset, isFavorite: true };
+    if (isOwner) {
+      response = await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: true } });
+    }
+
+    try {
+      await syncPartnerFavorite(asset.id, true);
+    } catch (overlayError) {
+      if (!isOwner) {
+        throw overlayError;
+      }
+      console.warn('[favorite] overlay sync failed', overlayError);
+    }
+
     toastManager.primary($t('added_to_favorites'));
     eventManager.emit('AssetUpdate', response);
   } catch (error) {
-    handleError(error, $t('errors.unable_to_add_remove_favorites', { values: { favorite: asset.isFavorite } }));
+    handleError(error, $t('errors.unable_to_add_remove_favorites', { values: { favorite: true } }));
   }
 };
 
@@ -409,14 +429,24 @@ const handleUnfavorite = async (asset: AssetResponseDto) => {
   const isOwner = authManager.authenticated && authManager.user.id === asset.ownerId;
 
   try {
-    const response = isOwner
-      ? await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: false } })
-      : { ...asset, isFavorite: false };
-    await partnerFavoritesStore.setFavorite(asset.id, false);
+    let response: AssetResponseDto = { ...asset, isFavorite: false };
+    if (isOwner) {
+      response = await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: false } });
+    }
+
+    try {
+      await syncPartnerFavorite(asset.id, false);
+    } catch (overlayError) {
+      if (!isOwner) {
+        throw overlayError;
+      }
+      console.warn('[favorite] overlay sync failed', overlayError);
+    }
+
     toastManager.primary($t('removed_from_favorites'));
     eventManager.emit('AssetUpdate', response);
   } catch (error) {
-    handleError(error, $t('errors.unable_to_add_remove_favorites', { values: { favorite: asset.isFavorite } }));
+    handleError(error, $t('errors.unable_to_add_remove_favorites', { values: { favorite: false } }));
   }
 };
 

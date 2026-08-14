@@ -36,24 +36,18 @@ export type FeatureUpdateNotifyResult = {
   detail?: string;
 };
 
-export type FeatureUpdateSubscriberAccount = {
-  email: string;
-  name?: string;
-};
-
 export type FeatureUpdateSubscriberList = {
   ok?: boolean;
   emails: string[];
-  users?: FeatureUpdateSubscriberAccount[];
   count: number;
   lastNotifiedVersion?: string | null;
-  source?: 'immich-users';
+  source?: 'modal';
   storage?: 'blob' | 'local' | 'none';
   error?: string;
   detail?: string;
 };
 
-/** Admin xem email trên tài khoản Immich (và lần gửi changelog gần nhất) */
+/** Admin xem email user nhập trên modal Tính năng mới */
 export const fetchFeatureUpdateSubscribers = async (
   accessToken?: string,
 ): Promise<FeatureUpdateSubscriberList> => {
@@ -75,7 +69,6 @@ export const fetchFeatureUpdateSubscribers = async (
 
   return {
     emails: Array.isArray(payload.emails) ? payload.emails : [],
-    users: Array.isArray(payload.users) ? payload.users : undefined,
     count: typeof payload.count === 'number' ? payload.count : payload.emails?.length ?? 0,
     lastNotifiedVersion: payload.lastNotifiedVersion ?? null,
     source: payload.source,
@@ -83,7 +76,7 @@ export const fetchFeatureUpdateSubscribers = async (
   };
 };
 
-/** Admin gửi changelog hiện tại tới email tài khoản */
+/** Admin gửi changelog tới email đã đăng ký trên modal */
 export const sendFeatureUpdateNotify = async (options: {
   version: string;
   items: FeatureUpdatesConfig['items'];

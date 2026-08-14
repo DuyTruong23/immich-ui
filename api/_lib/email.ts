@@ -20,7 +20,6 @@ export const getEnv = (key: string): string | undefined => {
     FEEDBACK_NOTIFY_FROM: env?.FEEDBACK_NOTIFY_FROM,
     PUBLIC_APP_NAME: env?.PUBLIC_APP_NAME,
     IMMICH_SERVER_URL: env?.IMMICH_SERVER_URL,
-    IMMICH_API_KEY: env?.IMMICH_API_KEY,
     VERCEL: env?.VERCEL,
   };
 
