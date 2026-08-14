@@ -1,0 +1,178 @@
+import { motionDuration } from '$lib/utils/mobile-performance.svelte';
+
+export type SwipeNavigateDirection = 'next' | 'previous';
+
+type SwipeNavigateOptions = {
+  getWidth: () => number;
+  canStart: () => boolean;
+  hasNext: () => boolean;
+  hasPrevious: () => boolean;
+  onCommit: (direction: SwipeNavigateDirection) => void;
+};
+
+const LOCK_PX = 10;
+const COMMIT_RATIO = 0.22;
+const COMMIT_VELOCITY = 0.5;
+const RUBBER = 0.34;
+const SETTLE_MS = 280;
+
+export class SwipeNavigate {
+  offset = $state(0);
+  animating = $state(false);
+
+  #options: SwipeNavigateOptions;
+  #pointerId: number | null = null;
+  #startX = 0;
+  #startY = 0;
+  #startTime = 0;
+  #lock: 'h' | 'v' | null = null;
+  #commitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor(options: SwipeNavigateOptions) {
+    this.#options = options;
+  }
+
+  get dragging() {
+    return this.#lock === 'h';
+  }
+
+  destroy() {
+    this.#clearCommit();
+  }
+
+  onPointerDown = (event: PointerEvent) => {
+    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) {
+      return;
+    }
+
+    if (!this.#options.canStart()) {
+      return;
+    }
+
+    this.#clearCommit();
+    this.animating = false;
+    this.#pointerId = event.pointerId;
+    this.#startX = event.clientX;
+    this.#startY = event.clientY;
+    this.#startTime = performance.now();
+    this.#lock = null;
+  };
+
+  onPointerMove = (event: PointerEvent) => {
+    if (event.pointerId !== this.#pointerId) {
+      if (!event.isPrimary && this.#pointerId !== null) {
+        this.#cancel();
+      }
+      return;
+    }
+
+    if (!this.#options.canStart()) {
+      this.#cancel();
+      return;
+    }
+
+    const dx = event.clientX - this.#startX;
+    const dy = event.clientY - this.#startY;
+
+    if (!this.#lock) {
+      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) {
+        return;
+      }
+
+      this.#lock = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
+      if (this.#lock === 'v') {
+        return;
+      }
+
+      event.currentTarget instanceof HTMLElement && event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
+    if (this.#lock !== 'h') {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.offset = this.#rubber(dx);
+  };
+
+  onPointerUp = (event: PointerEvent) => {
+    if (event.pointerId !== this.#pointerId) {
+      return;
+    }
+
+    const lock = this.#lock;
+    this.#pointerId = null;
+    this.#lock = null;
+
+    if (lock !== 'h') {
+      this.offset = 0;
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const width = Math.max(this.#options.getWidth(), 1);
+    const elapsed = Math.max(performance.now() - this.#startTime, 1);
+    const velocity = (event.clientX - this.#startX) / elapsed;
+    const ratio = this.offset / width;
+
+    let direction: SwipeNavigateDirection | null = null;
+    if ((ratio <= -COMMIT_RATIO || velocity <= -COMMIT_VELOCITY) && this.#options.hasNext()) {
+      direction = 'next';
+    } else if ((ratio >= COMMIT_RATIO || velocity >= COMMIT_VELOCITY) && this.#options.hasPrevious()) {
+      direction = 'previous';
+    }
+
+    this.animating = true;
+
+    if (!direction) {
+      this.offset = 0;
+      return;
+    }
+
+    this.offset = direction === 'next' ? -width : width;
+    this.#commitTimer = setTimeout(() => {
+      this.#commitTimer = undefined;
+      this.#options.onCommit(direction);
+    }, motionDuration(SETTLE_MS));
+  };
+
+  onPointerCancel = (event: PointerEvent) => {
+    if (event.pointerId === this.#pointerId) {
+      this.#cancel();
+    }
+  };
+
+  reset() {
+    this.#clearCommit();
+    this.#pointerId = null;
+    this.#lock = null;
+    this.animating = false;
+    this.offset = 0;
+  }
+
+  #rubber(dx: number) {
+    if ((dx < 0 && !this.#options.hasNext()) || (dx > 0 && !this.#options.hasPrevious())) {
+      return dx * RUBBER;
+    }
+
+    return dx;
+  }
+
+  #cancel() {
+    this.#clearCommit();
+    this.#pointerId = null;
+    this.#lock = null;
+    this.animating = true;
+    this.offset = 0;
+  }
+
+  #clearCommit() {
+    if (this.#commitTimer) {
+      clearTimeout(this.#commitTimer);
+      this.#commitTimer = undefined;
+    }
+  }
+}

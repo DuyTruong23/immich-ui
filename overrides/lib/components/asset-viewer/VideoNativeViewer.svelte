@@ -1,5 +1,6 @@
 <script lang="ts">
   import FaceEditor from '$lib/components/asset-viewer/face-editor/FaceEditor.svelte';
+  import PhotoBlurBackdrop from '$lib/components/asset-viewer/PhotoBlurBackdrop.svelte';
   import VideoRemoteViewer from '$lib/components/asset-viewer/VideoRemoteViewer.svelte';
   import { assetViewerFadeDuration } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
@@ -391,6 +392,7 @@
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
   >
+    <PhotoBlurBackdrop {asset} />
     {#if castManager.isCasting}
       <div class="h-full place-content-center place-items-center">
         <VideoRemoteViewer

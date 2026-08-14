@@ -17,6 +17,11 @@
 @import '../../../branding/src/fluent/viewer.css';
 @import '../../../branding/src/loading.css';
 
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
 .pg-brand-accent {
   color: var(--md-sys-color-primary);
 }
