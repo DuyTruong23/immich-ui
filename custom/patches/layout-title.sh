@@ -3,9 +3,17 @@
 apply_layout_title_patch() {
   local layout="$1"
   [ -f "$layout" ] || return 0
-  if grep -q "iCloud Photos</title>" "$layout"; then
+  if grep -q "WeGallery</title>" "$layout"; then
     return 0
   fi
-  sed -i 's| - Gallery</title>| · iCloud Photos</title>|g' "$layout" 2>/dev/null \
-    || sed -i '' 's| - Gallery</title>| · iCloud Photos</title>|g' "$layout"
+  sed -i \
+    -e "s| - Immich</title>| - WeGallery</title>|g" \
+    -e "s| · iCloud Photos</title>| - WeGallery</title>|g" \
+    -e "s| - Gallery</title>| - WeGallery</title>|g" \
+    "$layout" 2>/dev/null \
+    || sed -i '' \
+      -e "s| - Immich</title>| - WeGallery</title>|g" \
+      -e "s| · iCloud Photos</title>| - WeGallery</title>|g" \
+      -e "s| - Gallery</title>| - WeGallery</title>|g" \
+      "$layout"
 }

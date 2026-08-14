@@ -33,7 +33,7 @@ const buildEmailHtml = (options: {
     : '';
 
   return `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+    <div style="line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 0.35rem;">${escapeHtml(options.actor.name)} vừa thích một ảnh</h2>
       <p style="color: #555; margin-top: 0;">Thông báo từ <strong>${escapeHtml(options.appName)}</strong></p>
       <table style="border-collapse: collapse; margin: 1rem 0;">
@@ -53,7 +53,7 @@ export const notifyPartnerFavorite = async (options: {
   bothFavorited: boolean;
 }): Promise<{ sent: number; skipped: boolean; reason?: string }> => {
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('FEEDBACK_NOTIFY_FROM');
-  const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
+  const appName = getEnv('PUBLIC_APP_NAME') ?? 'WeGallery';
   const appUrl = resolveAppUrl();
 
   if (!getEnv('RESEND_API_KEY') || !fromEmail) {

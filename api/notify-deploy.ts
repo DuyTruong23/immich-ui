@@ -65,7 +65,7 @@ const buildEmailHtml = (options: {
     .join('');
 
   return `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+    <div style="line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 0.5rem; color: ${accent};">${title}</h2>
       <p style="color: #555; margin-top: 0;">Thông báo deploy từ <strong>${escapeHtml(appName)}</strong></p>
       <table style="border-collapse: collapse; margin: 1rem 0;">${tableRows}</table>
@@ -90,7 +90,7 @@ export default async function handler(request: Request): Promise<Response> {
 
   const adminEmail = getEnv('ADMIN_NOTIFY_EMAIL');
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('DEPLOY_NOTIFY_FROM');
-  const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
+  const appName = getEnv('PUBLIC_APP_NAME') ?? 'WeGallery';
 
   if (!adminEmail || !fromEmail) {
     return json({ error: 'Email notification is not configured' }, 503);

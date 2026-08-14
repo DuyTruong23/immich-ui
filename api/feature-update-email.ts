@@ -56,7 +56,7 @@ const notifyAdminSubscriberChange = async (options: {
 }): Promise<void> => {
   const adminEmail = getEnv('ADMIN_NOTIFY_EMAIL');
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('FEEDBACK_NOTIFY_FROM');
-  const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
+  const appName = getEnv('PUBLIC_APP_NAME') ?? 'WeGallery';
 
   if (!adminEmail || !fromEmail || !getEnv('RESEND_API_KEY')) {
     return;
@@ -87,7 +87,7 @@ const notifyAdminSubscriberChange = async (options: {
     from: fromEmail,
     subject: `[${appName}] ${subjects[options.action]}`,
     html: `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+      <div style="line-height: 1.6; color: #111;">
         <h2 style="margin-bottom: 0.5rem;">${titles[options.action]}</h2>
         <p style="color: #555; margin-top: 0;">Từ <strong>${escapeHtml(appName)}</strong></p>
         <table style="border-collapse: collapse; margin: 1rem 0;">

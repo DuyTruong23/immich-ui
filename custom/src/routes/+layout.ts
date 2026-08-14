@@ -103,7 +103,7 @@ export const load = (async ({ fetch, url }) => {
   return {
     error,
     meta: {
-      title: PUBLIC_APP_NAME || 'Photo Gallery',
+      title: PUBLIC_APP_NAME || 'WeGallery',
     },
   };
 }) satisfies LayoutLoad;

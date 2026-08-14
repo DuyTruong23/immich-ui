@@ -37,4 +37,4 @@
   );
 </script>
 
-<img {src} class="{styles({ size, variant })} {className}" alt="iCloud Photos" />
+<img {src} class="{styles({ size, variant })} {className}" alt="WeGallery" />

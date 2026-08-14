@@ -49,14 +49,13 @@
     preview = false,
     originElement = null,
     userId,
-    accountEmail,
   }: Props = $props();
 
   const CLOSE_MS = 200;
   const MODAL_CLASS = 'pg-feature-update-modal';
 
   let feedback = $state('');
-  let notifyEmail = $state(getDefaultNotifyEmail(accountEmail));
+  let notifyEmail = $state(getDefaultNotifyEmail());
   let lastPersistedEmail = $state(hasConfirmedNotifyEmail() ? getStoredNotifyEmail() : '');
   let sentFeedback = $state(false);
   let savingNotifyEmail = $state(false);

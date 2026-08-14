@@ -177,9 +177,9 @@
         <div class="flex gap-3">
           <Icon icon={mdiInformationOutline} size="22" class="mt-0.5 shrink-0 text-amber-400" />
           <div class="space-y-2 text-sm text-(--pg-text-muted)">
-            <p class="font-medium text-(--pg-text)">Giới hạn theo dõi của Immich</p>
+            <p class="font-medium text-(--pg-text)">Giới hạn theo dõi của WeGallery</p>
             <p>
-              Immich <strong>không</strong> lưu thống kê thời gian làm việc trong từng phiên hay danh sách ảnh đã xem
+              WeGallery <strong>không</strong> lưu thống kê thời gian làm việc trong từng phiên hay danh sách ảnh đã xem
               của người dùng. API chỉ cung cấp phiên đăng nhập (thiết bị, lần hoạt động cuối) và lịch sử upload như
               trên.
             </p>
