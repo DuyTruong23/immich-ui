@@ -337,7 +337,7 @@
       {#each displayItems as item (item.assetId)}
         {@const asset = assetsById.get(item.assetId)}
         {#if asset}
-          <div class="relative aspect-square overflow-hidden rounded-xl">
+          <div class="relative isolate aspect-square overflow-hidden rounded-xl">
             <Thumbnail
               {asset}
               thumbnailSize={thumbSize || undefined}
@@ -345,10 +345,10 @@
               readonly
               onClick={() => handlePromiseError(onViewAsset(asset))}
             />
-            <div class="pointer-events-none absolute inset-e-2 bottom-2 z-3 flex">
+            <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
               {#each item.favoritedBy as user, index (user.id)}
                 <div
-                  class="rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
+                  class="relative rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
                   style="z-index: {item.favoritedBy.length - index}"
                   title={$t('shared_favorites_liked_by', { values: { name: user.name } })}
                 >

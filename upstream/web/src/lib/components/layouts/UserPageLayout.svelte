@@ -75,7 +75,7 @@
     <UserSidebar />
   {/if}
 
-  <main class="relative">
+  <main class="relative z-0 isolate">
     <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" use:useActions={use}>
       {@render children?.()}
     </div>

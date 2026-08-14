@@ -11,6 +11,7 @@
 
   let dismissedThisSession = $state(false);
   let pinUserId = $state('');
+  let featureUpdateModalOpen = $state(false);
 
   $effect(() => {
     const userId = authManager.authenticated ? authManager.user.id : '';
@@ -24,7 +25,11 @@
 
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
   const visible = $derived(
-    authManager.authenticated && !authManager.user.isAdmin && !viewingAsset && !dismissedThisSession,
+    authManager.authenticated &&
+      !authManager.user.isAdmin &&
+      !viewingAsset &&
+      !dismissedThisSession &&
+      !featureUpdateModalOpen,
   );
 
   onMount(() => {
@@ -33,6 +38,15 @@
     } catch {
       // ignore
     }
+
+    const root = document.documentElement;
+    const syncModalOpen = () => {
+      featureUpdateModalOpen = Boolean(root.dataset.featureUpdateModal);
+    };
+    syncModalOpen();
+    const observer = new MutationObserver(syncModalOpen);
+    observer.observe(root, { attributes: true, attributeFilter: ['data-feature-update-modal'] });
+    return () => observer.disconnect();
   });
 
   const openWhatsNew = (event: MouseEvent) => {
@@ -84,6 +98,10 @@
 {/if}
 
 <style>
+  :global(html[data-feature-update-modal]) .pg-whats-new-pin {
+    display: none;
+  }
+
   .pg-whats-new-pin {
     position: fixed;
     right: max(1rem, env(safe-area-inset-right, 0px));
