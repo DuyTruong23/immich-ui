@@ -16,9 +16,13 @@ develop  →  main (push)
 
 ## Commit nào vào modal?
 
-| Prefix | Vào modal |
+Chỉ thay đổi **UI/UX mà user thường thấy** (timeline, login, avatar, video, navbar, …).
+
+| Commit | Vào modal |
 |---|---|
-| `feat:`, `fix:`, `improve:`, `perf:` | Có |
+| `feat` / `fix` / `improve` / `perf` về giao diện user | Có |
+| Scope hoặc nội dung `admin`, quản trị, `/admin` | Không |
+| Codebase, upstream, script, CI, changelog, prepare:custom | Không |
 | `chore:`, `docs:`, `ci:`, `test:`, `style:`, `refactor:` | Không |
 | Merge commit | Không |
 

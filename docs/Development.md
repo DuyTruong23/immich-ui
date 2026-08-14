@@ -80,7 +80,7 @@ Chi tiết: [docker/README.md](../docker/README.md)
 
 1. Checkout `develop`
 2. Code trong `custom/`, `branding/`, `overrides/`
-3. Commit `feat:` / `fix:` / `improve:` rồi push `develop`
+3. Commit `feat:` / `fix:` / `improve:` về UI/UX user rồi push `develop`
 4. Merge `develop` → `main` — CI tăng version và generate modal
 
 ## Debug

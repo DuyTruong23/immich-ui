@@ -151,7 +151,7 @@
       <Alert
         color="info"
         title="Release tự động từ git"
-        description="Mỗi lần merge develop → main, CI tăng 0.0.1 và generate mục từ commit feat/fix/improve/perf. Sửa tại đây chỉ ghi đè bản đang chạy; release mới hơn sẽ thay thế. Cần BLOB_READ_WRITE_TOKEN để lưu override."
+        description="Mỗi lần merge develop → main, CI tăng 0.0.1 và chỉ generate mục UI/UX của user (bỏ admin và thay đổi nội bộ repo). Sửa tại đây chỉ ghi đè bản đang chạy; release mới hơn sẽ thay thế. Cần BLOB_READ_WRITE_TOKEN để lưu override."
       />
 
       {#if loading}

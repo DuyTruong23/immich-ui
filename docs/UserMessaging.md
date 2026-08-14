@@ -25,7 +25,7 @@ Nội dung production **không sửa tay trên `main`**. Code trên `develop`, C
 
 **Quy trình:**
 
-1. Commit trên `develop` với `feat:` / `fix:` / `improve:` / `perf:` (tiếng Việt)
+1. Commit trên `develop` với `feat:` / `fix:` / `improve:` / `perf:` về UI/UX user (tiếng Việt). Không dùng cho admin hay việc nội bộ repo.
 2. Merge `develop` → `main` và push → CI tăng `v1.0.3` → `v1.0.4` và publish modal
 3. User chưa xem version mới sẽ thấy modal sau login
 

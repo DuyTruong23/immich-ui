@@ -92,7 +92,7 @@ chore(release): v1.0.4          # chỉ do CI
 
 Scope gợi ý: `branding`, `custom`, `override`, `patch`, `upstream`, `config`
 
-`feat` / `fix` / `improve` / `perf` sẽ vào modal. Body commit (nếu có) thành phần chi tiết khi user bấm mở rộng.
+Chỉ `feat` / `fix` / `improve` / `perf` **về UI/UX của user** mới vào modal. Bỏ commit admin, quản trị, codebase, script, CI. Body commit (nếu có) thành phần chi tiết khi user bấm mở rộng.
 
 ## Upstream sync workflow
 

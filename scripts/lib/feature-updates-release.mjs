@@ -2,9 +2,28 @@
 
 const INCLUDE_TYPES = new Set(['feat', 'fix', 'improve', 'perf']);
 const SKIP_TYPES = new Set(['chore', 'docs', 'ci', 'test', 'style', 'refactor', 'build', 'revert']);
+const SKIP_SCOPES = new Set([
+  'admin',
+  'api',
+  'ci',
+  'script',
+  'scripts',
+  'config',
+  'patch',
+  'upstream',
+  'release',
+  'git',
+  'build',
+  'dx',
+  'infra',
+]);
 
 const CONVENTIONAL_RE = /^(?<type>feat|fix|improve|perf|chore|docs|ci|test|style|refactor|build|revert)(?:\((?<scope>[^)]+)\))?(?<breaking>!)?:\s*(?<title>.+)$/i;
 const MERGE_RE = /^(merge\b|merged?\s+in\b)/i;
+
+/** Admin / nội bộ codebase — không hiện trên modal user. */
+const INTERNAL_OR_ADMIN_RE =
+  /\b(admin|quản trị|\/admin\b|codebase|upstream|prepare:custom|github actions?|workflow|changelog|generate changelog|merge develop|typecheck|eslint|prettier|typescript|tsconfig|vite|blob|vercel secret|đồng bộ bản copy|overlay upstream|script(s)?|ci\/cd)\b/i;
 
 /**
  * @param {string} version
@@ -68,8 +87,31 @@ export const parseConventionalSubject = (subject) => {
   };
 };
 
+/**
+ * Chỉ giữ thay đổi UI/UX mà user thường thấy — bỏ admin và việc nội bộ repo.
+ * @param {string} subject
+ * @param {string} [body]
+ */
+export const isUserFacingUiChange = (subject, body = '') => {
+  const { type, scope, title } = parseConventionalSubject(subject);
+  if (SKIP_SCOPES.has(scope.toLowerCase())) {
+    return false;
+  }
+
+  const haystack = [scope, title, body].filter(Boolean).join('\n');
+  if (INTERNAL_OR_ADMIN_RE.test(haystack)) {
+    return false;
+  }
+
+  if (type && !INCLUDE_TYPES.has(type)) {
+    return false;
+  }
+
+  return Boolean(title);
+};
+
 /** @param {string} subject */
-export const shouldIncludeCommit = (subject) => {
+export const shouldIncludeCommit = (subject, body = '') => {
   const trimmed = String(subject ?? '').trim();
   if (!trimmed || MERGE_RE.test(trimmed) || isReleaseCommit(trimmed)) {
     return false;
@@ -82,11 +124,11 @@ export const shouldIncludeCommit = (subject) => {
   if (SKIP_TYPES.has(type)) {
     return false;
   }
-  if (INCLUDE_TYPES.has(type)) {
-    return true;
+  if (INCLUDE_TYPES.has(type) || !type) {
+    return isUserFacingUiChange(trimmed, body);
   }
 
-  return !type;
+  return false;
 };
 
 /**
@@ -95,7 +137,7 @@ export const shouldIncludeCommit = (subject) => {
  * @returns {{ title: string, detail?: string } | null}
  */
 export const commitToItem = (subject, body = '') => {
-  if (!shouldIncludeCommit(subject)) {
+  if (!shouldIncludeCommit(subject, body)) {
     return null;
   }
 
@@ -173,6 +215,10 @@ export const normalizePendingItem = (value) => {
   }
 
   const detail = typeof record.detail === 'string' ? record.detail.trim() : '';
+  if (!isUserFacingUiChange(title, detail)) {
+    return null;
+  }
+
   return detail ? { title, detail } : { title };
 };
 

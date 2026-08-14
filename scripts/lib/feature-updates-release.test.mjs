@@ -44,6 +44,15 @@ describe('commit filtering', () => {
     assert.equal(isReleaseCommit('chore(release): v1.0.4'), true);
   });
 
+  it('skips admin and codebase changes', () => {
+    assert.equal(shouldIncludeCommit('feat(admin): thêm tab tính năng cập nhật'), false);
+    assert.equal(shouldIncludeCommit('feat: giao diện admin dễ đọc hơn trên mobile'), false);
+    assert.equal(shouldIncludeCommit('fix: admin login không crash dashboard'), false);
+    assert.equal(shouldIncludeCommit('feat: tự tăng version và generate changelog khi merge develop'), false);
+    assert.equal(shouldIncludeCommit('feat(upstream): sync overlay prepare:custom'), false);
+    assert.equal(shouldIncludeCommit('feat: Cho phép đổi avatar', 'Sửa trang /admin'), false);
+  });
+
   it('parses conventional subject', () => {
     assert.deepEqual(parseConventionalSubject('feat(custom): Cho phép đổi avatar'), {
       type: 'feat',
