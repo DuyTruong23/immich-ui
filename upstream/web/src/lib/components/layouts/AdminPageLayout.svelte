@@ -40,7 +40,7 @@
       <NavbarItem title={$t('external_libraries')} href={Route.libraries()} icon={mdiBookshelf} />
       <NavbarItem title={$t('admin.queues')} href={Route.queues()} icon={mdiTrayFull} />
       <NavbarItem title={$t('settings')} href={Route.systemSettings()} icon={mdiCog} />
-      <NavbarItem title="Tính năng cập nhật" href="/admin/feature-updates" icon={mdiNewBox} />
+      <NavbarItem title={$t('admin.feature_updates')} href="/admin/feature-updates" icon={mdiNewBox} />
       <NavbarItem title={$t('admin.maintenance_settings')} href={Route.systemMaintenance()} icon={mdiWrench} />
       <NavbarItem title={$t('server_stats')} href={Route.systemStatistics()} icon={mdiServer} />
     </div>

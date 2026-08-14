@@ -66,6 +66,7 @@
       .show(FeatureUpdateModal, {
         version: config.version,
         updates: config.items,
+        releases: config.releases,
         preview: isUiDevMode(),
       })
       .catch((error) => {
@@ -199,8 +200,7 @@
           <Text fontWeight="medium">UI Dev Mode</Text>
         </div>
         <Text size="small" class="text-(--pg-text-muted)">
-          Không cần Docker hay server Immich. Chọn role để xem giao diện — timeline/album sẽ trống, dashboard dùng
-          dữ liệu mock.
+          {$t('ui_dev_mode_description')}
         </Text>
       </div>
 
@@ -215,7 +215,7 @@
         >
           <span class="inline-flex items-center justify-center gap-2">
             <Icon icon={mdiAccountCog} size="20" />
-            Vào với Admin
+            {$t('ui_dev_mode_enter_admin')}
           </span>
         </Button>
 
@@ -230,17 +230,17 @@
         >
           <span class="inline-flex items-center justify-center gap-2">
             <Icon icon={mdiAccountOutline} size="20" />
-            Vào với User
+            {$t('ui_dev_mode_enter_user')}
           </span>
         </Button>
       </Stack>
 
       <Text size="tiny" class="text-center text-(--pg-text-muted)">
-        Tắt chế độ này: dùng `pnpm dev` thay vì `pnpm dev:local`
+        {$t('ui_dev_mode_disable_hint')}
       </Text>
 
       <Button size="medium" shape="round" fullWidth color="secondary" onclick={previewFeatureModal}>
-        Xem modal "Tính năng được cập nhật"
+        {$t('ui_dev_mode_preview_feature_modal')}
       </Button>
     </Stack>
   {:else}

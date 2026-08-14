@@ -9,5 +9,20 @@
       "title": "Cho phép đổi avatar, tên",
       "detail": "Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái."
     }
+  ],
+  "releases": [
+    {
+      "version": "v1.0.5",
+      "items": [
+        {
+          "title": "Cải thiện tốc độ xem video trên thiết bị di động",
+          "detail": "Video trên điện thoại tải nhanh hơn, khả năng chờ khi loading."
+        },
+        {
+          "title": "Cho phép đổi avatar, tên",
+          "detail": "Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái."
+        }
+      ]
+    }
   ]
 }

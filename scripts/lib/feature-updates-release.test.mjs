@@ -105,6 +105,10 @@ describe('buildRelease', () => {
     assert.equal(release.version, 'v1.0.4');
     assert.equal(release.source, 'pending');
     assert.deepEqual(release.items, [{ title: 'Mới từ nhánh' }]);
+    assert.deepEqual(release.releases, [
+      { version: 'v1.0.4', items: [{ title: 'Mới từ nhánh' }] },
+      { version: 'v1.0.3', items: [{ title: 'Cũ' }] },
+    ]);
   });
 
   it('falls back to conventional commits', () => {
@@ -132,5 +136,28 @@ describe('buildRelease', () => {
     assert.equal(release.version, 'v1.0.4');
     assert.equal(release.source, 'unchanged');
     assert.deepEqual(release.items, current.items);
+  });
+
+  it('prepends a new version and keeps older releases', () => {
+    const release = buildRelease({
+      current: {
+        version: 'v1.0.5',
+        items: [{ title: 'Video' }],
+        releases: [
+          { version: 'v1.0.5', items: [{ title: 'Video' }] },
+          { version: 'v1.0.4', items: [{ title: 'Avatar' }] },
+        ],
+      },
+      pendingItems: [{ title: 'Email thông báo' }],
+      commitItems: [],
+      releasedAt: '2026-08-14T00:00:00.000Z',
+    });
+
+    assert.equal(release.version, 'v1.0.6');
+    assert.deepEqual(release.releases, [
+      { version: 'v1.0.6', items: [{ title: 'Email thông báo' }] },
+      { version: 'v1.0.5', items: [{ title: 'Video' }] },
+      { version: 'v1.0.4', items: [{ title: 'Avatar' }] },
+    ]);
   });
 });

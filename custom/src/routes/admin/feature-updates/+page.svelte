@@ -17,6 +17,8 @@
   import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiArrowDown, mdiArrowUp, mdiPlus, mdiTrashCanOutline } from '@mdi/js';
   import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
+  import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
   type Props = {
@@ -49,7 +51,7 @@
     try {
       applyConfig(await fetchFeatureUpdatesConfig({ force: true }));
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Không thể tải cấu hình';
+      errorMessage = error instanceof Error ? error.message : get(t)('admin.feature_updates_errors_load_failed');
       applyConfig(getDefaultFeatureUpdatesConfig());
     } finally {
       loading = false;
@@ -120,9 +122,9 @@
 
       invalidateFeatureUpdatesCache();
       applyConfig(saved);
-      toastManager.success('Đã lưu nội dung modal tính năng mới');
+      toastManager.success(get(t)('admin.feature_updates_saved_toast'));
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Không thể lưu cấu hình';
+      errorMessage = error instanceof Error ? error.message : get(t)('admin.feature_updates_errors_save_failed');
       toastManager.error(errorMessage);
     } finally {
       saving = false;
@@ -138,9 +140,9 @@
   <Container size="medium" center class="my-6 max-w-3xl">
     <Stack gap={4}>
       <div>
-        <Text class="text-lg font-semibold">Tính năng được cập nhật</Text>
+        <Text class="text-lg font-semibold">{$t('feature_updates_title')}</Text>
         <Text class="text-(--md-sys-color-on-surface-variant)">
-          Nội dung mặc định được generate từ commit trên develop khi merge sang main. Trang này ghi đè tạm trên Vercel Blob (cùng version hoặc cao hơn).
+          {$t('admin.feature_updates_page_description')}
         </Text>
       </div>
 
@@ -150,30 +152,34 @@
 
       <Alert
         color="info"
-        title="Release tự động từ git"
-        description="Mỗi lần merge develop → main, CI tăng 0.0.1 và chỉ generate mục UI/UX của user (bỏ admin và thay đổi nội bộ repo). Sửa tại đây chỉ ghi đè bản đang chạy; release mới hơn sẽ thay thế. Cần BLOB_READ_WRITE_TOKEN để lưu override."
+        title={$t('admin.feature_updates_auto_release_title')}
+        description={$t('admin.feature_updates_auto_release_description')}
       />
 
       {#if loading}
-        <Text class="text-(--md-sys-color-on-surface-variant)">Đang tải...</Text>
+        <Text class="text-(--md-sys-color-on-surface-variant)">{$t('loading')}</Text>
       {:else}
-        <Field label="Phiên bản hiển thị">
+        <Field label={$t('admin.feature_updates_display_version')}>
           <Input bind:value={version} placeholder="v1.0.3" />
         </Field>
 
         <Stack gap={3}>
-          <Text class="font-medium">Các mục tính năng</Text>
+          <Text class="font-medium">{$t('admin.feature_updates_items_heading')}</Text>
 
           {#each items as item, index (index)}
             <div class="rounded-xl border border-(--md-sys-color-outline-variant) p-3">
               <div class="flex items-start gap-2">
                 <div class="min-w-0 flex-1 flex flex-col gap-2">
-                  <Input bind:value={items[index].title} grow placeholder="Tiêu đề tính năng..." />
+                  <Input
+                    bind:value={items[index].title}
+                    grow
+                    placeholder={$t('admin.feature_updates_item_title_placeholder')}
+                  />
                   <Textarea
                     bind:value={items[index].detail}
                     grow
                     rows={2}
-                    placeholder="Hướng dẫn chi tiết (hiện khi user bấm mở rộng)..."
+                    placeholder={$t('admin.feature_updates_item_detail_placeholder')}
                   />
                 </div>
                 <div class="flex shrink-0 gap-1">
@@ -183,7 +189,7 @@
                   variant="ghost"
                   size="small"
                   icon={mdiArrowUp}
-                  aria-label="Di chuyển lên"
+                  aria-label={$t('admin.feature_updates_move_up')}
                   disabled={index === 0}
                   onclick={() => moveItem(index, -1)}
                 />
@@ -193,7 +199,7 @@
                   variant="ghost"
                   size="small"
                   icon={mdiArrowDown}
-                  aria-label="Di chuyển xuống"
+                  aria-label={$t('admin.feature_updates_move_down')}
                   disabled={index === items.length - 1}
                   onclick={() => moveItem(index, 1)}
                 />
@@ -203,7 +209,7 @@
                   variant="ghost"
                   size="small"
                   icon={mdiTrashCanOutline}
-                  aria-label="Xóa mục"
+                  aria-label={$t('admin.feature_updates_remove_item')}
                   onclick={() => removeItem(index)}
                 />
               </div>
@@ -212,16 +218,18 @@
           {/each}
 
           <Button leadingIcon={mdiPlus} color="secondary" variant="ghost" onclick={addItem}>
-            Thêm mục
+            {$t('admin.feature_updates_add_item')}
           </Button>
         </Stack>
 
         <div class="flex flex-wrap gap-2 pt-2">
           <Button shape="round" onclick={saveConfig} disabled={!hasValidForm || saving}>
-            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {saving ? $t('admin.feature_updates_saving') : $t('admin.feature_updates_save')}
           </Button>
-          <Button shape="round" color="secondary" onclick={previewModal}>Xem thử modal</Button>
-          <Button shape="round" color="secondary" variant="ghost" onclick={resetDefaults}>Khôi phục mặc định</Button>
+          <Button shape="round" color="secondary" onclick={previewModal}>{$t('admin.feature_updates_preview_modal')}</Button>
+          <Button shape="round" color="secondary" variant="ghost" onclick={resetDefaults}>
+            {$t('admin.feature_updates_restore_defaults')}
+          </Button>
         </div>
       {/if}
     </Stack>

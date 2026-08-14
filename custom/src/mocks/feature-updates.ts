@@ -1,21 +1,30 @@
-import type { FeatureUpdateItem } from '$custom/utils/feature-update-items';
+import type { FeatureUpdateItem, FeatureUpdateRelease } from '$custom/utils/feature-update-items';
 
 /** Mock data dùng khi preview modal ở UI dev mode (pnpm dev:local) */
 export const FEATURE_UPDATES_MOCK: FeatureUpdateItem[] = [
   {
-    title: 'Cải thiện tốc độ xem video trên thiết bị di động',
-    detail: 'Mock — video preload nhanh hơn trên mobile.',
+    title: 'Đăng ký email nhận thông báo tính năng',
+    detail: 'Mock — nhập email trên modal để nhận changelog khi có phiên bản mới.',
+  },
+];
+
+export const FEATURE_UPDATES_MOCK_RELEASES: FeatureUpdateRelease[] = [
+  {
+    version: 'v1.0.7',
+    items: FEATURE_UPDATES_MOCK,
   },
   {
-    title: 'Cho phép đổi avatar, tên',
-    detail: 'Mock — vào Cài đặt → Tài khoản để đổi avatar.',
-  },
-  {
-    title: 'Form đăng nhập hỗ trợ chặn autofill mật khẩu tốt hơn khi dùng OAuth',
-    detail: 'Mock — OAuth không còn kích autofill mật khẩu.',
-  },
-  {
-    title: 'Giao diện admin dễ đọc hơn trên mobile — bảng, thư viện ngoài, chọn ảnh',
-    detail: 'Mock — thử /admin trên điện thoại.',
+    version: 'v1.0.6',
+    items: [
+      {
+        title: 'Cải thiện tốc độ xem video trên thiết bị di động',
+        detail: 'Video trên điện thoại tải nhanh hơn, khả năng chờ khi loading.',
+      },
+      {
+        title: 'Cho phép đổi avatar, tên',
+        detail:
+          'Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái.',
+      },
+    ],
   },
 ];

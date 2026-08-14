@@ -146,8 +146,8 @@
           size="medium"
           icon={mdiNewBox}
           onclick={openFeatureUpdateModal}
-          title="Tính năng mới"
-          aria-label="Tính năng mới"
+          title={$t('new_feature')}
+          aria-label={$t('new_feature')}
         />
 
         {#if showNotifications}

@@ -4,6 +4,11 @@
     DEFAULT_FEATURE_UPDATE_VERSION,
   } from '$custom/constants/feature-updates';
   import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
+  import {
+    hasStoredNotifyEmail,
+    isValidNotifyEmail,
+    subscribeFeatureUpdateEmail,
+  } from '$custom/hooks/feature-update-subscribe';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
   import {
     coerceFeatureUpdateItems,
@@ -11,16 +16,19 @@
     getFeatureUpdateItemTitle,
     itemHasDetail,
     type FeatureUpdateItem,
+    type FeatureUpdateRelease,
   } from '$custom/utils/feature-update-items';
-  import { Field, Button, HStack, Icon, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
+  import { Field, Button, HStack, Icon, Input, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
   import { mdiCheckCircleOutline, mdiChevronDown } from '@mdi/js';
   import { onMount } from 'svelte';
+  import { t } from 'svelte-i18n';
 
   type Props = {
     onClose: () => void;
     accessToken?: string;
     version?: string;
     updates?: readonly FeatureUpdateItem[];
+    releases?: readonly FeatureUpdateRelease[];
     preview?: boolean;
     originElement?: HTMLElement | null;
   };
@@ -30,6 +38,7 @@
     accessToken,
     version = DEFAULT_FEATURE_UPDATE_VERSION,
     updates = DEFAULT_FEATURE_UPDATE_ITEMS,
+    releases,
     preview = false,
     originElement = null,
   }: Props = $props();
@@ -38,20 +47,34 @@
   const MODAL_CLASS = 'pg-feature-update-modal';
 
   let feedback = $state('');
+  let notifyEmail = $state('');
   let sentFeedback = $state(false);
+  let showNotifyEmail = $state(!hasStoredNotifyEmail());
+  let savedNotifyEmail = $state(false);
   let isClosing = $state(false);
-  let expandedItems = $state<ReadonlySet<number>>(new Set());
+  let expandedItems = $state<ReadonlySet<string>>(new Set());
 
-  const displayUpdates = $derived(coerceFeatureUpdateItems(updates));
+  const displayReleases = $derived(
+    releases && releases.length > 0
+      ? releases.map((release) => ({
+          version: release.version,
+          items: coerceFeatureUpdateItems(release.items),
+        }))
+      : [{ version, items: coerceFeatureUpdateItems(updates) }],
+  );
 
   const hasFeedback = $derived(feedback.trim().length > 0);
+  const hasValidNotifyEmail = $derived(isValidNotifyEmail(notifyEmail));
+  const canSubmit = $derived(hasFeedback || (showNotifyEmail && hasValidNotifyEmail));
 
-  const toggleItem = (index: number) => {
+  const itemKey = (releaseVersion: string, index: number) => `${releaseVersion}:${index}`;
+
+  const toggleItem = (key: string) => {
     const next = new Set(expandedItems);
-    if (next.has(index)) {
-      next.delete(index);
+    if (next.has(key)) {
+      next.delete(key);
     } else {
-      next.add(index);
+      next.add(key);
     }
     expandedItems = next;
   };
@@ -85,10 +108,22 @@
     };
   });
 
+  const persistNotifyEmail = () => {
+    if (preview || savedNotifyEmail || !showNotifyEmail || !hasValidNotifyEmail) {
+      return;
+    }
+
+    savedNotifyEmail = true;
+    showNotifyEmail = false;
+    subscribeFeatureUpdateEmail(notifyEmail, accessToken, version);
+  };
+
   const handleDismiss = () => {
     if (isClosing) {
       return;
     }
+
+    persistNotifyEmail();
 
     if (!preview) {
       markFeatureUpdateSeen(version);
@@ -133,12 +168,16 @@
   };
 
   const handleSendFeedback = () => {
-    const trimmed = feedback.trim();
-    if (!trimmed || sentFeedback) {
+    if (!canSubmit || sentFeedback) {
       return;
     }
 
-    submitFeedback(trimmed, accessToken);
+    const trimmed = feedback.trim();
+    if (trimmed) {
+      submitFeedback(trimmed, accessToken);
+    }
+
+    persistNotifyEmail();
     sentFeedback = true;
     handleDismiss();
   };
@@ -146,7 +185,7 @@
 
 <Modal
   size="medium"
-  title="Tính năng được cập nhật"
+  title={$t('feature_updates_title')}
   onClose={handleDismiss}
   icon={false}
   class="{MODAL_CLASS}{isClosing ? ` ${MODAL_CLASS}--closing` : ''}"
@@ -155,79 +194,98 @@
     <div class="feature-update-body__header">
       {#if preview}
         <Text size="tiny" class="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
-          Chế độ preview — dữ liệu mock cho local dev
+          {$t('feature_updates_preview_banner')}
         </Text>
       {/if}
 
-      <span
-        class="mb-3 inline-flex rounded-full bg-(--md-sys-color-primary-container) px-2.5 py-0.5 text-xs font-semibold tracking-wide text-(--md-sys-color-on-primary-container)"
-      >
-        {version}
-      </span>
-
       <Text class="text-(--md-sys-color-on-surface-variant)">
-        Gallery vừa được cập nhật với các thay đổi sau:
+        {$t('feature_updates_intro')}
       </Text>
     </div>
 
-    <section class="feature-updates-section feature-updates-section--scroll" aria-label="Các mục tính năng">
-      <Text class="feature-updates-section__heading">Các mục tính năng</Text>
+    <section class="feature-updates-section feature-updates-section--scroll" aria-label={$t('feature_updates_items_aria')}>
+      {#each displayReleases as release, releaseIndex (release.version)}
+        {#if releaseIndex > 0}
+          <hr class="feature-updates-release__divider" />
+        {/if}
 
-      <ul class="feature-updates-list">
-        {#each displayUpdates as item, index (index)}
-          {@const title = getFeatureUpdateItemTitle(item)}
-          {@const detail = getFeatureUpdateItemDetail(item)}
-          {@const expandable = itemHasDetail({ title, detail })}
-          {@const expanded = expandedItems.has(index)}
-          <li class="feature-updates-item" class:feature-updates-item--expanded={expanded}>
-            {#if expandable}
-              <button
-                type="button"
-                class="feature-updates-item__trigger"
-                aria-expanded={expanded}
-                onclick={() => toggleItem(index)}
-              >
-                <span class="feature-updates-item__icon" aria-hidden="true">
-                  <Icon icon={mdiCheckCircleOutline} size="18" />
-                </span>
-                <span class="feature-updates-item__text">{title}</span>
-                <span class="feature-updates-item__chevron" aria-hidden="true">
-                  <Icon icon={mdiChevronDown} size="20" />
-                </span>
-              </button>
-            {:else}
-              <div class="feature-updates-item__static">
-                <span class="feature-updates-item__icon" aria-hidden="true">
-                  <Icon icon={mdiCheckCircleOutline} size="18" />
-                </span>
-                <span class="feature-updates-item__text">{title}</span>
-              </div>
-            {/if}
+        <div class="feature-updates-release">
+          <span class="feature-updates-release__version">{release.version}</span>
 
-            {#if expandable && expanded}
-              <div class="feature-updates-item__detail">{detail}</div>
-            {/if}
-          </li>
-        {/each}
-      </ul>
+          <ul class="feature-updates-list">
+            {#each release.items as item, index (`${release.version}:${index}`)}
+              {@const title = getFeatureUpdateItemTitle(item)}
+              {@const detail = getFeatureUpdateItemDetail(item)}
+              {@const expandable = itemHasDetail({ title, detail })}
+              {@const key = itemKey(release.version, index)}
+              {@const expanded = expandedItems.has(key)}
+              <li class="feature-updates-item" class:feature-updates-item--expanded={expanded}>
+                {#if expandable}
+                  <button
+                    type="button"
+                    class="feature-updates-item__trigger"
+                    aria-expanded={expanded}
+                    onclick={() => toggleItem(key)}
+                  >
+                    <span class="feature-updates-item__icon" aria-hidden="true">
+                      <Icon icon={mdiCheckCircleOutline} size="18" />
+                    </span>
+                    <span class="feature-updates-item__text">{title}</span>
+                    <span class="feature-updates-item__chevron" aria-hidden="true">
+                      <Icon icon={mdiChevronDown} size="20" />
+                    </span>
+                  </button>
+                {:else}
+                  <div class="feature-updates-item__static">
+                    <span class="feature-updates-item__icon" aria-hidden="true">
+                      <Icon icon={mdiCheckCircleOutline} size="18" />
+                    </span>
+                    <span class="feature-updates-item__text">{title}</span>
+                  </div>
+                {/if}
+
+                {#if expandable && expanded}
+                  <div class="feature-updates-item__detail">{detail}</div>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
     </section>
 
-    <Field label="Đóng góp ý kiến" class="feature-update-feedback">
-      <Textarea
-        bind:value={feedback}
-        grow
-        rows={1}
-        placeholder="Chia sẻ trải nghiệm hoặc góp ý của bạn..."
-        class="feature-update-feedback__input"
-      />
-    </Field>
+    <div class="feature-update-feedback">
+      <Field label={$t('feature_updates_feedback_label')}>
+        <Textarea
+          bind:value={feedback}
+          grow
+          rows={1}
+          placeholder={$t('feature_updates_feedback_placeholder')}
+          class="feature-update-feedback__input"
+        />
+      </Field>
+      {#if showNotifyEmail}
+        <Field label={$t('feature_updates_notify_email_label')} class="mt-3">
+          <Input
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            bind:value={notifyEmail}
+            placeholder={$t('feature_updates_notify_email_placeholder')}
+          />
+        </Field>
+        <Text size="tiny" class="mt-1 text-(--md-sys-color-on-surface-variant)">
+          {$t('feature_updates_notify_email_hint')}
+        </Text>
+      {/if}
+    </div>
   </ModalBody>
 
   <ModalFooter class="feature-update-footer">
     <HStack fullWidth gap={3}>
-      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss}>Đóng</Button>
-      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!hasFeedback}>
-        Gửi góp ý
+      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss}>{$t('close')}</Button>
+      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!canSubmit}>
+        {$t('feature_updates_send_feedback')}
       </Button>
     </HStack>
   </ModalFooter>
@@ -295,15 +353,28 @@
     background: var(--md-sys-color-surface-container);
   }
 
-  .feature-updates-section__heading {
-    display: block;
-    margin-bottom: 0.625rem;
-    padding-inline: 0.125rem;
-    font-size: 0.6875rem;
+  .feature-updates-release {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .feature-updates-release__version {
+    display: inline-flex;
+    align-self: flex-start;
+    border-radius: 999px;
+    background: var(--md-sys-color-primary-container);
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--md-sys-color-primary);
+    letter-spacing: 0.02em;
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+  .feature-updates-release__divider {
+    margin: 0.875rem 0;
+    border: 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
   }
 
   .feature-updates-list {

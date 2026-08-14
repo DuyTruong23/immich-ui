@@ -140,6 +140,28 @@ FEEDBACK_ENABLED=true
 
 Luồng: login → modal → user nhập góp ý → đóng modal → POST `/api/feedback` → email admin.
 
+### Email nhận changelog khi có version mới
+
+User nhập **Email nhận thông báo** trên modal. Danh sách lưu private trên Vercel Blob (`feature-updates/subscribers.json`).
+
+| Biến | Bắt buộc | Mô tả |
+|---|---|---|
+| `BLOB_READ_WRITE_TOKEN` | Có | Lưu danh sách email (private blob) |
+| `RESEND_API_KEY` | Có | Gửi changelog |
+| `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi |
+| `PUBLIC_APP_URL` | Không | Link "Mở Gallery" / hủy đăng ký trong email. Fallback `VERCEL_PROJECT_PRODUCTION_URL` |
+| `FEATURE_UPDATE_NOTIFY_URL` | Có (GitHub secret) | `https://<domain>/api/feature-update-notify` — CI gọi sau release |
+| `FEATURE_UPDATE_NOTIFY_SECRET` | Có (Vercel + GitHub) | Bearer secret để CI kích hoạt gửi mail |
+
+```env
+FEATURE_UPDATE_NOTIFY_URL=https://<domain>/api/feature-update-notify
+FEATURE_UPDATE_NOTIFY_SECRET=replace-me
+```
+
+Luồng: user nhập email → POST `/api/feature-update-subscribe` → merge `develop` → `main` (hoặc admin tăng version) → Resend gửi changelog.
+
+> Resend free/`onboarding@resend.dev` chỉ gửi được tới email đã đăng ký Resend. Để gửi tới mọi user cần verify domain và dùng `LOGIN_NOTIFY_FROM` thuộc domain đó.
+
 ## Trang "Hệ thống đang cập nhật dữ liệu."
 
 Khi Immich/tunnel không phản hồi (5xx, 404 API, `failed to fetch`), app hiển thị trang thân thiện thay vì lỗi Immich mặc định.

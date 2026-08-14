@@ -42,6 +42,7 @@ Chi tiết git: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](
 | Tiêu đề | `Tính năng được cập nhật` |
 | Auto-close | **5 giây** — timer dừng khi user focus/ gõ vào ô góp ý |
 | Góp ý | Textarea + nút **Gửi góp ý** → POST `/api/feedback` (cần `FEEDBACK_ENABLED=true` trên Vercel) |
+| Email nhận thông báo | Input **Email nhận thông báo** → POST `/api/feature-update-subscribe`. Khi CI/admin publish version mới, Resend gửi changelog tới các email đã đăng ký |
 | Preview local | Trang login dev mode → nút **Xem modal "Tính năng được cập nhật"** |
 
 ### File liên quan
@@ -55,6 +56,7 @@ Chi tiết git: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](
 | `custom/src/routes/FeatureUpdateOnLogin.svelte` | Gắn modal sau login |
 | `custom/src/routes/auth/login/+page.svelte` | Nút preview (dev mode) |
 | `custom/src/hooks/feedback-submit.ts` | Gửi góp ý email |
+| `custom/src/hooks/feature-update-subscribe.ts` | Đăng ký email nhận changelog |
 
 ### Env liên quan
 

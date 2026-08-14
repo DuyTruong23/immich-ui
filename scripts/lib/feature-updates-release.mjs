@@ -267,7 +267,11 @@ export const collectPendingItems = (files) => {
 
 /**
  * @param {{
- *   current: { version: string, items: { title: string, detail?: string }[] },
+ *   current: {
+ *     version: string,
+ *     items: { title: string, detail?: string }[],
+ *     releases?: { version: string, items: { title: string, detail?: string }[] }[],
+ *   },
  *   pendingItems: { title: string, detail?: string }[],
  *   commitItems: { title: string, detail?: string }[],
  *   releasedAt: string,
@@ -275,10 +279,21 @@ export const collectPendingItems = (files) => {
  */
 export const buildRelease = ({ current, pendingItems, commitItems, releasedAt }) => {
   const items = pendingItems.length > 0 ? pendingItems : commitItems;
+  const nextItems = items.length > 0 ? items : current.items;
+  const version = bumpPatch(current.version);
+  const previousReleases =
+    Array.isArray(current.releases) && current.releases.length > 0
+      ? current.releases
+      : [{ version: current.version, items: current.items }];
+  const releases = [
+    { version, items: nextItems },
+    ...previousReleases.filter((release) => release.version !== version),
+  ];
 
   return {
-    version: bumpPatch(current.version),
-    items: items.length > 0 ? items : current.items,
+    version,
+    items: nextItems,
+    releases,
     releasedAt,
     source: pendingItems.length > 0 ? 'pending' : commitItems.length > 0 ? 'commits' : 'unchanged',
   };
