@@ -55,7 +55,8 @@
   const MODAL_CLASS = 'pg-feature-update-modal';
 
   let feedback = $state('');
-  let notifyEmail = $state(getDefaultNotifyEmail());
+  const initialNotifyEmail = getDefaultNotifyEmail();
+  let notifyEmail = $state(initialNotifyEmail);
   let lastPersistedEmail = $state(hasConfirmedNotifyEmail() ? getStoredNotifyEmail() : '');
   let sentFeedback = $state(false);
   let savingNotifyEmail = $state(false);
@@ -74,13 +75,26 @@
 
   const hasFeedback = $derived(feedback.trim().length > 0);
   const hasValidNotifyEmail = $derived(isValidNotifyEmail(notifyEmail));
+  const notifyEmailChanged = $derived(
+    notifyEmail.trim().toLowerCase() !== initialNotifyEmail.trim().toLowerCase(),
+  );
   const emailNeedsSave = $derived(
-    hasValidNotifyEmail && notifyEmail.trim().toLowerCase() !== lastPersistedEmail.trim().toLowerCase(),
+    notifyEmailChanged &&
+      hasValidNotifyEmail &&
+      notifyEmail.trim().toLowerCase() !== lastPersistedEmail.trim().toLowerCase(),
   );
   const emailNeedsUnsubscribe = $derived(
-    lastPersistedEmail.trim().length > 0 && notifyEmail.trim().length === 0,
+    notifyEmailChanged && lastPersistedEmail.trim().length > 0 && notifyEmail.trim().length === 0,
   );
-  const canSubmit = $derived(hasFeedback || emailNeedsSave || emailNeedsUnsubscribe);
+  const emailDirty = $derived(emailNeedsSave || emailNeedsUnsubscribe);
+  const canSubmit = $derived(hasFeedback || emailDirty);
+  const submitLabel = $derived(
+    hasFeedback && emailDirty
+      ? $t('feature_updates_save_and_send_feedback')
+      : emailDirty
+        ? $t('save')
+        : $t('feature_updates_send_feedback'),
+  );
 
   const itemKey = (releaseVersion: string, index: number) => `${releaseVersion}:${index}`;
 
@@ -180,24 +194,12 @@
     }
   };
 
-  const handleClearNotifyEmail = async () => {
+  const handleClearNotifyEmail = () => {
     if (savingNotifyEmail) {
       return;
     }
 
     notifyEmail = '';
-
-    if (preview) {
-      lastPersistedEmail = '';
-      return;
-    }
-
-    if (lastPersistedEmail.trim()) {
-      await persistUnsubscribeEmail();
-      return;
-    }
-
-    clearStoredNotifyEmail();
   };
 
   const persistHidePreference = () => {
@@ -253,15 +255,9 @@
     card.addEventListener('animationend', onAnimationEnd);
   };
 
-  const handleDismiss = async () => {
+  const handleDismiss = () => {
     if (isClosing || savingNotifyEmail) {
       return;
-    }
-
-    if (emailNeedsUnsubscribe) {
-      await persistUnsubscribeEmail();
-    } else if (emailNeedsSave) {
-      await persistNotifyEmail();
     }
 
     closeModal();
@@ -388,7 +384,7 @@
                 color="secondary"
                 class="me-1"
                 disabled={savingNotifyEmail}
-                onclick={() => void handleClearNotifyEmail()}
+                onclick={handleClearNotifyEmail}
                 aria-label={$t('clear')}
               />
             {/if}
@@ -409,8 +405,14 @@
       <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={savingNotifyEmail}>
         {$t('close')}
       </Button>
-      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!canSubmit || savingNotifyEmail}>
-        {savingNotifyEmail ? $t('feature_updates_notify_email_saving') : $t('feature_updates_send_feedback')}
+      <Button
+        shape="round"
+        fullWidth
+        type="button"
+        onclick={handleSendFeedback}
+        disabled={!canSubmit || savingNotifyEmail}
+      >
+        {savingNotifyEmail ? $t('feature_updates_notify_email_saving') : submitLabel}
       </Button>
     </HStack>
   </ModalFooter>
