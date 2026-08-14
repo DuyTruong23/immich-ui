@@ -77,7 +77,7 @@
       </div>
     {/if}
 
-    <div class="relative size-full">
+    <div class="relative flex size-full place-content-center place-items-center">
       {@render children?.()}
     </div>
 
