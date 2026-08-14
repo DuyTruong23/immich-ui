@@ -28,6 +28,7 @@ export type PartnerFavoritesResponse = {
   emailed?: number;
   synced?: number;
   error?: string;
+  detail?: string;
 };
 
 const headers = (): HeadersInit => {
@@ -41,7 +42,7 @@ const headers = (): HeadersInit => {
 const parseResponse = async (response: Response): Promise<PartnerFavoritesResponse> => {
   const payload = (await response.json().catch(() => ({}))) as PartnerFavoritesResponse;
   if (!response.ok) {
-    throw new Error(payload.error || `Partner favorites request failed (${response.status})`);
+    throw new Error(payload.detail || payload.error || `Partner favorites request failed (${response.status})`);
   }
   return payload;
 };

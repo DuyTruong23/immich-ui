@@ -1,10 +1,15 @@
 import { getEnv } from './email.js';
+import {
+  blobPathnameCandidates,
+  getBlobToken,
+  listBlobs,
+  privateBlobFileUrl,
+  putBlobJson,
+  readBlobJson,
+} from './vercel-blob.js';
 
 const BLOB_PATHNAME = 'partner-favorites/store.json';
-const BLOB_API_URL = 'https://vercel.com/api/blob';
-const BLOB_API_VERSION = '7';
 const BLOB_READ_TIMEOUT_MS = 2500;
-const BLOB_WRITE_TIMEOUT_MS = 8000;
 
 const ASSET_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const AVATAR_COLORS = new Set([
@@ -47,19 +52,7 @@ export type PartnerFavoriteItem = {
   favoritedBy: PartnerFavoriteUser[];
 };
 
-const EMPTY_STORE: PartnerFavoriteStore = { users: {}, favorites: {}, shareWithEveryone: {} };
-
 let memoryStore: PartnerFavoriteStore | null = null;
-
-const fetchWithTimeout = async (url: string, init: RequestInit, ms: number): Promise<Response> => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-};
 
 export const isAssetId = (value: string): boolean => ASSET_ID_RE.test(value);
 
@@ -153,81 +146,43 @@ const normalizeStore = (value: unknown): PartnerFavoriteStore => {
   return { users, favorites, shareWithEveryone };
 };
 
-const parseBlobStoreId = (token: string): string | undefined => {
-  const parts = token.split('_');
-  if (parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw' && parts[3]) {
-    return parts[3];
+const readStoredJson = async (url: string, token: string): Promise<PartnerFavoriteStore | null> => {
+  const result = await readBlobJson<unknown>(url, token, { timeoutMs: BLOB_READ_TIMEOUT_MS });
+  if (!result.ok) {
+    return result.status === 404 ? { users: {}, favorites: {}, shareWithEveryone: {} } : null;
   }
 
-  return undefined;
-};
-
-const privateBlobFileUrl = (token: string): string | undefined => {
-  const storeId = parseBlobStoreId(token);
-  return storeId ? `https://${storeId}.private.blob.vercel-storage.com/${BLOB_PATHNAME}` : undefined;
-};
-
-const readBlobJson = async (url: string, token: string): Promise<PartnerFavoriteStore | null> => {
-  const fileResponse = await fetchWithTimeout(
-    url,
-    {
-      cache: 'no-store',
-      headers: { authorization: `Bearer ${token}` },
-    },
-    BLOB_READ_TIMEOUT_MS,
-  );
-
-  if (fileResponse.status === 404) {
-    return { users: {}, favorites: {}, shareWithEveryone: {} };
-  }
-
-  if (!fileResponse.ok) {
-    return null;
-  }
-
-  return normalizeStore(await fileResponse.json());
+  return normalizeStore(result.value);
 };
 
 const readBlobStore = async (): Promise<PartnerFavoriteStore | null> => {
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  const token = getBlobToken();
   if (!token) {
     return null;
   }
 
   try {
-    const directUrl = privateBlobFileUrl(token);
-    if (directUrl) {
-      const direct = await readBlobJson(directUrl, token);
-      if (direct) {
-        return direct;
+    for (const pathname of blobPathnameCandidates(BLOB_PATHNAME)) {
+      const directUrl = privateBlobFileUrl(pathname, token);
+      if (directUrl) {
+        const direct = await readStoredJson(directUrl, token);
+        if (direct) {
+          return direct;
+        }
       }
     }
 
-    const listParams = new URLSearchParams({ prefix: BLOB_PATHNAME, limit: '20' });
-    const listResponse = await fetchWithTimeout(
-      `${BLOB_API_URL}?${listParams.toString()}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-          'x-api-version': BLOB_API_VERSION,
-        },
-      },
-      BLOB_READ_TIMEOUT_MS,
-    );
-
-    if (!listResponse.ok) {
-      return null;
-    }
-
-    const listed = (await listResponse.json()) as { blobs?: Array<{ pathname?: string; url?: string }> };
-    const blob = listed.blobs?.find(
-      (item) => item.pathname === BLOB_PATHNAME || item.pathname?.endsWith(`/${BLOB_PATHNAME}`),
+    const listed = await listBlobs('partner-favorites', { limit: 20, timeoutMs: BLOB_READ_TIMEOUT_MS });
+    const blob = listed.find((item) =>
+      blobPathnameCandidates(BLOB_PATHNAME).some(
+        (pathname) => item.pathname === pathname || item.pathname?.endsWith(`/${pathname}`),
+      ),
     );
     if (!blob?.url) {
       return { users: {}, favorites: {}, shareWithEveryone: {} };
     }
 
-    return (await readBlobJson(blob.url, token)) ?? { users: {}, favorites: {}, shareWithEveryone: {} };
+    return (await readStoredJson(blob.url, token)) ?? { users: {}, favorites: {}, shareWithEveryone: {} };
   } catch {
     return null;
   }
@@ -247,7 +202,7 @@ export const writePartnerFavorites = async (store: PartnerFavoriteStore): Promis
   const next = normalizeStore(store);
   memoryStore = next;
 
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  const token = getBlobToken();
   if (!token) {
     if (getEnv('VERCEL') === '1') {
       console.warn('[partner-favorites] BLOB_READ_WRITE_TOKEN missing; store is memory-only');
@@ -255,28 +210,7 @@ export const writePartnerFavorites = async (store: PartnerFavoriteStore): Promis
     return;
   }
 
-  const params = new URLSearchParams({ pathname: BLOB_PATHNAME });
-  const response = await fetchWithTimeout(
-    `${BLOB_API_URL}/?${params.toString()}`,
-    {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'x-api-version': BLOB_API_VERSION,
-        'x-content-type': 'application/json',
-        'x-add-random-suffix': '0',
-        'x-allow-overwrite': '1',
-        'x-vercel-blob-access': 'private',
-      },
-      body: JSON.stringify(next),
-    },
-    BLOB_WRITE_TIMEOUT_MS,
-  );
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`Blob put failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
-  }
+  await putBlobJson(BLOB_PATHNAME, next, { access: 'private' });
 };
 
 export const upsertFavoriteUser = (store: PartnerFavoriteStore, user: PartnerFavoriteUser): PartnerFavoriteStore => {
