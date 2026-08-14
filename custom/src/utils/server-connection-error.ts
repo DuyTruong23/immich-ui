@@ -4,7 +4,7 @@ const CONNECTION_ERROR_PATTERN =
   /\b(bad gateway|service unavailable|gateway timeout|failed to fetch|network error|econnrefused|err_connection_refused|aggregateerror)\b/i;
 
 const STALE_CHUNK_PATTERN =
-  /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|error loading chunk/i;
+  /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|error loading chunk|unable to preload css|_app\/immutable|reading ['"]universal['"]/i;
 
 export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 

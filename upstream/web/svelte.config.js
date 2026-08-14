@@ -18,7 +18,13 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     version: {
-      name: process.env.IMMICH_BUILD || process.env.npm_package_version || 'local',
+      name:
+        process.env.VERCEL_GIT_COMMIT_SHA ||
+        process.env.VERCEL_DEPLOYMENT_ID ||
+        process.env.IMMICH_BUILD ||
+        process.env.npm_package_version ||
+        'local',
+      pollInterval: 60_000,
     },
     paths: {
       relative: false,
