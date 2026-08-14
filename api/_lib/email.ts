@@ -52,13 +52,16 @@ const parseResendDetail = (raw: string): string | undefined => {
   }
 };
 
+export const EMAIL_FONT_FAMILY =
+  "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif";
+
 const wrapEmailHtml = (html: string): string => `<!DOCTYPE html>
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-  <body style="margin:0; padding:16px; font-family:'Segoe UI',Arial,Helvetica,sans-serif; line-height:1.6; color:#111;">
+  <body style="margin:0; padding:16px; font-family:${EMAIL_FONT_FAMILY}; line-height:1.6; color:#111;">
     ${html}
   </body>
 </html>`;

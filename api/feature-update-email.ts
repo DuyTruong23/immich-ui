@@ -87,7 +87,7 @@ const notifyAdminSubscriberChange = async (options: {
     from: fromEmail,
     subject: `[${appName}] ${subjects[options.action]}`,
     html: `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+      <div style="line-height: 1.6; color: #111;">
         <h2 style="margin-bottom: 0.5rem;">${titles[options.action]}</h2>
         <p style="color: #555; margin-top: 0;">Từ <strong>${escapeHtml(appName)}</strong></p>
         <table style="border-collapse: collapse; margin: 1rem 0;">

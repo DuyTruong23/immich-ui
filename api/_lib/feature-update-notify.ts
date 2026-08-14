@@ -58,7 +58,7 @@ export const buildFeatureUpdateNotifyHtml = (options: {
     : '';
 
   return `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+    <div style="line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 0.35rem;">WeGallery vừa cập nhật ${escapeHtml(options.version)}</h2>
       <p style="color: #555; margin-top: 0;">Các thay đổi mới trên <strong>${escapeHtml(options.appName)}</strong>:</p>
       <ul style="padding-left: 1.25rem; margin: 1rem 0;">${itemsHtml}</ul>

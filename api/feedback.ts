@@ -59,7 +59,7 @@ const buildEmailHtml = (options: {
   const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
   return `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
+    <div style="line-height: 1.6; color: #111;">
       <h2 style="margin-bottom: 0.5rem;">Đóng góp ý kiến mới</h2>
       <p style="color: #555; margin-top: 0;">Từ <strong>${escapeHtml(options.appName)}</strong></p>
       <table style="border-collapse: collapse; margin: 1rem 0;">

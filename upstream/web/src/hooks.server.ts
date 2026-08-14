@@ -1,14 +1,14 @@
 import type { Handle } from '@sveltejs/kit';
 
-const beVietnamProRegular = '/branding/fonts/BeVietnamPro/BeVietnamPro-Regular.ttf';
-const beVietnamProMedium = '/branding/fonts/BeVietnamPro/BeVietnamPro-Medium.ttf';
+const sfProRegular = '/branding/fonts/SFPro/SF-Pro-Text-Regular.woff2';
+const sfProMedium = '/branding/fonts/SFPro/SF-Pro-Text-Medium.woff2';
 
 export const handle = (async ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) => {
       return html
-        .replace('%app.font%', () => beVietnamProRegular)
-        .replace('%app.monofont%', () => beVietnamProMedium);
+        .replace('%app.font%', () => sfProRegular)
+        .replace('%app.monofont%', () => sfProMedium);
     },
   });
 }) satisfies Handle;

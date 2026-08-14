@@ -39,7 +39,7 @@
   }
 
   body {
-    font-family: var(--md-ref-typeface-brand, 'Be Vietnam Pro'), system-ui, sans-serif;
+    font-family: var(--md-ref-typeface-brand, var(--pg-font-sans));
     font-size: var(--md-sys-typescale-body-large-size);
     line-height: var(--md-sys-typescale-body-large-line-height);
     font-weight: var(--md-sys-typescale-body-large-weight);

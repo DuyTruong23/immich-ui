@@ -10,7 +10,7 @@ media-controller {
   --media-primary-color: #ffffff !important;
   --media-text-color: rgba(255, 255, 255, 0.92) !important;
   --media-icon-color: #ffffff !important;
-  --media-font-family: var(--font-sans, 'Be Vietnam Pro', system-ui, sans-serif) !important;
+  --media-font-family: var(--font-sans, var(--pg-font-sans)) !important;
   --media-font-weight: 500 !important;
   --media-font-size: var(--md-sys-typescale-label-large-size, 0.875rem) !important;
   --media-menu-item-hover-background: var(--md-state-on-video-hover) !important;

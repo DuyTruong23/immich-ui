@@ -1,10 +1,13 @@
 /*
- * Be Vietnam Pro — typography tokens
+ * SF Pro — typography tokens
  */
 
 :root {
-  --fontFamilyBase: 'Be Vietnam Pro', sans-serif;
-  --fontFamilyMonospace: 'Be Vietnam Pro', sans-serif;
+  --pg-font-sans: 'SF Pro', 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  --pg-font-mono: 'SF Pro', ui-monospace, monospace;
+
+  --fontFamilyBase: var(--pg-font-sans);
+  --fontFamilyMonospace: var(--pg-font-mono);
 
   /* Ant Design fontSize scale (base 14px) */
   --fontSizeBase100: 12px;
