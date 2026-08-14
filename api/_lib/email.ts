@@ -35,6 +35,17 @@ const parseResendDetail = (raw: string): string | undefined => {
   }
 };
 
+const wrapEmailHtml = (html: string): string => `<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="margin:0; padding:16px; font-family:'Segoe UI',Arial,Helvetica,sans-serif; line-height:1.6; color:#111;">
+    ${html}
+  </body>
+</html>`;
+
 export const sendViaResend = async (options: {
   to: string;
   from: string;
@@ -50,13 +61,13 @@ export const sendViaResend = async (options: {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
     },
     body: JSON.stringify({
       from: options.from,
       to: [options.to],
       subject: options.subject,
-      html: options.html,
+      html: wrapEmailHtml(options.html),
     }),
   });
 

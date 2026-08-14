@@ -8,6 +8,7 @@ import {
   mdiContentDuplicate,
   mdiCrosshairsGps,
   mdiFolderOutline,
+  mdiHeartMultipleOutline,
   mdiHeartOutline,
   mdiImageAlbum,
   mdiImageMultipleOutline,
@@ -127,6 +128,12 @@ export const getPagesProvider = ($t: MessageFormatter) => {
       title: $t('favorites'),
       icon: mdiHeartOutline,
       onAction: () => goto(Route.favorites()),
+      $if: () => authManager.authenticated,
+    },
+    {
+      title: $t('shared_favorites'),
+      icon: mdiHeartMultipleOutline,
+      onAction: () => goto('/shared-favorites'),
       $if: () => authManager.authenticated,
     },
     {

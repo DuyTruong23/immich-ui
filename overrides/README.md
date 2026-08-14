@@ -26,6 +26,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/managers/timeline-manager/timeline-day.svelte.ts` | Giữ asset đích trong DOM khi jump-to-date |
 | `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
+| `lib/services/asset.service.ts` | Favorite ảnh partner + ghi overlay yêu thích chung |
+| `lib/components/timeline/actions/FavoriteAction.svelte` | Bulk favorite gồm ảnh partner |
 
 | File (custom routes) | Thay thế |
 |---|---|

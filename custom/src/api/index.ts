@@ -8,6 +8,7 @@ export * from './people.js';
 export * from './map.js';
 export * from './partner.js';
 export * from './favorites.js';
+export * from './partner-favorites.js';
 export * from './trash.js';
 export * from './archive.js';
 export * from './jobs.js';
