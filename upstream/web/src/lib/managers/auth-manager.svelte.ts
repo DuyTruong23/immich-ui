@@ -10,8 +10,10 @@ import {
 import { getAppConfig } from '@photo-gallery/config';
 import {
   beginBrowserSession,
+  clearAdminPersistentSession,
   clearSessionActive,
   isActiveBrowserSession,
+  isAdminPersistentSession,
 } from '$custom/hooks/session-auth';
 import {
   clearDevSession,
@@ -21,6 +23,8 @@ import {
 import { clearStoredAccessToken } from '$custom/hooks/access-token';
 import {
   clearSessionExpiry,
+  clearSessionNoExpiry,
+  enableAdminSessionPersistence,
   isSessionExpired,
   watchSessionExpiry,
 } from '$custom/hooks/session-expiry';
@@ -110,7 +114,7 @@ class AuthManager {
 
     if (this.#isSessionOnlyAuth()) {
       beginBrowserSession();
-      if (!isActiveBrowserSession()) {
+      if (!isActiveBrowserSession() && !isAdminPersistentSession()) {
         return;
       }
     }
@@ -132,6 +136,10 @@ class AuthManager {
       const [user, preferences] = await Promise.all([getMyUser(), getMyPreferences()]);
       this.#preferences = preferences;
       this.#user = user;
+
+      if (user.isAdmin) {
+        enableAdminSessionPersistence();
+      }
 
       if (user.license?.activatedAt) {
         this.isPurchased = true;
@@ -252,6 +260,8 @@ class AuthManager {
     this.#stopSessionExpiryWatcher();
     clearStoredAccessToken();
     clearSessionExpiry();
+    clearSessionNoExpiry();
+    clearAdminPersistentSession();
 
     if (this.#isSessionOnlyAuth()) {
       clearSessionActive();
@@ -273,6 +283,11 @@ class AuthManager {
     }
 
     this.#stopSessionExpiryWatcher();
+
+    if (this.#user?.isAdmin) {
+      return;
+    }
+
     this.#expiryWatcherCleanup = watchSessionExpiry(() => {
       void this.logout();
     });

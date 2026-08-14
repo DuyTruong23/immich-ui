@@ -3,16 +3,24 @@
     DEFAULT_FEATURE_UPDATE_ITEMS,
     DEFAULT_FEATURE_UPDATE_VERSION,
   } from '$custom/constants/feature-updates';
+  import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
+  import {
+    coerceFeatureUpdateItems,
+    getFeatureUpdateItemDetail,
+    getFeatureUpdateItemTitle,
+    itemHasDetail,
+    type FeatureUpdateItem,
+  } from '$custom/utils/feature-update-items';
   import { Field, Button, HStack, Icon, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
-  import { mdiCheckCircleOutline } from '@mdi/js';
+  import { mdiCheckCircleOutline, mdiChevronDown } from '@mdi/js';
   import { onMount } from 'svelte';
 
   type Props = {
     onClose: () => void;
     accessToken?: string;
     version?: string;
-    updates?: readonly string[];
+    updates?: readonly FeatureUpdateItem[];
     preview?: boolean;
     originElement?: HTMLElement | null;
   };
@@ -32,8 +40,21 @@
   let feedback = $state('');
   let sentFeedback = $state(false);
   let isClosing = $state(false);
+  let expandedItems = $state<ReadonlySet<number>>(new Set());
+
+  const displayUpdates = $derived(coerceFeatureUpdateItems(updates));
 
   const hasFeedback = $derived(feedback.trim().length > 0);
+
+  const toggleItem = (index: number) => {
+    const next = new Set(expandedItems);
+    if (next.has(index)) {
+      next.delete(index);
+    } else {
+      next.add(index);
+    }
+    expandedItems = next;
+  };
 
   const prefersReducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -67,6 +88,10 @@
   const handleDismiss = () => {
     if (isClosing) {
       return;
+    }
+
+    if (!preview) {
+      markFeatureUpdateSeen(version);
     }
 
     isClosing = true;
@@ -149,12 +174,39 @@
       <Text class="feature-updates-section__heading">Các mục tính năng</Text>
 
       <ul class="feature-updates-list">
-        {#each updates as item, index (index)}
-          <li class="feature-updates-item">
-            <span class="feature-updates-item__icon" aria-hidden="true">
-              <Icon icon={mdiCheckCircleOutline} size="18" />
-            </span>
-            <span class="feature-updates-item__text">{item}</span>
+        {#each displayUpdates as item, index (index)}
+          {@const title = getFeatureUpdateItemTitle(item)}
+          {@const detail = getFeatureUpdateItemDetail(item)}
+          {@const expandable = itemHasDetail({ title, detail })}
+          {@const expanded = expandedItems.has(index)}
+          <li class="feature-updates-item" class:feature-updates-item--expanded={expanded}>
+            {#if expandable}
+              <button
+                type="button"
+                class="feature-updates-item__trigger"
+                aria-expanded={expanded}
+                onclick={() => toggleItem(index)}
+              >
+                <span class="feature-updates-item__icon" aria-hidden="true">
+                  <Icon icon={mdiCheckCircleOutline} size="18" />
+                </span>
+                <span class="feature-updates-item__text">{title}</span>
+                <span class="feature-updates-item__chevron" aria-hidden="true">
+                  <Icon icon={mdiChevronDown} size="20" />
+                </span>
+              </button>
+            {:else}
+              <div class="feature-updates-item__static">
+                <span class="feature-updates-item__icon" aria-hidden="true">
+                  <Icon icon={mdiCheckCircleOutline} size="18" />
+                </span>
+                <span class="feature-updates-item__text">{title}</span>
+              </div>
+            {/if}
+
+            {#if expandable && expanded}
+              <div class="feature-updates-item__detail">{detail}</div>
+            {/if}
           </li>
         {/each}
       </ul>
@@ -265,15 +317,42 @@
 
   .feature-updates-item {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 0.875rem;
+    flex-direction: column;
+    gap: 0;
     border-radius: 0.75rem;
     border-inline-start: 3px solid var(--md-sys-color-primary);
     background: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface);
     font-size: 0.875rem;
     line-height: 1.5;
+    overflow: hidden;
+  }
+
+  .feature-updates-item__trigger,
+  .feature-updates-item__static {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 0.875rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+  }
+
+  .feature-updates-item__trigger {
+    cursor: pointer;
+  }
+
+  .feature-updates-item__trigger:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .feature-updates-item__trigger:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
   }
 
   .feature-updates-item__icon {
@@ -285,6 +364,27 @@
   .feature-updates-item__text {
     flex: 1;
     min-width: 0;
+    font-weight: 500;
+  }
+
+  .feature-updates-item__chevron {
+    flex-shrink: 0;
+    margin-top: 0.0625rem;
+    color: var(--md-sys-color-on-surface-variant);
+    transition: transform var(--md-motion-duration-short, 200ms)
+      var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1));
+  }
+
+  .feature-updates-item--expanded .feature-updates-item__chevron {
+    transform: rotate(180deg);
+  }
+
+  .feature-updates-item__detail {
+    padding: 0 0.875rem 0.875rem 2.625rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -296,8 +396,8 @@
           var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1));
     }
 
-    .feature-updates-item:hover {
-      background: var(--md-sys-color-surface-container-high);
+    .feature-updates-item--expanded {
+      background: var(--md-sys-color-surface-container);
     }
   }
 

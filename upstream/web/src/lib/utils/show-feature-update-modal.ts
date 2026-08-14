@@ -1,12 +1,14 @@
 import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
+import { coerceFeatureUpdateItems } from '$custom/utils/feature-update-items';
+import type { FeatureUpdateItem } from '$custom/utils/feature-update-items';
 import FeatureUpdateModal from '../../routes/FeatureUpdateModal.svelte';
 import { modalManager } from '@immich/ui';
 
 type ShowFeatureUpdateModalOptions = {
   accessToken?: string;
   version?: string;
-  updates?: readonly string[];
+  updates?: readonly FeatureUpdateItem[];
   originElement?: HTMLElement | null;
 };
 
@@ -30,7 +32,7 @@ export const showFeatureUpdateModal = async ({
   return modalManager.show(FeatureUpdateModal, {
     accessToken: preview ? undefined : accessToken,
     version: config.version,
-    updates: config.items,
+    updates: coerceFeatureUpdateItems(config.items),
     preview,
     originElement,
   });

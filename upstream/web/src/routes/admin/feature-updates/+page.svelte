@@ -4,6 +4,7 @@
     DEFAULT_FEATURE_UPDATE_VERSION,
     type FeatureUpdatesConfig,
   } from '$custom/constants/feature-updates';
+  import type { FeatureUpdateItem } from '$custom/utils/feature-update-items';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import AdminPageLayout from '$lib/components/layouts/AdminPageLayout.svelte';
   import {
@@ -13,7 +14,7 @@
     saveFeatureUpdatesConfig,
   } from '$custom/services/feature-updates.service';
   import { getStoredAccessToken } from '$custom/hooks/access-token';
-  import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, toastManager } from '@immich/ui';
+  import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiArrowDown, mdiArrowUp, mdiPlus, mdiTrashCanOutline } from '@mdi/js';
   import { onMount } from 'svelte';
   import type { PageData } from './$types';
@@ -25,16 +26,20 @@
   const { data }: Props = $props();
 
   let version = $state(DEFAULT_FEATURE_UPDATE_VERSION);
-  let items = $state<string[]>([...DEFAULT_FEATURE_UPDATE_ITEMS]);
+  let items = $state<FeatureUpdateItem[]>([...DEFAULT_FEATURE_UPDATE_ITEMS]);
   let loading = $state(true);
   let saving = $state(false);
   let errorMessage = $state('');
 
-  const hasValidForm = $derived(version.trim().length > 0 && items.some((item) => item.trim().length > 0));
+  const hasValidForm = $derived(
+    version.trim().length > 0 && items.some((item) => item.title.trim().length > 0),
+  );
 
   const applyConfig = (config: FeatureUpdatesConfig) => {
     version = config.version;
-    items = config.items.length > 0 ? [...config.items] : [''];
+    items = config.items.length > 0
+      ? config.items.map((item) => ({ title: item.title, detail: item.detail ?? '' }))
+      : [{ title: '', detail: '' }];
   };
 
   const loadConfig = async () => {
@@ -52,13 +57,13 @@
   };
 
   const addItem = () => {
-    items = [...items, ''];
+    items = [...items, { title: '', detail: '' }];
   };
 
   const removeItem = (index: number) => {
     items = items.filter((_, itemIndex) => itemIndex !== index);
     if (items.length === 0) {
-      items = [''];
+      items = [{ title: '', detail: '' }];
     }
   };
 
@@ -80,7 +85,12 @@
   const previewModal = () => {
     showFeatureUpdateModal({
       version: version.trim(),
-      updates: items.map((item) => item.trim()).filter(Boolean),
+      updates: items
+        .map((item) => ({
+          title: item.title.trim(),
+          ...(item.detail?.trim() ? { detail: item.detail.trim() } : {}),
+        }))
+        .filter((item) => item.title.length > 0),
     }).catch((error) => {
       console.error('[feature-updates-admin] preview failed', error);
     });
@@ -98,7 +108,12 @@
       const saved = await saveFeatureUpdatesConfig(
         {
           version: version.trim(),
-          items: items.map((item) => item.trim()).filter(Boolean),
+          items: items
+            .map((item) => ({
+              title: item.title.trim(),
+              ...(item.detail?.trim() ? { detail: item.detail.trim() } : {}),
+            }))
+            .filter((item) => item.title.length > 0),
         },
         getStoredAccessToken(),
       );
@@ -125,7 +140,7 @@
       <div>
         <Text class="text-lg font-semibold">Tính năng được cập nhật</Text>
         <Text class="text-(--md-sys-color-on-surface-variant)">
-          Tùy chỉnh phiên bản và danh sách hiển thị trong modal sau đăng nhập và nút "Tính năng mới" trên navbar.
+          Nội dung mặc định được generate từ commit trên develop khi merge sang main. Trang này ghi đè tạm trên Vercel Blob (cùng version hoặc cao hơn).
         </Text>
       </div>
 
@@ -135,8 +150,8 @@
 
       <Alert
         color="info"
-        title="Lưu trữ trên Vercel"
-        description="Cần cấu hình BLOB_READ_WRITE_TOKEN trên Vercel để lưu thay đổi cho mọi người dùng. Nếu chưa có, trang vẫn xem được nội dung mặc định."
+        title="Release tự động từ git"
+        description="Mỗi lần merge develop → main, CI tăng 0.0.1 và generate mục từ commit feat/fix/improve/perf. Sửa tại đây chỉ ghi đè bản đang chạy; release mới hơn sẽ thay thế. Cần BLOB_READ_WRITE_TOKEN để lưu override."
       />
 
       {#if loading}
@@ -150,11 +165,18 @@
           <Text class="font-medium">Các mục tính năng</Text>
 
           {#each items as item, index (index)}
-            <div class="flex items-start gap-2">
-              <div class="min-w-0 flex-1">
-                <Input bind:value={items[index]} grow placeholder="Mô tả tính năng mới..." />
-              </div>
-              <div class="flex shrink-0 gap-1">
+            <div class="rounded-xl border border-(--md-sys-color-outline-variant) p-3">
+              <div class="flex items-start gap-2">
+                <div class="min-w-0 flex-1 flex flex-col gap-2">
+                  <Input bind:value={items[index].title} grow placeholder="Tiêu đề tính năng..." />
+                  <Textarea
+                    bind:value={items[index].detail}
+                    grow
+                    rows={2}
+                    placeholder="Hướng dẫn chi tiết (hiện khi user bấm mở rộng)..."
+                  />
+                </div>
+                <div class="flex shrink-0 gap-1">
                 <IconButton
                   shape="round"
                   color="secondary"
@@ -185,6 +207,7 @@
                   onclick={() => removeItem(index)}
                 />
               </div>
+            </div>
             </div>
           {/each}
 

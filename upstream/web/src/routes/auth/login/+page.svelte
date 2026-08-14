@@ -6,7 +6,7 @@
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
   import { markSessionActive } from '$custom/hooks/session-auth';
-  import { markSessionExpiry } from '$custom/hooks/session-expiry';
+  import { enableAdminSessionPersistence, markSessionExpiry } from '$custom/hooks/session-expiry';
   import { goto } from '$app/navigation';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -17,8 +17,8 @@
   import { oauth } from '$lib/utils';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { login, type LoginResponseDto } from '@immich/sdk';
-  import { Alert, Button, Field, Icon, Input, Stack, Text, modalManager } from '@immich/ui';
-  import { mdiAccountCog, mdiAccountOutline, mdiPalette } from '@mdi/js';
+  import { Alert, Button, Field, Icon, IconButton, Input, Stack, Text, modalManager } from '@immich/ui';
+  import { mdiAccountCog, mdiAccountOutline, mdiEyeOffOutline, mdiEyeOutline, mdiPalette } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -36,13 +36,23 @@
   let loading = $state(false);
   let oauthLoading = $state(featureFlagsManager.value.oauth);
   let loadingRole = $state<UiDevRole | null>(null);
+  let passwordVisible = $state(false);
+  let blockAutofill = $state(true);
 
   const serverConfig = $derived(serverConfigManager.value);
+  const passwordToggleLabel = $derived(passwordVisible ? $t('hide_password') : $t('show_password'));
+
+  const unlockAutofill = () => {
+    blockAutofill = false;
+  };
   const { publicEnv } = getAppConfig();
 
   const enterAs = async (role: UiDevRole) => {
     loadingRole = role;
     applyDevRole(role);
+    if (role === 'admin') {
+      enableAdminSessionPersistence();
+    }
     await goto(data.continueUrl, { invalidateAll: true });
     eventManager.emit('AuthLogin', {
       accessToken: `dev-${role}`,
@@ -65,14 +75,20 @@
 
   const onSuccess = async (user: LoginResponseDto) => {
     storeAccessToken(user.accessToken);
-    markSessionExpiry();
+
+    if (user.isAdmin) {
+      enableAdminSessionPersistence();
+      await authManager.refresh();
+    } else {
+      markSessionExpiry();
+      if (publicEnv.sessionOnlyAuth) {
+        markSessionActive();
+        await authManager.refresh();
+      }
+    }
+
     password = '';
     email = '';
-
-    if (publicEnv.sessionOnlyAuth) {
-      markSessionActive();
-      await authManager.refresh();
-    }
 
     await notifyAdminOnLogin(user.accessToken);
     await goto(data.continueUrl, { invalidateAll: true });
@@ -239,42 +255,84 @@
       {#if featureFlagsManager.value.passwordLogin}
         <form
           autocomplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore
+          data-form-type="other"
           {onsubmit}
-          class="flex flex-col gap-4"
+          class="relative flex flex-col gap-4"
           hidden={oauthLoading}
         >
-          {#if errorMessage}
-            <Alert color="danger" title={errorMessage} closable />
-          {/if}
-
-          <Field label={$t('email')} required="indicator">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="username"
-              bind:value={email}
-            />
-          </Field>
-
-          <!-- Decoy field — ngăn trình duyệt hỏi lưu mật khẩu sau login -->
+          <!-- Decoy fields — trình duyệt autofill vào đây thay vì ô thật -->
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            tabindex="-1"
+            aria-hidden="true"
+            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
+          />
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            tabindex="-1"
+            aria-hidden="true"
+            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
+          />
           <input
             type="password"
             name="prevent-save-password"
             autocomplete="new-password"
             tabindex="-1"
             aria-hidden="true"
-            class="pointer-events-none absolute size-0 opacity-0"
+            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
           />
+
+          {#if errorMessage}
+            <Alert color="danger" title={errorMessage} closable />
+          {/if}
+
+          <Field label={$t('email')} required="indicator">
+            <Input
+              id="pg-login-email"
+              name="pg-login-email"
+              type="text"
+              inputmode="email"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck={false}
+              autocomplete="off"
+              readonly={blockAutofill}
+              onfocus={unlockAutofill}
+              bind:value={email}
+            />
+          </Field>
 
           <Field label={$t('password')} required="indicator">
             <Input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
+              id="pg-login-password"
+              name="pg-login-password"
+              type={passwordVisible ? 'text' : 'password'}
+              autocomplete="off"
+              readonly={blockAutofill}
+              onfocus={unlockAutofill}
               bind:value={password}
-            />
+            >
+              {#snippet trailingIcon()}
+                <IconButton
+                  variant="ghost"
+                  shape="round"
+                  color="secondary"
+                  size="small"
+                  class="me-1"
+                  icon={passwordVisible ? mdiEyeOffOutline : mdiEyeOutline}
+                  onclick={() => (passwordVisible = !passwordVisible)}
+                  title={passwordToggleLabel}
+                  aria-label={passwordToggleLabel}
+                />
+              {/snippet}
+            </Input>
           </Field>
 
           <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
