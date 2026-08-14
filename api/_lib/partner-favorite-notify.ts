@@ -53,7 +53,7 @@ export const notifyPartnerFavorite = async (options: {
   bothFavorited: boolean;
 }): Promise<{ sent: number; skipped: boolean; reason?: string }> => {
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('FEEDBACK_NOTIFY_FROM');
-  const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
+  const appName = getEnv('PUBLIC_APP_NAME') ?? 'WeGallery';
   const appUrl = resolveAppUrl();
 
   if (!getEnv('RESEND_API_KEY') || !fromEmail) {

@@ -1,7 +1,7 @@
 {
-  "name": "iCloud Photos",
-  "short_name": "Photos",
-  "description": "Custom Immich photo gallery frontend",
+  "name": "WeGallery",
+  "short_name": "WeGallery",
+  "description": "WeGallery photo gallery frontend",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

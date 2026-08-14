@@ -17,7 +17,7 @@
         },
         {
           "title": "Gợi ý thêm vào màn hình chính",
-          "detail": "Nếu chưa cài Gallery trên điện thoại, bạn sẽ thấy gợi ý Thêm vào màn hình chính để mở nhanh như ứng dụng."
+          "detail": "Nếu chưa cài WeGallery trên điện thoại, bạn sẽ thấy gợi ý Thêm vào màn hình chính để mở nhanh như ứng dụng."
         }
       ]
     },
@@ -35,7 +35,7 @@
       "items": [
         {
           "title": "Đăng ký email nhận thông báo tính năng",
-          "detail": "Nhập email trên modal để nhận thông báo khi Gallery có phiên bản mới, kèm các thay đổi."
+          "detail": "Nhập email trên modal để nhận thông báo khi WeGallery có phiên bản mới, kèm các thay đổi."
         },
         {
           "title": "Hiện danh sách cập nhật theo từng phiên bản",
@@ -48,7 +48,7 @@
       "items": [
         {
           "title": "Khả năng thay đổi ảnh đại diện",
-          "detail": "Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái."
+          "detail": "Click vào avatar để thay đổi ảnh đại diện."
         }
       ]
     },

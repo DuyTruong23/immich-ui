@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Replace all Immich favicon / PWA icon assets with iCloud Photos branding.
+# Replace all Immich favicon / PWA icon assets with WeGallery branding.
 
 BRANDING_FAVICON_VERSION="${BRANDING_FAVICON_VERSION:-icloud2}"
 
@@ -94,12 +94,18 @@ apply_app_html_noscript_patch() {
   local app_html="$1"
   [ -f "$app_html" ] || return 0
 
-  if grep -q 'iCloud Photos' "$app_html"; then
+  if grep -q 'To use WeGallery' "$app_html"; then
     return 0
   fi
 
-  sed -i 's|To use Immich, you must enable JavaScript|To use iCloud Photos, you must enable JavaScript|' "$app_html" 2>/dev/null \
-    || sed -i '' 's|To use Immich, you must enable JavaScript|To use iCloud Photos, you must enable JavaScript|' "$app_html"
+  sed -i \
+    -e 's|To use Immich, you must enable JavaScript|To use WeGallery, you must enable JavaScript|' \
+    -e 's|To use iCloud Photos, you must enable JavaScript|To use WeGallery, you must enable JavaScript|' \
+    "$app_html" 2>/dev/null \
+    || sed -i '' \
+      -e 's|To use Immich, you must enable JavaScript|To use WeGallery, you must enable JavaScript|' \
+      -e 's|To use iCloud Photos, you must enable JavaScript|To use WeGallery, you must enable JavaScript|' \
+      "$app_html"
 }
 
 apply_layout_favicon_patch() {
@@ -146,8 +152,8 @@ import sys
 
 path = pathlib.Path(sys.argv[1])
 data = json.loads(path.read_text(encoding="utf-8"))
-data["name"] = "iCloud Photos"
-data["short_name"] = "Photos"
+data["name"] = "WeGallery"
+  data["short_name"] = "WeGallery"
 data["theme_color"] = "#1677ff"
 data["icons"] = [
     {

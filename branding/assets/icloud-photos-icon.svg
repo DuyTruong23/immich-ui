@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Photos">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="WeGallery">
   <rect width="64" height="64" rx="14" fill="#ffffff"/>
   <g transform="translate(32 32)">
     <path fill="#ff3b30" d="M0-18c6 4 10 11 10 18s-4 14-10 18c-1-7 1-14 0-18s-1-11 0-18z"/>

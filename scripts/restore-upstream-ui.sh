@@ -42,7 +42,7 @@ text = re.sub(
 path.write_text(text, encoding="utf-8")
 PY
 
-  # Reset +layout.svelte title/favicon to upstream (keep other custom edits in file)
+  # Keep document titles on WeGallery after upstream restore
   python - "$root/upstream/web/src/routes/+layout.svelte" <<'PY'
 import pathlib
 import re
@@ -54,7 +54,13 @@ if not path.is_file():
 text = path.read_text(encoding="utf-8")
 text = re.sub(
     r"<title>[^<]*</title>",
-    "<title>{page.data.meta?.title || 'Web'} - Immich</title>",
+    "<title>{page.data.meta?.title || 'Web'} - WeGallery</title>",
+    text,
+    count=1,
+)
+text = re.sub(
+    r'content="(?:Photos|iCloud Photos|Immich)"',
+    'content="WeGallery"',
     text,
     count=1,
 )
@@ -63,6 +69,32 @@ text = re.sub(
     "\n",
     text,
 )
+path.write_text(text, encoding="utf-8")
+PY
+
+  python - "$root/upstream/web/src/lib/components/pages/SharedLinkPage.svelte" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.is_file():
+    sys.exit(0)
+text = path.read_text(encoding="utf-8")
+text = text.replace(" + ' - Immich'", " + ' - WeGallery'")
+text = text.replace(' + " - Immich"', ' + " - WeGallery"')
+path.write_text(text, encoding="utf-8")
+PY
+
+  python - "$root/upstream/web/src/app.html" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.is_file():
+    sys.exit(0)
+text = path.read_text(encoding="utf-8")
+text = text.replace("To use Immich, you must enable JavaScript", "To use WeGallery, you must enable JavaScript")
+text = text.replace("To use iCloud Photos, you must enable JavaScript", "To use WeGallery, you must enable JavaScript")
 path.write_text(text, encoding="utf-8")
 PY
 }

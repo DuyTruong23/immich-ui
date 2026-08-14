@@ -142,7 +142,7 @@ printResult('local/no-token', localNoToken.status, localNoToken.body);
 
 let accessToken = explicitToken?.trim();
 if (!accessToken && testEmail && testPassword) {
-  console.log('\n--- Immich login (IMMICH_TEST_EMAIL) ---');
+  console.log('\n--- Server login (IMMICH_TEST_EMAIL) ---');
   try {
     accessToken = await loginImmich(testEmail, testPassword);
     console.log('Login OK — accessToken received');

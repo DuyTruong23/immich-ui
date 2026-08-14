@@ -32,7 +32,7 @@ const readTheme = (value: string | undefined): PublicEnv['theme'] => {
 /** Runtime config từ biến môi trường PUBLIC_* (SvelteKit) hoặc fallback dev */
 export const createPublicEnv = (env: Record<string, string | undefined>): PublicEnv => ({
   immichServerUrl: env.PUBLIC_IMMICH_SERVER_URL ?? '',
-  appName: env.PUBLIC_APP_NAME ?? 'Photo Gallery',
+  appName: env.PUBLIC_APP_NAME ?? 'WeGallery',
   companyName: env.PUBLIC_COMPANY_NAME ?? '',
   theme: readTheme(env.PUBLIC_THEME),
   defaultTheme: env.PUBLIC_DEFAULT_THEME === 'light' ? 'light' : 'dark',

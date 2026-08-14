@@ -58,7 +58,7 @@ const release = JSON.parse(readFileSync(resolve(root, 'custom/src/data/feature-u
 
 const adminEmail = process.env.ADMIN_NOTIFY_EMAIL?.trim();
 const fromEmail = process.env.LOGIN_NOTIFY_FROM?.trim() || process.env.FEEDBACK_NOTIFY_FROM?.trim();
-const appName = process.env.PUBLIC_APP_NAME?.trim() || 'Photo Gallery';
+const appName = process.env.PUBLIC_APP_NAME?.trim() || 'WeGallery';
 const appUrl = (process.env.PUBLIC_APP_URL?.trim() || 'https://gallery-app.pp.ua').replace(/\/$/, '');
 
 console.log('==> feature-update subscribe / notify test');
