@@ -25,6 +25,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/managers/auth-manager.svelte.ts` | `sessionKey` cho media cross-subdomain; timeout 4s không chặn thumbnail |
 | `lib/managers/timeline-manager/internal/intersection-support.svelte.ts` | Buffer viewport lớn hơn khi đang scrub/scroll |
 | `lib/managers/timeline-manager/timeline-day.svelte.ts` | Giữ asset đích trong DOM khi jump-to-date |
+| `lib/stores/websocket.ts` | WS trực tiếp tunnel; resume sau bfcache không reload |
 | `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
 | `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
@@ -41,6 +42,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |
 | `custom/src/routes/admin/feature-updates/` | Admin tùy chỉnh modal tính năng mới |
+| `custom/src/hooks.client.ts` | bfcache `pageshow`: refresh auth/WS chọn lọc, không reload |
 | `custom/src/service-worker/index.ts` | Cache thumbnail `ok` only, key theo `size`+`c` |
 | `lib/components/layouts/AdminPageLayout.svelte` | Thêm tab admin **Tính năng cập nhật** |
 

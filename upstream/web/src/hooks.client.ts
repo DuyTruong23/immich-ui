@@ -26,6 +26,30 @@ if (typeof window !== 'undefined') {
     event.preventDefault();
     reloadOnceForStaleChunk();
   });
+
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) {
+      return;
+    }
+    void restoreAfterBfcache();
+  });
+}
+
+async function restoreAfterBfcache() {
+  try {
+    const { authManager } = await import('$lib/managers/auth-manager.svelte');
+    const { resumeWebsocketAfterBfcache } = await import('$lib/stores/websocket');
+
+    if (authManager.authenticated) {
+      await authManager.ensureMediaSessionKey();
+    } else {
+      await authManager.load();
+    }
+
+    resumeWebsocketAfterBfcache();
+  } catch (error) {
+    console.warn('[bfcache] restore failed', error);
+  }
 }
 
 const DEFAULT_MESSAGE = 'Hmm, not sure about that. Check the logs or open a ticket?';

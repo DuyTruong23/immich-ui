@@ -116,6 +116,23 @@ export const closeWebsocketConnection = () => {
   websocket.disconnect();
 };
 
+/** Sau bfcache: socket thường chết, store có thể còn stale — chỉ connect lại, không reload. */
+export const resumeWebsocketAfterBfcache = () => {
+  if (isUiDevMode() || !authManager.authenticated) {
+    return;
+  }
+
+  if (websocket.connected) {
+    return;
+  }
+
+  try {
+    websocket.connect();
+  } catch (error) {
+    console.warn('[bfcache] websocket resume failed', error);
+  }
+};
+
 export const waitForWebsocketEvent = <T extends keyof Events>(
   event: T,
   predicate?: (...args: Parameters<Events[T]>) => boolean,
