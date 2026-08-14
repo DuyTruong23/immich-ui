@@ -1,32 +1,39 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import Portal from '$lib/elements/Portal.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
+  import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
-  const DISMISS_KEY = 'pg_feature_update_pin_dismissed_version';
+  const LEGACY_DISMISS_KEY = 'pg_feature_update_pin_dismissed_version';
 
-  const readDismissedVersion = () => {
-    try {
-      return typeof localStorage === 'undefined' ? undefined : localStorage.getItem(DISMISS_KEY)?.trim() || undefined;
-    } catch {
-      return undefined;
+  let dismissedThisSession = $state(false);
+  let pinUserId = $state('');
+
+  $effect(() => {
+    const userId = authManager.authenticated ? authManager.user.id : '';
+    if (userId === pinUserId) {
+      return;
     }
-  };
 
-  let dismissedVersion = $state(readDismissedVersion());
+    pinUserId = userId;
+    dismissedThisSession = false;
+  });
 
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
-  const currentVersion = $derived(peekFeatureUpdatesConfig().version.trim());
   const visible = $derived(
-    authManager.authenticated &&
-      !authManager.user.isAdmin &&
-      !viewingAsset &&
-      dismissedVersion !== currentVersion,
+    authManager.authenticated && !authManager.user.isAdmin && !viewingAsset && !dismissedThisSession,
   );
+
+  onMount(() => {
+    try {
+      localStorage.removeItem(LEGACY_DISMISS_KEY);
+    } catch {
+      // ignore
+    }
+  });
 
   const openWhatsNew = (event: MouseEvent) => {
     showFeatureUpdateModal({
@@ -41,18 +48,7 @@
   const dismissPin = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-
-    const version = currentVersion;
-    if (!version) {
-      return;
-    }
-
-    dismissedVersion = version;
-    try {
-      localStorage.setItem(DISMISS_KEY, version);
-    } catch {
-      // ignore
-    }
+    dismissedThisSession = true;
   };
 </script>
 
