@@ -3,6 +3,7 @@
     DEFAULT_FEATURE_UPDATE_ITEMS,
     DEFAULT_FEATURE_UPDATE_VERSION,
   } from '$custom/constants/feature-updates';
+  import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
   import { Field, Button, HStack, Icon, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
   import { mdiCheckCircleOutline } from '@mdi/js';
@@ -67,6 +68,10 @@
   const handleDismiss = () => {
     if (isClosing) {
       return;
+    }
+
+    if (!preview) {
+      markFeatureUpdateSeen(version);
     }
 
     isClosing = true;

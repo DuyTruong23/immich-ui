@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { hasSeenFeatureUpdateVersion } from '$custom/hooks/feature-update-seen';
+  import { fetchFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import OnEvents from '$lib/components/OnEvents.svelte';
   import type { LoginResponseDto } from '@immich/sdk';
@@ -8,9 +10,22 @@
       return;
     }
 
-    showFeatureUpdateModal({ accessToken: user.accessToken }).catch((error) => {
-      console.error('[FeatureUpdateOnLogin]', error);
-    });
+    void (async () => {
+      try {
+        const config = await fetchFeatureUpdatesConfig({ force: true });
+        if (hasSeenFeatureUpdateVersion(config.version)) {
+          return;
+        }
+
+        await showFeatureUpdateModal({
+          accessToken: user.accessToken,
+          version: config.version,
+          updates: config.items,
+        });
+      } catch (error) {
+        console.error('[FeatureUpdateOnLogin]', error);
+      }
+    })();
   };
 </script>
 
