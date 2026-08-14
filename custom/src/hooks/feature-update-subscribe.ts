@@ -68,7 +68,7 @@ export const subscribeFeatureUpdateEmail = async (
   }
 
   const token = accessToken?.trim() || getStoredAccessToken();
-  const response = await fetch('/api/feature-update-subscribe', {
+  const response = await fetch('/api/feature-update-email', {
     method: 'POST',
     credentials: 'include',
     keepalive: true,

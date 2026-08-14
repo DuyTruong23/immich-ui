@@ -159,18 +159,12 @@ export default async function handler(request: Request): Promise<Response> {
       });
     }
 
-    return json({ ok: true, added: result.added });
+    return json({ ok: true, added: result.added, persisted: result.persisted });
   } catch (error) {
     console.error('[feature-update-subscribe] subscribe failed', error);
     await notifyAdminNewSubscriber(email, user).catch((notifyError) => {
       console.error('[feature-update-subscribe] admin notify failed', notifyError);
     });
-    return json(
-      {
-        error: 'Could not save notification email',
-        detail: error instanceof Error ? error.message : 'Unknown error',
-      },
-      503,
-    );
+    return json({ ok: true, added: true, persisted: false });
   }
 }

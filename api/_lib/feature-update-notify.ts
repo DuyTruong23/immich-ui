@@ -27,7 +27,7 @@ const buildUnsubscribeUrl = (appUrl: string, email: string): string | undefined 
     return undefined;
   }
 
-  const url = new URL('/api/feature-update-subscribe', `${appUrl}/`);
+  const url = new URL('/api/feature-update-email', `${appUrl}/`);
   url.searchParams.set('email', email);
   url.searchParams.set('unsubscribe', '1');
   return url.toString();

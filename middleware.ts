@@ -6,6 +6,7 @@ const LOCAL_API_PATHS = new Set([
   '/api/feedback',
   '/api/feature-updates',
   '/api/feature-update-subscribe',
+  '/api/feature-update-email',
   '/api/feature-update-notify',
   '/api/partner-favorites',
 ]);

@@ -109,6 +109,9 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
   }
 };
 
+export const hasSubscriberPersistence = (): boolean =>
+  Boolean(getEnv('BLOB_READ_WRITE_TOKEN')) || (!isVercelRuntime() && localAdapter !== null);
+
 export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
   if (memoryStore) {
     return memoryStore;
@@ -132,7 +135,7 @@ export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubsc
     return memoryStore;
   }
 
-  throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
+  return { ...EMPTY_STORE };
 };
 
 export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
@@ -184,10 +187,21 @@ export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscrib
 export const addFeatureUpdateSubscriber = async (
   email: string,
   currentVersion?: string,
-): Promise<{ added: boolean; store: FeatureUpdateSubscriberStore }> => {
+): Promise<{ added: boolean; persisted: boolean; store: FeatureUpdateSubscriberStore }> => {
   const normalized = normalizeNotifyEmail(email);
   if (!isValidNotifyEmail(normalized)) {
     throw new Error('Invalid email');
+  }
+
+  if (!hasSubscriberPersistence()) {
+    return {
+      added: true,
+      persisted: false,
+      store: {
+        emails: [normalized],
+        lastNotifiedVersion: currentVersion?.trim() || undefined,
+      },
+    };
   }
 
   const store = await readFeatureUpdateSubscribers();
@@ -201,7 +215,7 @@ export const addFeatureUpdateSubscriber = async (
     await writeFeatureUpdateSubscribers(next);
   }
 
-  return { added: !exists, store: next };
+  return { added: !exists, persisted: true, store: next };
 };
 
 export const removeFeatureUpdateSubscriber = async (email: string): Promise<boolean> => {
