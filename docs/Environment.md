@@ -228,12 +228,12 @@ Luồng: login → modal → user nhập góp ý → đóng modal → POST `/api
 
 ### Email nhận changelog khi có version mới
 
-User nhập **Email nhận thông báo** trên modal. Danh sách lưu trên Resend (segment `photo-gallery-changelog`).
+User nhập **Email nhận thông báo** trên modal. Danh sách lưu trên **Vercel Blob** (`feature-updates/subscribers.json`). Resend chỉ dùng để **gửi** mail — API key hiện tại (`restricted_api_key`) không quản được contact/segment.
 
 | Biến | Bắt buộc | Mô tả |
 |---|---|---|
-| `RESEND_API_KEY` | Có | Gửi changelog **và** lưu/đọc danh sách email |
-| `BLOB_READ_WRITE_TOKEN` | Không | Tùy chọn — mirror list lên Blob |
+| `BLOB_READ_WRITE_TOKEN` | Có | Lưu/đọc danh sách email đã đăng ký |
+| `RESEND_API_KEY` | Có | Gửi changelog và mail báo admin |
 | `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi |
 | `PUBLIC_APP_URL` | Không | Link "Mở Gallery" / hủy đăng ký trong email. Fallback `VERCEL_PROJECT_PRODUCTION_URL` |
 | `FEATURE_UPDATE_NOTIFY_URL` | Không | `https://<domain>/api/feature-update-notify` — gọi tay nếu muốn gửi mail changelog |
@@ -244,7 +244,7 @@ FEATURE_UPDATE_NOTIFY_URL=https://<domain>/api/feature-update-notify
 FEATURE_UPDATE_NOTIFY_SECRET=replace-me
 ```
 
-Luồng: user nhập email → POST `/api/feature-update-email` → lưu contact Resend + email admin. Góp ý đi `/api/feedback` riêng. Mail changelog: admin gửi từ `/admin/feature-updates`.
+Luồng: user nhập email → POST `/api/feature-update-email` → lưu Blob + email admin. Góp ý đi `/api/feedback` riêng. Mail changelog: admin gửi từ `/admin/feature-updates`. Email đăng ký khi chưa có Blob chỉ tới hộp thư admin — thêm lại trên trang admin sau khi Connect Blob.
 
 > Đăng ký changelog gửi tới email user — **bắt buộc verify domain** trước khi dùng production. Xem **[Resend (gửi email)](#resend-gửi-email)**.
 

@@ -102,14 +102,14 @@ const listResponse = async (request: Request, accessToken?: string): Promise<Res
     });
   } catch (error) {
     console.error('[feature-update-email] list failed', error);
-    return json({
-      ok: true,
-      emails: [],
-      count: 0,
-      lastNotifiedVersion: null,
-      storage,
-      detail: error instanceof Error ? error.message : 'Unknown error',
-    });
+    return json(
+      {
+        error: 'Could not load subscribers',
+        detail: error instanceof Error ? error.message : 'Unknown error',
+        storage,
+      },
+      502,
+    );
   }
 };
 
@@ -177,18 +177,31 @@ export default async function handler(request: Request): Promise<Response> {
 
   try {
     const result = await addFeatureUpdateSubscriber(email, body.version);
+    if (!result.persisted) {
+      return json(
+        {
+          error: 'Could not save subscription',
+          detail: 'BLOB_READ_WRITE_TOKEN is not configured',
+        },
+        503,
+      );
+    }
+
     if (result.added) {
       void notifyAdminNewSubscriber(email, user).catch((error) => {
         console.error('[feature-update-email] admin notify failed', error);
       });
     }
 
-    return json({ ok: true, added: result.added, persisted: result.persisted });
+    return json({ ok: true, added: result.added, persisted: true });
   } catch (error) {
     console.error('[feature-update-email] save failed', error);
-    void notifyAdminNewSubscriber(email, user).catch((notifyError) => {
-      console.error('[feature-update-email] admin notify failed', notifyError);
-    });
-    return json({ ok: true, added: true, persisted: false });
+    return json(
+      {
+        error: 'Could not save subscription',
+        detail: error instanceof Error ? error.message : 'Unknown error',
+      },
+      503,
+    );
   }
 }
