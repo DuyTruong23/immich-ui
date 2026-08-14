@@ -6,10 +6,10 @@
   import Portal from '$lib/elements/Portal.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
+  import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
   import type { PartnerFavoriteUser } from '$custom/api/partner-favorites';
   import { handlePromiseError } from '$lib/utils';
-  import { getNextAsset, getPreviousAsset } from '$lib/utils/asset-utils';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
@@ -26,7 +26,7 @@
   type FilterId = 'all' | 'both' | 'mine' | 'partner';
 
   let filter = $state<FilterId>('all');
-  let assets = $state<AssetResponseDto[]>([]);
+  let assetsById = $state(new Map<string, TimelineAsset>());
   let loadingAssets = $state(true);
   let errorMessage = $state('');
 
@@ -46,10 +46,22 @@
     return all;
   });
 
+  const displayItems = $derived.by(() => {
+    if (partnerFavoritesStore.items.length > 0) {
+      return items;
+    }
+    if (filter === 'partner' || filter === 'both') {
+      return [];
+    }
+    return [...assetsById.keys()].map((assetId) => ({
+      assetId,
+      favoritedAt: '',
+      favoritedBy: [] as PartnerFavoriteUser[],
+    }));
+  });
+
   const visibleAssets = $derived(
-    items
-      .map((item) => assets.find((asset) => asset.id === item.assetId))
-      .filter((asset): asset is AssetResponseDto => Boolean(asset)),
+    displayItems.map((item) => assetsById.get(item.assetId)).filter((asset): asset is TimelineAsset => Boolean(asset)),
   );
 
   const counts = $derived.by(() => {
@@ -114,41 +126,123 @@
     };
   };
 
-  const loadAssets = async (assetIds: string[]) => {
-    const unique = [...new Set(assetIds)];
-    const found: AssetResponseDto[] = [];
-
-    for (let index = 0; index < unique.length; index += 12) {
-      const chunk = unique.slice(index, index + 12);
-      const results = await Promise.allSettled(chunk.map((id) => getAssetInfo({ id })));
-      for (const result of results) {
-        if (result.status === 'fulfilled' && !result.value.isTrashed) {
-          found.push(result.value);
-        }
-      }
+  const mergeAssets = (incoming: TimelineAsset[]) => {
+    if (incoming.length === 0) {
+      return;
     }
 
-    assets = found;
+    const next = new Map(assetsById);
+    for (const asset of incoming) {
+      next.set(asset.id, { ...asset, isFavorite: false });
+    }
+    assetsById = next;
   };
 
-  const refresh = async () => {
-    loadingAssets = true;
-    errorMessage = '';
-    try {
-      await partnerFavoritesStore.syncMineFromImmich();
-      await loadAssets(partnerFavoritesStore.items.map((item) => item.assetId));
-    } catch (error) {
-      errorMessage = error instanceof Error ? error.message : $t('shared_favorites_load_error');
-    } finally {
+  const revealGrid = () => {
+    if (!loadingAssets) {
+      return;
+    }
+
+    if (visibleAssets.length > 0) {
       loadingAssets = false;
     }
   };
 
+  const loadMissingAssets = async (assetIds: string[], isCancelled: () => boolean) => {
+    const unique = [...new Set(assetIds)].filter((id) => !assetsById.has(id));
+
+    for (let index = 0; index < unique.length; index += 12) {
+      if (isCancelled()) {
+        return;
+      }
+
+      const chunk = unique.slice(index, index + 12);
+      const results = await Promise.allSettled(chunk.map((id) => getAssetInfo({ id })));
+      if (isCancelled()) {
+        return;
+      }
+
+      const incoming: TimelineAsset[] = [];
+      for (const result of results) {
+        if (result.status === 'fulfilled' && !result.value.isTrashed) {
+          incoming.push(toTimelineAsset(result.value));
+        }
+      }
+      mergeAssets(incoming);
+      revealGrid();
+    }
+  };
+
+  const neighborAsset = (delta: 1 | -1): AssetResponseDto | undefined => {
+    const currentId = assetViewerManager.asset?.id;
+    const index = currentId ? visibleAssets.findIndex((asset) => asset.id === currentId) : -1;
+    const neighbor = index >= 0 ? visibleAssets[index + delta] : undefined;
+    return neighbor ? ({ id: neighbor.id } as AssetResponseDto) : undefined;
+  };
+
   onMount(() => {
+    let cancelled = false;
+
+    const refresh = async () => {
+      loadingAssets = true;
+      errorMessage = '';
+
+      try {
+        const favoriteIdsPromise = partnerFavoritesStore.loadFavoriteBuckets((assets) => {
+          if (cancelled) {
+            return;
+          }
+          mergeAssets(assets);
+          revealGrid();
+        });
+
+        await partnerFavoritesStore.ensureLoaded();
+        if (cancelled) {
+          return;
+        }
+        revealGrid();
+
+        const ownerId = partnerFavoritesStore.me?.id;
+        const partnerOnlyIds = ownerId
+          ? partnerFavoritesStore.items
+              .filter((item) => !item.favoritedBy.some((user) => user.id === ownerId))
+              .map((item) => item.assetId)
+          : [];
+
+        const [, favoriteIds] = await Promise.all([
+          loadMissingAssets(partnerOnlyIds, () => cancelled),
+          favoriteIdsPromise,
+        ]);
+        if (cancelled) {
+          return;
+        }
+
+        await partnerFavoritesStore.syncMineFromImmich(favoriteIds);
+        if (cancelled) {
+          return;
+        }
+        revealGrid();
+
+        const leftoverIds = partnerFavoritesStore.items.map((item) => item.assetId).filter((id) => !assetsById.has(id));
+        await loadMissingAssets(leftoverIds, () => cancelled);
+      } catch (error) {
+        if (!cancelled) {
+          errorMessage = error instanceof Error ? error.message : $t('shared_favorites_load_error');
+        }
+      } finally {
+        if (!cancelled) {
+          loadingAssets = false;
+        }
+      }
+    };
+
     void refresh();
+    return () => {
+      cancelled = true;
+    };
   });
 
-  const onViewAsset = async (asset: AssetResponseDto) => {
+  const onViewAsset = async (asset: TimelineAsset) => {
     await navigate({ targetRoute: 'current', assetId: asset.id });
   };
 
@@ -159,8 +253,8 @@
 
   const assetCursor = $derived({
     current: assetViewerManager.asset!,
-    nextAsset: getNextAsset(visibleAssets, assetViewerManager.asset),
-    previousAsset: getPreviousAsset(visibleAssets, assetViewerManager.asset),
+    nextAsset: neighborAsset(1),
+    previousAsset: neighborAsset(-1),
   });
 </script>
 
@@ -170,7 +264,9 @@
   </p>
 
   {#if partnerFavoritesStore.partners.length === 0 && partnerFavoritesStore.loaded}
-    <p class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+    <p
+      class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
+    >
       {$t('shared_favorites_no_partner')}
     </p>
   {/if}
@@ -190,23 +286,19 @@
     {/each}
   </div>
 
-  {#if loadingAssets}
-    <p class="text-sm text-(--pg-text-muted)">{$t('shared_favorites_loading')}</p>
-  {:else if errorMessage}
+  {#if errorMessage}
     <p class="text-sm text-red-500">{errorMessage}</p>
+  {:else if visibleAssets.length === 0 && loadingAssets}
+    <p class="text-sm text-(--pg-text-muted)">{$t('shared_favorites_loading')}</p>
   {:else if visibleAssets.length === 0}
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-      {#each items as item (item.assetId)}
-        {@const asset = assets.find((entry) => entry.id === item.assetId)}
+      {#each displayItems as item (item.assetId)}
+        {@const asset = assetsById.get(item.assetId)}
         {#if asset}
           <div class="relative aspect-square overflow-hidden rounded-xl">
-            <Thumbnail
-              asset={toTimelineAsset({ ...asset, isFavorite: false })}
-              readonly
-              onClick={() => handlePromiseError(onViewAsset(asset))}
-            />
+            <Thumbnail {asset} readonly onClick={() => handlePromiseError(onViewAsset(asset))} />
             <div class="pointer-events-none absolute inset-e-2 bottom-2 z-3 flex">
               {#each item.favoritedBy as user, index (user.id)}
                 <div

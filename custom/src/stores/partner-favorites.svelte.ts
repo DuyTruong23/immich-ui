@@ -1,4 +1,6 @@
-import { getTimeBucket, getTimeBuckets } from '@immich/sdk';
+import { getTimeBucket, getTimeBuckets, type TimeBucketAssetResponseDto } from '@immich/sdk';
+import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
+import { fromISODateTimeUTC, getTimes } from '$lib/utils/timeline-util';
 import {
   fetchPartnerFavorites,
   setPartnerFavorite,
@@ -9,6 +11,55 @@ import {
   type PartnerFavoritesResponse,
 } from '$custom/api/partner-favorites';
 
+const timeBucketToTimelineAssets = (bucket: TimeBucketAssetResponseDto): TimelineAsset[] => {
+  const assets: TimelineAsset[] = [];
+
+  for (let index = 0; index < bucket.id.length; index++) {
+    if (bucket.isTrashed[index]) {
+      continue;
+    }
+
+    const { localDateTime, fileCreatedAt } = getTimes(bucket.fileCreatedAt[index], bucket.localOffsetHours[index]);
+    const stackEntry = bucket.stack?.at(index);
+    const asset: TimelineAsset = {
+      city: bucket.city?.[index] ?? null,
+      country: bucket.country?.[index] ?? null,
+      duration: bucket.duration[index],
+      id: bucket.id[index],
+      visibility: bucket.visibility[index],
+      isFavorite: bucket.isFavorite[index],
+      isImage: bucket.isImage[index],
+      isTrashed: bucket.isTrashed[index],
+      isVideo: !bucket.isImage[index],
+      livePhotoVideoId: bucket.livePhotoVideoId[index],
+      localDateTime,
+      createdAt: fromISODateTimeUTC(bucket.createdAt[index]).toLocal().toObject(),
+      fileCreatedAt,
+      ownerId: bucket.ownerId[index],
+      projectionType: bucket.projectionType[index],
+      ratio: bucket.ratio[index],
+      stack: stackEntry
+        ? {
+            id: stackEntry[0],
+            primaryAssetId: bucket.id[index],
+            assetCount: Number.parseInt(stackEntry[1]),
+          }
+        : null,
+      thumbhash: bucket.thumbhash[index],
+      people: null,
+    };
+
+    if (bucket.latitude?.at(index) && bucket.longitude?.at(index)) {
+      asset.latitude = bucket.latitude[index];
+      asset.longitude = bucket.longitude[index];
+    }
+
+    assets.push(asset);
+  }
+
+  return assets;
+};
+
 class PartnerFavoritesStore {
   loaded = $state(false);
   loading = $state(false);
@@ -16,6 +67,8 @@ class PartnerFavoritesStore {
   partners = $state<PartnerFavoriteUser[]>([]);
   items = $state<PartnerFavoriteItem[]>([]);
   shareWithEveryone = $state(false);
+
+  #loadPromise: Promise<void> | null = null;
 
   byAssetId = $derived(new Map(this.items.map((item) => [item.assetId, item])));
 
@@ -40,16 +93,21 @@ class PartnerFavoritesStore {
   }
 
   async load(): Promise<void> {
-    if (this.loading) {
-      return;
+    if (this.#loadPromise) {
+      return this.#loadPromise;
     }
 
     this.loading = true;
-    try {
-      this.apply(await fetchPartnerFavorites());
-    } finally {
-      this.loading = false;
-    }
+    this.#loadPromise = (async () => {
+      try {
+        this.apply(await fetchPartnerFavorites());
+      } finally {
+        this.loading = false;
+        this.#loadPromise = null;
+      }
+    })();
+
+    return this.#loadPromise;
   }
 
   async ensureLoaded(): Promise<void> {
@@ -58,14 +116,32 @@ class PartnerFavoritesStore {
     }
   }
 
-  async syncMineFromImmich(): Promise<void> {
+  async loadFavoriteBuckets(onChunk: (assets: TimelineAsset[]) => void): Promise<string[]> {
+    const buckets = await getTimeBuckets({ isFavorite: true });
+    const assetIds: string[] = [];
+
+    await Promise.all(
+      buckets.map(async (bucket) => {
+        try {
+          const chunk = await getTimeBucket({ timeBucket: bucket.timeBucket, isFavorite: true });
+          assetIds.push(...chunk.id);
+          onChunk(timeBucketToTimelineAssets(chunk));
+        } catch (error) {
+          console.warn('[partner-favorites] failed to load bucket', bucket.timeBucket, error);
+        }
+      }),
+    );
+
+    return assetIds;
+  }
+
+  async syncMineFromImmich(assetIds?: string[]): Promise<void> {
     try {
-      const buckets = await getTimeBuckets({ isFavorite: true });
-      const chunks = await Promise.all(
-        buckets.map((bucket) => getTimeBucket({ timeBucket: bucket.timeBucket, isFavorite: true })),
-      );
-      const assetIds = chunks.flatMap((chunk) => chunk.id);
-      this.apply(await syncPartnerFavorites(assetIds));
+      let ids = assetIds;
+      if (!ids) {
+        ids = await this.loadFavoriteBuckets(() => undefined);
+      }
+      this.apply(await syncPartnerFavorites(ids));
     } catch (error) {
       console.warn('[partner-favorites] sync from Immich failed', error);
       await this.load();
