@@ -559,6 +559,9 @@
         onVideoEnded={() => navigateAsset()}
         onVideoStarted={handleVideoStarted}
         playOriginalVideo={isPlayingOriginalVideo}
+        nextAsset={cursor.nextAsset}
+        previousAsset={cursor.previousAsset}
+        {onSwipe}
       />
     {:else if viewerKind === 'LiveVideoViewer'}
       <VideoViewer
@@ -571,6 +574,9 @@
         onNextAsset={() => navigateAsset('next')}
         onVideoEnded={() => (assetViewerManager.isPlayingMotionPhoto = false)}
         playOriginalVideo={isPlayingOriginalVideo}
+        nextAsset={cursor.nextAsset}
+        previousAsset={cursor.previousAsset}
+        {onSwipe}
       />
     {:else if viewerKind === 'ImagePanaramaViewer'}
       <ImagePanoramaViewer {asset} />
@@ -591,6 +597,9 @@
         onVideoEnded={() => navigateAsset()}
         onVideoStarted={handleVideoStarted}
         playOriginalVideo={isPlayingOriginalVideo}
+        nextAsset={cursor.nextAsset}
+        previousAsset={cursor.previousAsset}
+        {onSwipe}
       />
     {/if}
 

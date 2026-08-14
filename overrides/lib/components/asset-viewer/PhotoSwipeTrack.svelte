@@ -12,17 +12,18 @@
     previousAsset?: AssetResponseDto;
     sharedLink?: SharedLinkResponseDto;
     disabled?: boolean;
+    canStart?: (event: PointerEvent) => boolean;
     onSwipe?: (event: SwipeCustomEvent) => void;
     children?: Snippet;
   }
 
-  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, onSwipe, children }: Props = $props();
+  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, canStart, onSwipe, children }: Props = $props();
 
   let width = $state(0);
 
   const swipe = new SwipeNavigate({
     getWidth: () => width,
-    canStart: () => !disabled,
+    canStart: (event) => !disabled && (canStart?.(event) ?? true),
     hasNext: () => Boolean(nextAsset),
     hasPrevious: () => Boolean(previousAsset),
     onCommit: (direction) => {

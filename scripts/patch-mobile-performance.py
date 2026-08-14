@@ -540,6 +540,14 @@ def patch_asset_viewer_swipe_back(path: pathlib.Path) -> None:
 """,
         'AssetViewer SwipeBackEdge markup',
     )
+    if 'nextAsset={cursor.nextAsset}' not in text:
+        text = text.replace(
+            '        playOriginalVideo={isPlayingOriginalVideo}\n',
+            '        playOriginalVideo={isPlayingOriginalVideo}\n'
+            '        nextAsset={cursor.nextAsset}\n'
+            '        previousAsset={cursor.previousAsset}\n'
+            '        {onSwipe}\n',
+        )
     path.write_text(text, encoding='utf-8')
 
 

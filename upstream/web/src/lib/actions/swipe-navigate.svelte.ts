@@ -4,7 +4,7 @@ export type SwipeNavigateDirection = 'next' | 'previous';
 
 type SwipeNavigateOptions = {
   getWidth: () => number;
-  canStart: () => boolean;
+  canStart: (event: PointerEvent) => boolean;
   hasNext: () => boolean;
   hasPrevious: () => boolean;
   onCommit: (direction: SwipeNavigateDirection) => void;
@@ -45,7 +45,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (!this.#options.canStart()) {
+    if (!this.#options.canStart(event)) {
       return;
     }
 
@@ -66,7 +66,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (!this.#options.canStart()) {
+    if (!this.#options.canStart(event)) {
       this.#cancel();
       return;
     }
