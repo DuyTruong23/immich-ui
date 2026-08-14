@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
   import { peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import Portal from '$lib/elements/Portal.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -27,10 +26,11 @@
   );
 
   const openWhatsNew = (event: MouseEvent) => {
-    const version = peekFeatureUpdatesConfig().version;
-    markFeatureUpdateSeen(version);
-
-    showFeatureUpdateModal({ originElement: event.currentTarget as HTMLElement }).catch((error) => {
+    showFeatureUpdateModal({
+      originElement: event.currentTarget as HTMLElement,
+      userId: authManager.user.id,
+      accountEmail: authManager.user.email,
+    }).catch((error) => {
       console.error('[FeatureUpdatePin] Failed to open feature update modal', error);
     });
   };

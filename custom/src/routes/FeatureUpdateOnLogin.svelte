@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { hasSeenFeatureUpdateVersion } from '$custom/hooks/feature-update-seen';
+  import { shouldHideFeatureUpdateModal } from '$custom/hooks/feature-update-seen';
   import { fetchFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import OnEvents from '$lib/components/OnEvents.svelte';
@@ -10,15 +10,17 @@
       return;
     }
 
+    if (shouldHideFeatureUpdateModal(user.userId)) {
+      return;
+    }
+
     void (async () => {
       try {
-        const config = await fetchFeatureUpdatesConfig({ force: true });
-        if (hasSeenFeatureUpdateVersion(config.version)) {
-          return;
-        }
-
+        await fetchFeatureUpdatesConfig({ force: true });
         await showFeatureUpdateModal({
           accessToken: user.accessToken,
+          userId: user.userId,
+          accountEmail: user.userEmail,
         });
       } catch (error) {
         console.error('[FeatureUpdateOnLogin]', error);
