@@ -11,8 +11,9 @@ photo-gallery-ui/
 ├── custom/        # Trang & widget mới
 ├── overrides/     # Override component upstream
 ├── patches/       # Git patches cho thay đổi upstream bắt buộc
+├── feature-updates/ # Tài liệu changelog modal tính năng
 ├── docs/          # Tài liệu
-└── scripts/       # Sync & patch tools
+└── scripts/       # Sync, patch, release notes
 ```
 
 ## Quick Start
@@ -36,7 +37,7 @@ Frontend: http://localhost:5283 — cần Immich Server tại http://localhost:2
 | `pnpm docker:down` | Stop Immich Docker stack |
 | `pnpm build` | Production build |
 | `pnpm prepare:custom` | Sync routes + branding assets |
-| `pnpm branch feature my-feature` | Tạo feature branch |
+| `pnpm release:notes` | Xem trước version + changelog khi merge main |
 | `pnpm sync:upstream` | Đồng bộ Immich upstream |
 
 ## Git Remotes
@@ -49,10 +50,10 @@ git remote add origin <your-fork-url>
 ## Branch Strategy
 
 ```
-main → upstream-sync → develop → feature/* | hotfix/*
+develop → main
 ```
 
-Không phát triển trực tiếp trên `main`.
+Code trên `develop`. Push `main` tự tăng version modal (`v1.0.3` → `v1.0.4`) và generate changelog từ commit. Chi tiết: [GitWorkflow.md](docs/GitWorkflow.md).
 
 ## Tài liệu
 

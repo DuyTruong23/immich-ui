@@ -114,14 +114,14 @@ Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → g
 
 Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công (và qua nút **Tính năng mới** trên navbar).
 
-**Admin UI:** `/admin/feature-updates` — tab **Tính năng cập nhật** trong sidebar admin. Chỉnh phiên bản và danh sách mục, bấm **Lưu thay đổi**.
+**Nguồn mặc định:** `custom/src/data/feature-updates.json` — CI tăng `0.0.1` và generate items mỗi lần push `main`.
+
+**Admin UI:** `/admin/feature-updates` — ghi đè tạm trên Blob. Blob chỉ thắng khi version ≥ bản git; release git mới hơn sẽ thay blob cũ.
 
 | Biến | Bắt buộc | Mô tả |
 |---|---|---|
-| `BLOB_READ_WRITE_TOKEN` | Có (để lưu) | Token Vercel Blob — lưu config cho mọi user |
-| `FEATURE_UPDATES_CONFIG` | Không | JSON fallback chỉ đọc khi chưa có blob. Ví dụ: `{"version":"v1.0.4","items":["Mục 1"]}` |
-
-Fallback mặc định: `custom/src/constants/feature-updates.ts`.
+| `BLOB_READ_WRITE_TOKEN` | Có (để lưu override / publish từ CI) | Token Vercel Blob. Thêm cùng secret trên GitHub để CI publish ngay khi release |
+| `FEATURE_UPDATES_CONFIG` | Không | JSON fallback. Ví dụ: `{"version":"v1.0.4","items":["Mục 1"]}` |
 
 Chi tiết luồng, preview dev: [UserMessaging.md](./UserMessaging.md).
 

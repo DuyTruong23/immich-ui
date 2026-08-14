@@ -16,27 +16,24 @@ User login → AuthLogin event → FeatureUpdateOnLogin.svelte → FeatureUpdate
 
 | Môi trường | Hành vi |
 |---|---|
-| Production / `pnpm dev` | Danh sách từ `FEATURE_UPDATES` |
+| Production / `pnpm dev` | Danh sách từ `custom/src/data/feature-updates.json` (hoặc API/Blob) |
 | `pnpm dev:local` (`PUBLIC_UI_DEV_MODE=true`) | Danh sách mock từ `FEATURE_UPDATES_MOCK` |
 
 ### Cách cập nhật danh sách tính năng
 
-**File chính:** `custom/src/constants/feature-updates.ts`
+Nội dung production **không sửa tay trên `main`**. Code trên `develop`, CI generate khi merge sang `main`.
 
-```typescript
-export const FEATURE_UPDATES = [
-  'Mô tả tính năng hoặc thay đổi mới — dòng 1',
-  'Mô tả tính năng hoặc thay đổi mới — dòng 2',
-] as const;
-```
+**Quy trình:**
 
-**Quy trình mỗi lần deploy có thay đổi UX:**
+1. Commit trên `develop` với `feat:` / `fix:` / `improve:` / `perf:` (tiếng Việt)
+2. Merge `develop` → `main` và push → CI tăng `v1.0.3` → `v1.0.4` và publish modal
+3. User chưa xem version mới sẽ thấy modal sau login
 
-1. Thêm hoặc sửa các dòng trong `FEATURE_UPDATES` (tiếng Việt, ngắn gọn, bullet).
-2. Commit + push → Vercel redeploy.
-3. User đăng nhập lại sẽ thấy modal với nội dung mới.
+**Nguồn sự thật:** `custom/src/data/feature-updates.json`
 
 **Mock cho dev:** `custom/src/mocks/feature-updates.ts` — chỉ dùng khi preview local, không ảnh hưởng production.
+
+Chi tiết git: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](../feature-updates/README.md).
 
 ### Hành vi modal
 
@@ -51,7 +48,8 @@ export const FEATURE_UPDATES = [
 
 | File | Vai trò |
 |---|---|
-| `custom/src/constants/feature-updates.ts` | **Danh sách production** — sửa ở đây |
+| `custom/src/data/feature-updates.json` | **Bản release** — CI ghi khi push `main` |
+| `custom/src/constants/feature-updates.ts` | Import JSON + mock helper |
 | `custom/src/mocks/feature-updates.ts` | Mock cho `dev:local` |
 | `custom/src/routes/FeatureUpdateModal.svelte` | UI modal |
 | `custom/src/routes/FeatureUpdateOnLogin.svelte` | Gắn modal sau login |
@@ -159,8 +157,9 @@ export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 
 ### Sau mỗi release UI có thay đổi user-facing
 
-- [ ] Cập nhật `FEATURE_UPDATES` trong `feature-updates.ts`
-- [ ] Redeploy Vercel
+- [ ] Commit `feat`/`fix`/`improve` rõ nghĩa trên `develop`
+- [ ] Merge `develop` → `main` — CI tự bump + generate
+- [ ] Kiểm tra modal sau login (user chưa xem version mới)
 
 ### Trước khi bảo trì / tắt PC Immich
 

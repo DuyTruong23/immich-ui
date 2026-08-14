@@ -1,0 +1,58 @@
+name: Release feature updates
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Chỉ in changelog, không ghi file
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(release)')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate release notes
+        env:
+          RELEASE_FROM: ${{ github.event.before }}
+          RELEASE_TO: ${{ github.sha }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/release-feature-updates.mjs --dry-run
+            exit 0
+          fi
+          node scripts/release-feature-updates.mjs
+
+      - name: Commit version bump
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') }}
+        run: |
+          git add custom/src/data/feature-updates.json
+          if git diff --cached --quiet; then
+            echo "No release file changes"
+            exit 0
+          fi
+
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('custom/src/data/feature-updates.json','utf8')).version)")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(release): ${VERSION}"
+          git tag -a "${VERSION}" -m "Feature updates ${VERSION}"
+          git push origin HEAD
+          git push origin "${VERSION}"

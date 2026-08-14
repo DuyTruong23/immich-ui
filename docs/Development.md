@@ -72,14 +72,16 @@ Chi tiết: [docker/README.md](../docker/README.md)
 | `pnpm preview` | Preview build local |
 | `pnpm check` | Lint + typecheck |
 | `pnpm prepare:custom` | Merge routes + branding |
+| `pnpm release:notes` | Xem trước version + items (không ghi file) |
+| `pnpm test:release` | Test logic bump/generate changelog |
 | `pnpm sync:upstream` | Sync Immich upstream |
 
 ## Workflow
 
 1. Checkout `develop`
-2. `pnpm branch feature <tên>`
-3. Code trong `custom/`, `branding/`, `overrides/`
-4. PR → `develop` → `main`
+2. Code trong `custom/`, `branding/`, `overrides/`
+3. Commit `feat:` / `fix:` / `improve:` rồi push `develop`
+4. Merge `develop` → `main` — CI tăng version và generate modal
 
 ## Debug
 

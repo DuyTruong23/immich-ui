@@ -44,8 +44,9 @@ photo-gallery-ui/
 ├── custom/             # Trang & component mới (Dashboard, Explorer, …)
 ├── overrides/          # Thay thế component upstream qua alias
 ├── patches/            # Git patches cho thay đổi upstream bắt buộc
+├── feature-updates/    # Tài liệu changelog modal — CI generate khi push main
 ├── docs/               # Tài liệu dự án
-└── scripts/            # Sync upstream, apply patches
+└── scripts/            # Sync upstream, apply patches, release notes
 ```
 
 ## Stack công nghệ

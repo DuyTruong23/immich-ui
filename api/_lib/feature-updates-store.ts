@@ -3,6 +3,7 @@ import {
   DEFAULT_FEATURE_UPDATES,
   normalizeFeatureUpdatesConfig,
   parseFeatureUpdatesConfig,
+  resolveFeatureUpdatesConfig,
   type FeatureUpdatesConfig,
 } from './feature-updates-config.js';
 
@@ -72,17 +73,9 @@ export const readFeatureUpdatesConfig = async (): Promise<FeatureUpdatesConfig> 
   }
 
   const blobConfig = await readBlobConfig();
-  if (blobConfig) {
-    memoryConfig = blobConfig;
-    return blobConfig;
-  }
-
   const envConfig = readEnvConfig();
-  if (envConfig) {
-    return envConfig;
-  }
-
-  return DEFAULT_FEATURE_UPDATES;
+  memoryConfig = resolveFeatureUpdatesConfig(DEFAULT_FEATURE_UPDATES, blobConfig, envConfig);
+  return memoryConfig;
 };
 
 export const writeFeatureUpdatesConfig = async (config: FeatureUpdatesConfig): Promise<void> => {

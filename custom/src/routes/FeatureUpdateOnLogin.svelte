@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { hasSeenFeatureUpdateVersion } from '$custom/hooks/feature-update-seen';
   import { fetchFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import OnEvents from '$lib/components/OnEvents.svelte';
@@ -12,6 +13,10 @@
     void (async () => {
       try {
         const config = await fetchFeatureUpdatesConfig({ force: true });
+        if (hasSeenFeatureUpdateVersion(config.version)) {
+          return;
+        }
+
         await showFeatureUpdateModal({
           accessToken: user.accessToken,
           version: config.version,

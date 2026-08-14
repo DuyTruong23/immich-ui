@@ -98,12 +98,16 @@ const handleDevApi = async (
     const webRequest = new Request(url, init);
 
     if (pathname === '/api/feature-updates' && request.method === 'GET') {
-      const [{ normalizeFeatureUpdatesConfig }, { json }] = await Promise.all([
-        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
-        server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
-      ]);
+      const [{ normalizeFeatureUpdatesConfig, DEFAULT_FEATURE_UPDATES, compareFeatureUpdateVersion }, { json }] =
+        await Promise.all([
+          server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
+          server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
+        ]);
       const localConfig = normalizeFeatureUpdatesConfig(readLocalFeatureUpdatesConfig());
-      if (localConfig) {
+      if (
+        localConfig &&
+        compareFeatureUpdateVersion(localConfig.version, DEFAULT_FEATURE_UPDATES.version) >= 0
+      ) {
         await sendResponse(json(localConfig), response);
         return true;
       }

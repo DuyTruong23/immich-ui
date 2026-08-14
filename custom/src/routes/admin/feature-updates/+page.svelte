@@ -14,7 +14,7 @@
     saveFeatureUpdatesConfig,
   } from '$custom/services/feature-updates.service';
   import { getStoredAccessToken } from '$custom/hooks/access-token';
-  import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, toastManager } from '@immich/ui';
+  import { Alert, Button, Container, Field, IconButton, Input, Stack, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiArrowDown, mdiArrowUp, mdiPlus, mdiTrashCanOutline } from '@mdi/js';
   import { onMount } from 'svelte';
   import type { PageData } from './$types';
@@ -140,7 +140,7 @@
       <div>
         <Text class="text-lg font-semibold">Tính năng được cập nhật</Text>
         <Text class="text-(--md-sys-color-on-surface-variant)">
-          Tùy chỉnh phiên bản và danh sách hiển thị trong modal sau đăng nhập và nút "Tính năng mới" trên navbar.
+          Nội dung mặc định được generate từ commit trên develop khi merge sang main. Trang này ghi đè tạm trên Vercel Blob (cùng version hoặc cao hơn).
         </Text>
       </div>
 
@@ -150,8 +150,8 @@
 
       <Alert
         color="info"
-        title="Lưu trữ trên Vercel"
-        description="Cần cấu hình BLOB_READ_WRITE_TOKEN trên Vercel để lưu thay đổi cho mọi người dùng. Nếu chưa có, trang vẫn xem được nội dung mặc định."
+        title="Release tự động từ git"
+        description="Mỗi lần merge develop → main, CI tăng 0.0.1 và generate mục từ commit feat/fix/improve/perf. Sửa tại đây chỉ ghi đè bản đang chạy; release mới hơn sẽ thay thế. Cần BLOB_READ_WRITE_TOKEN để lưu override."
       />
 
       {#if loading}

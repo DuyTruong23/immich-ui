@@ -1,3 +1,5 @@
+import release from '../../custom/src/data/feature-updates.json';
+
 export type FeatureUpdateItem = {
   title: string;
   detail?: string;
@@ -9,24 +11,57 @@ export type FeatureUpdatesConfig = {
 };
 
 export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = {
-  version: 'v1.0.3',
-  items: [
-    {
-      title: 'Cải thiện tốc độ xem video trên thiết bị di động',
-      detail:
-        'Video trên điện thoại tải nhanh hơn, khả năng chờ khi loading.',
-    },
-    {
-      title: 'Cho phép đổi avatar, tên',
-      detail:
-        'Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái.',
-    },
-    {
-      title: 'Giao diện admin dễ đọc hơn trên mobile — bảng, thư viện ngoài, chọn ảnh',
-      detail:
-        'Trang quản trị hiển thị bảng và thư viện ngoài dễ cuộn hơn trên màn hình nhỏ. Mở /admin trên điện thoại để kiểm tra bố cục mới.',
-    },
-  ],
+  version: release.version,
+  items: release.items,
+};
+
+/** So sánh semver modal (v1.0.3). Dương = a mới hơn b. */
+export const compareFeatureUpdateVersion = (a: string, b: string): number => {
+  const parse = (version: string): readonly [number, number, number] => {
+    const [major = 0, minor = 0, patch = 0] = version
+      .trim()
+      .replace(/^v/i, '')
+      .split('.')
+      .map((part) => Number.parseInt(part, 10) || 0);
+    return [major, minor, patch];
+  };
+
+  const left = parse(a);
+  const right = parse(b);
+  for (let index = 0; index < 3; index += 1) {
+    if (left[index] !== right[index]) {
+      return left[index] - right[index];
+    }
+  }
+
+  return 0;
+};
+
+type RankedConfig = {
+  config: FeatureUpdatesConfig;
+  rank: number;
+};
+
+/** Git defaults < env < blob khi cùng version; bản version cao hơn luôn thắng. */
+export const resolveFeatureUpdatesConfig = (
+  defaults: FeatureUpdatesConfig,
+  blob: FeatureUpdatesConfig | null,
+  env: FeatureUpdatesConfig | null,
+): FeatureUpdatesConfig => {
+  const candidates: RankedConfig[] = [
+    { config: defaults, rank: 0 },
+    ...(env ? [{ config: env, rank: 1 }] : []),
+    ...(blob ? [{ config: blob, rank: 2 }] : []),
+  ];
+
+  return candidates.reduce((best, current) => {
+    const compared = compareFeatureUpdateVersion(current.config.version, best.config.version);
+    if (compared > 0 || (compared === 0 && current.rank > best.rank)) {
+      return current;
+    }
+
+    return best;
+  }).config;
 };
 
 const normalizeFeatureUpdateItem = (value: unknown): FeatureUpdateItem | null => {
