@@ -1,5 +1,5 @@
 import { json } from './_lib/email.js';
-import { verifySession, type ImmichUser } from './_lib/immich-auth.js';
+import { verifySession, verifySessionFromRequest, type ImmichUser } from './_lib/immich-auth.js';
 import { notifyPartnerFavorite } from './_lib/partner-favorite-notify.js';
 import {
   buildFavoriteItems,
@@ -20,8 +20,6 @@ export const config = {
   runtime: 'edge',
 };
 
-const DEFAULT_UPSTREAM = 'https://immich.gallery-app.pp.ua';
-
 type PartnerRecord = {
   id?: string;
   email?: string;
@@ -30,11 +28,6 @@ type PartnerRecord = {
   avatarColor?: string;
   profileImagePath?: string;
   profileChangedAt?: string;
-};
-
-const getUpstreamBase = (): string => {
-  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-  return (env?.IMMICH_SERVER_URL ?? DEFAULT_UPSTREAM).replace(/\/$/, '');
 };
 
 const toFavoriteUser = (user: ImmichUser, extra?: Partial<PartnerFavoriteUser>): PartnerFavoriteUser =>
@@ -56,7 +49,7 @@ const toFavoriteUser = (user: ImmichUser, extra?: Partial<PartnerFavoriteUser>):
     profileChangedAt: user.profileChangedAt ?? new Date().toISOString(),
   };
 
-const authHeaders = (accessToken?: string, cookieHeader?: string): Record<string, string> | null => {
+const authHeaders = (request: Request, accessToken?: string): Record<string, string> | null => {
   const headers: Record<string, string> = { Accept: 'application/json' };
   const token = accessToken?.trim();
   if (token) {
@@ -64,7 +57,7 @@ const authHeaders = (accessToken?: string, cookieHeader?: string): Record<string
     return headers;
   }
 
-  const cookie = cookieHeader?.trim();
+  const cookie = request.headers.get('cookie')?.trim();
   if (cookie) {
     headers.Cookie = cookie;
     return headers;
@@ -73,20 +66,25 @@ const authHeaders = (accessToken?: string, cookieHeader?: string): Record<string
   return null;
 };
 
-const fetchPartners = async (
-  accessToken?: string,
-  cookieHeader?: string,
-): Promise<PartnerFavoriteUser[]> => {
-  const headers = authHeaders(accessToken, cookieHeader);
+const resolveUser = async (request: Request, accessToken?: string): Promise<ImmichUser | null> => {
+  const cookie = request.headers.get('cookie') ?? undefined;
+  return (
+    (await verifySessionFromRequest(request, accessToken)) ?? (await verifySession(accessToken, cookie))
+  );
+};
+
+const fetchPartners = async (request: Request, accessToken?: string): Promise<PartnerFavoriteUser[]> => {
+  const headers = authHeaders(request, accessToken);
   if (!headers) {
     return [];
   }
 
-  const base = getUpstreamBase();
   const results = await Promise.all(
     ['shared-by', 'shared-with'].map(async (direction) => {
       try {
-        const response = await fetch(`${base}/api/partners?direction=${direction}`, { headers });
+        const response = await fetch(new URL(`/api/partners?direction=${direction}`, request.url).toString(), {
+          headers,
+        });
         if (!response.ok) {
           return [] as PartnerFavoriteUser[];
         }
@@ -142,136 +140,171 @@ const jsonPayload = (
     ...extra,
   });
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+const persistStore = async (store: StoreShape): Promise<Response | null> => {
+  try {
+    await writePartnerFavorites(store);
+    return null;
+  } catch (error) {
+    console.error('[partner-favorites] persist failed', error);
+    return json(
+      {
+        error: 'Could not save partner favorites',
+        detail: error instanceof Error ? error.message : 'Unknown error',
       },
-    });
+      502,
+    );
   }
+};
 
-  if (
-    request.method !== 'GET' &&
-    request.method !== 'POST' &&
-    request.method !== 'PUT' &&
-    request.method !== 'PATCH'
-  ) {
-    return json({ error: 'Method not allowed' }, 405);
-  }
+export default async function handler(request: Request): Promise<Response> {
+  try {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
 
-  let body: {
-    accessToken?: string;
-    assetId?: string;
-    favorite?: boolean;
-    assetIds?: unknown;
-    shareWithEveryone?: unknown;
-  } = {};
-  if (request.method !== 'GET') {
-    try {
-      const text = await request.text();
-      if (text) {
-        body = JSON.parse(text) as typeof body;
+    if (
+      request.method !== 'GET' &&
+      request.method !== 'POST' &&
+      request.method !== 'PUT' &&
+      request.method !== 'PATCH'
+    ) {
+      return json({ error: 'Method not allowed' }, 405);
+    }
+
+    let body: {
+      accessToken?: string;
+      assetId?: string;
+      favorite?: boolean;
+      assetIds?: unknown;
+      shareWithEveryone?: unknown;
+    } = {};
+    if (request.method !== 'GET') {
+      try {
+        const text = await request.text();
+        if (text) {
+          body = JSON.parse(text) as typeof body;
+        }
+      } catch {
+        return json({ error: 'Invalid JSON body' }, 400);
       }
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
-    }
-  }
-
-  const cookie = request.headers.get('cookie') ?? undefined;
-  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
-  const accessToken = parseAccessToken(body) || bearer || undefined;
-  const user = await verifySession(accessToken, cookie);
-  if (!user) {
-    return json({ error: 'Unauthorized' }, 401);
-  }
-
-  const partners = await fetchPartners(accessToken, cookie);
-  const me = toFavoriteUser(user);
-  let store = upsertFavoriteUser(await readPartnerFavorites(), me);
-  for (const partner of partners) {
-    store = upsertFavoriteUser(store, partner);
-  }
-
-  if (request.method === 'GET') {
-    return jsonPayload(me, partners, store);
-  }
-
-  if (request.method === 'PATCH') {
-    if (typeof body.shareWithEveryone !== 'boolean') {
-      return json({ error: 'shareWithEveryone must be a boolean' }, 400);
     }
 
-    store = setShareWithEveryone(store, me.id, body.shareWithEveryone);
-    await writePartnerFavorites(store);
-    return jsonPayload(me, partners, store, { ok: true });
-  }
+    const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+    const accessToken = parseAccessToken(body) || bearer || undefined;
+    const user = await resolveUser(request, accessToken);
+    if (!user) {
+      return json({ error: 'Unauthorized' }, 401);
+    }
 
-  if (request.method === 'PUT') {
-    const assetIds = Array.isArray(body.assetIds)
+    const partners = await fetchPartners(request, accessToken);
+    const me = toFavoriteUser(user);
+    let store = upsertFavoriteUser(await readPartnerFavorites(), me);
+    for (const partner of partners) {
+      store = upsertFavoriteUser(store, partner);
+    }
+
+    if (request.method === 'GET') {
+      return jsonPayload(me, partners, store);
+    }
+
+    if (request.method === 'PATCH') {
+      if (typeof body.shareWithEveryone !== 'boolean') {
+        return json({ error: 'shareWithEveryone must be a boolean' }, 400);
+      }
+
+      store = setShareWithEveryone(store, me.id, body.shareWithEveryone);
+      const persistError = await persistStore(store);
+      if (persistError) {
+        return persistError;
+      }
+      return jsonPayload(me, partners, store, { ok: true });
+    }
+
+    if (request.method === 'PUT') {
+      const assetIds = Array.isArray(body.assetIds)
+        ? body.assetIds.filter((id): id is string => typeof id === 'string' && isAssetId(id))
+        : null;
+      if (!assetIds) {
+        return json({ error: 'assetIds must be an array of asset ids' }, 400);
+      }
+
+      store = syncUserImmichFavorites(store, me.id, assetIds);
+      const persistError = await persistStore(store);
+      if (persistError) {
+        return persistError;
+      }
+      return jsonPayload(me, partners, store, { ok: true, synced: assetIds.length });
+    }
+
+    const singleId = typeof body.assetId === 'string' ? body.assetId.trim() : '';
+    const bulkIds = Array.isArray(body.assetIds)
       ? body.assetIds.filter((id): id is string => typeof id === 'string' && isAssetId(id))
-      : null;
-    if (!assetIds) {
-      return json({ error: 'assetIds must be an array of asset ids' }, 400);
+      : [];
+    const assetIds = bulkIds.length > 0 ? bulkIds : singleId && isAssetId(singleId) ? [singleId] : [];
+    if (assetIds.length === 0) {
+      return json({ error: 'Valid assetId is required' }, 400);
     }
 
-    store = syncUserImmichFavorites(store, me.id, assetIds);
-    await writePartnerFavorites(store);
-    return jsonPayload(me, partners, store, { ok: true, synced: assetIds.length });
-  }
+    const favorite = Boolean(body.favorite);
+    const addedIds: string[] = [];
+    let added = false;
+    let removed = false;
 
-  const singleId = typeof body.assetId === 'string' ? body.assetId.trim() : '';
-  const bulkIds = Array.isArray(body.assetIds)
-    ? body.assetIds.filter((id): id is string => typeof id === 'string' && isAssetId(id))
-    : [];
-  const assetIds = bulkIds.length > 0 ? bulkIds : singleId && isAssetId(singleId) ? [singleId] : [];
-  if (assetIds.length === 0) {
-    return json({ error: 'Valid assetId is required' }, 400);
-  }
-
-  const favorite = Boolean(body.favorite);
-  const addedIds: string[] = [];
-  let added = false;
-  let removed = false;
-
-  for (const assetId of assetIds) {
-    const result = setUserFavorite(store, assetId, me.id, favorite, 'overlay');
-    store = result.store;
-    added = added || result.added;
-    removed = removed || result.removed;
-    if (result.added) {
-      addedIds.push(assetId);
+    for (const assetId of assetIds) {
+      const result = setUserFavorite(store, assetId, me.id, favorite, 'overlay');
+      store = result.store;
+      added = added || result.added;
+      removed = removed || result.removed;
+      if (result.added) {
+        addedIds.push(assetId);
+      }
     }
-  }
 
-  await writePartnerFavorites(store);
+    const persistError = await persistStore(store);
+    if (persistError) {
+      return persistError;
+    }
 
-  let emailed = 0;
-  if (addedIds.length > 0 && (me.isAdmin || isShareWithEveryone(store, me.id))) {
-    const bothFavorited = addedIds.some((assetId) => {
-      const item = buildFavoriteItems(
-        store,
-        [me.id, ...partners.map((partner) => partner.id)],
-        { isAdmin: true },
-      ).find((entry) => entry.assetId === assetId);
-      return (item?.favoritedBy.length ?? 0) > 1;
+    let emailed = 0;
+    if (addedIds.length > 0 && (me.isAdmin || isShareWithEveryone(store, me.id))) {
+      const bothFavorited = addedIds.some((assetId) => {
+        const item = buildFavoriteItems(
+          store,
+          [me.id, ...partners.map((partner) => partner.id)],
+          { isAdmin: true },
+        ).find((entry) => entry.assetId === assetId);
+        return (item?.favoritedBy.length ?? 0) > 1;
+      });
+      const notify = await notifyPartnerFavorite({
+        actor: me,
+        recipients: partners,
+        bothFavorited,
+      });
+      emailed = notify.sent;
+    }
+
+    return jsonPayload(me, partners, store, {
+      ok: true,
+      assetId: assetIds[0],
+      favorite,
+      added,
+      removed,
+      emailed,
     });
-    const notify = await notifyPartnerFavorite({
-      actor: me,
-      recipients: partners,
-      bothFavorited,
-    });
-    emailed = notify.sent;
+  } catch (error) {
+    console.error('[partner-favorites] handler failed', error);
+    return json(
+      {
+        error: 'Partner favorites request failed',
+        detail: error instanceof Error ? error.message : 'Unknown error',
+      },
+      502,
+    );
   }
-
-  return jsonPayload(me, partners, store, {
-    ok: true,
-    assetId: assetIds[0],
-    favorite,
-    added,
-    removed,
-    emailed,
-  });
 }
