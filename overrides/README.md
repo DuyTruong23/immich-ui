@@ -18,6 +18,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/UserAvatar.svelte` | URL avatar kèm `sessionKey` khi media cross-origin |
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar; banner gợi ý thumbnail lỗi trên mobile |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
+| `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
 | `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; `touch-action: pan-y pinch-zoom` khi zoom=1 |
 | `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile preload, HLS; PhotoSwipeTrack có guard control/seek/zoom |
 | `lib/components/asset-viewer/VideoWrapperViewer.svelte` | Truyền next/prev + onSwipe xuống video viewer |
