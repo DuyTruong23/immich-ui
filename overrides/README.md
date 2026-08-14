@@ -37,6 +37,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 
 | File (custom routes) | Thay thế |
 |---|---|
+| `custom/src/routes/(user)/explore/[[photos=photos]]/[[assetId=id]]/` | Explore URL-sync viewer (`/explore/photos/:id`), back đóng viewer |
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |
 | `custom/src/routes/admin/feature-updates/` | Admin tùy chỉnh modal tính năng mới |
