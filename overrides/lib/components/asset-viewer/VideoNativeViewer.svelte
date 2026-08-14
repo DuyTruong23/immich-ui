@@ -9,7 +9,9 @@
   import { castManager } from '$lib/managers/cast-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { mediaCapabilitiesManager } from '$lib/managers/media-capabilities-manager.svelte';
+  import { ocrManager } from '$lib/stores/ocr.svelte';
   import { autoPlayVideo, lang, loopVideo as loopVideoPreference } from '$lib/stores/preferences.store';
+  import { SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { getAssetHlsSessionUrl, getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
   import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
@@ -354,8 +356,14 @@
 
   let isSeeking = $state(false);
 
+  const { slideshowState } = slideshowStore;
+
   const swipeDisabled = $derived(
-    assetViewerManager.zoom > 1 || assetViewerManager.isFaceEditMode || assetViewerManager.isShowEditor,
+    assetViewerManager.zoom > 1 ||
+      assetViewerManager.isFaceEditMode ||
+      assetViewerManager.isShowEditor ||
+      $slideshowState !== SlideshowState.None ||
+      ocrManager.showOverlay,
   );
 
   const canStartVideoSwipe = (event: PointerEvent) => {

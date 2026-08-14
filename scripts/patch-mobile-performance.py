@@ -540,6 +540,23 @@ def patch_asset_viewer_swipe_back(path: pathlib.Path) -> None:
 """,
         'AssetViewer SwipeBackEdge markup',
     )
+    if "event.detail.direction === 'bottom'" not in text:
+        text = text.replace(
+            """    if (event.detail.direction === 'left') {
+      navigateAsset('next');
+    } else if (event.detail.direction === 'right') {
+      navigateAsset('previous');
+    }
+""",
+            """    if (event.detail.direction === 'left') {
+      navigateAsset('next');
+    } else if (event.detail.direction === 'right') {
+      navigateAsset('previous');
+    } else if (event.detail.direction === 'bottom') {
+      closeViewer();
+    }
+""",
+        )
     if 'nextAsset={cursor.nextAsset}' not in text:
         text = text.replace(
             '        playOriginalVideo={isPlayingOriginalVideo}\n',

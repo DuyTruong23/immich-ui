@@ -482,6 +482,8 @@
       navigateAsset('next');
     } else if (event.detail.direction === 'right') {
       navigateAsset('previous');
+    } else if (event.detail.direction === 'bottom') {
+      closeViewer();
     }
   };
 </script>

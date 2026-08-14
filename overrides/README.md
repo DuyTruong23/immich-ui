@@ -31,6 +31,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
 | `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
 | `lib/utils/mobile-back-navigation.ts` | Intercept popstate/willUnload, đóng viewer SPA |
+| `lib/actions/swipe-navigate.svelte.ts` | Vuốt ngang next/back + vuốt xuống đóng (lock h/v) |
 | `lib/actions/swipe-back.ts` | Gesture vuốt từ mép (LTR/RTL) |
 | `lib/components/shared-components/MobileBackGuard.svelte` | Guard back hệ thống trên layout user |
 | `lib/components/shared-components/SwipeBackEdge.svelte` | Vùng vuốt back trong asset viewer |
