@@ -10,7 +10,11 @@ export const resolveImmichServerUrl = (): string =>
   process.env.PUBLIC_IMMICH_SERVER_URL ??
   'http://localhost:2283';
 
+const webNodeModules = path.resolve(rootDir, 'upstream/web/node_modules');
+
 export const customViteAliases = (): Record<string, string> => ({
+  // $custom lives outside upstream/web; bare imports need the web node_modules.
+  'svelte-i18n': path.resolve(webNodeModules, 'svelte-i18n'),
   '@photo-gallery/config': path.resolve(rootDir, 'config/src'),
   '@photo-gallery/custom': path.resolve(rootDir, 'custom/src'),
   '@photo-gallery/branding': path.resolve(rootDir, 'branding/src'),
