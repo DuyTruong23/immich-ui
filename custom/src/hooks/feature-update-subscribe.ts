@@ -61,6 +61,14 @@ const persistNotifyEmail = (email: string, confirmed: boolean): void => {
   localStorage.setItem(STORED_EMAIL_KEY, JSON.stringify({ email: email.trim(), confirmed }));
 };
 
+export const clearStoredNotifyEmail = (): void => {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+
+  localStorage.removeItem(STORED_EMAIL_KEY);
+};
+
 /** Đăng ký email nhận changelog — chỉ đánh dấu đã lưu khi server xác nhận */
 export const subscribeFeatureUpdateEmail = async (
   email: string,
@@ -97,4 +105,41 @@ export const subscribeFeatureUpdateEmail = async (
   }
 
   persistNotifyEmail(trimmed, true);
+};
+
+/** Hủy đăng ký email nhận changelog — chỉ xóa localStorage khi server xác nhận */
+export const unsubscribeFeatureUpdateEmail = async (
+  email: string,
+  accessToken?: string,
+): Promise<void> => {
+  const trimmed = email.trim();
+  if (!isValidNotifyEmail(trimmed)) {
+    throw new Error('Valid email is required');
+  }
+
+  if (isUiDevMode()) {
+    clearStoredNotifyEmail();
+    console.info('[feature-update-subscribe] Dev mode — hủy email nhận thông báo:', trimmed);
+    return;
+  }
+
+  const token = accessToken?.trim() || getStoredAccessToken();
+  const response = await fetch('/api/feature-update-email', {
+    method: 'POST',
+    credentials: 'include',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: trimmed,
+      unsubscribe: true,
+      ...(token ? { accessToken: token } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as { detail?: string; error?: string };
+    throw new Error(payload.detail ?? payload.error ?? `Unsubscribe failed (${response.status})`);
+  }
+
+  clearStoredNotifyEmail();
 };

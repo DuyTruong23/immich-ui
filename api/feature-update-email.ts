@@ -1,5 +1,6 @@
 import { getEnv, json, sendViaResend } from './_lib/email.js';
 import {
+  listImmichAccountUsers,
   verifyAdminSession,
   verifyAdminSessionFromRequest,
   verifySession,
@@ -91,13 +92,29 @@ const listResponse = async (request: Request, accessToken?: string): Promise<Res
   }
 
   const storage = getSubscriberStorage();
+  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const token = bearer || accessToken?.trim() || undefined;
+  const cookie = request.headers.get('cookie') ?? undefined;
+
   try {
-    const store = await readFeatureUpdateSubscribers();
+    const accounts = [...(await listImmichAccountUsers({ accessToken: token, cookie }))].sort((left, right) =>
+      left.name.localeCompare(right.name, 'vi'),
+    );
+    let lastNotifiedVersion: string | null = null;
+    try {
+      const store = await readFeatureUpdateSubscribers();
+      lastNotifiedVersion = store.lastNotifiedVersion ?? null;
+    } catch (error) {
+      console.warn('[feature-update-email] lastNotifiedVersion unavailable', error);
+    }
+
     return json({
       ok: true,
-      emails: store.emails,
-      count: store.emails.length,
-      lastNotifiedVersion: store.lastNotifiedVersion ?? null,
+      emails: accounts.map((user) => user.email),
+      users: accounts,
+      count: accounts.length,
+      lastNotifiedVersion,
+      source: 'immich-users',
       storage,
     });
   } catch (error) {

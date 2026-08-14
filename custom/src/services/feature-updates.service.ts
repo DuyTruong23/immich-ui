@@ -36,17 +36,24 @@ export type FeatureUpdateNotifyResult = {
   detail?: string;
 };
 
+export type FeatureUpdateSubscriberAccount = {
+  email: string;
+  name?: string;
+};
+
 export type FeatureUpdateSubscriberList = {
   ok?: boolean;
   emails: string[];
+  users?: FeatureUpdateSubscriberAccount[];
   count: number;
   lastNotifiedVersion?: string | null;
+  source?: 'immich-users';
   storage?: 'blob' | 'local' | 'none';
   error?: string;
   detail?: string;
 };
 
-/** Admin xem danh sách email đã đăng ký nhận changelog */
+/** Admin xem email trên tài khoản Immich (và lần gửi changelog gần nhất) */
 export const fetchFeatureUpdateSubscribers = async (
   accessToken?: string,
 ): Promise<FeatureUpdateSubscriberList> => {
@@ -68,35 +75,15 @@ export const fetchFeatureUpdateSubscribers = async (
 
   return {
     emails: Array.isArray(payload.emails) ? payload.emails : [],
+    users: Array.isArray(payload.users) ? payload.users : undefined,
     count: typeof payload.count === 'number' ? payload.count : payload.emails?.length ?? 0,
     lastNotifiedVersion: payload.lastNotifiedVersion ?? null,
+    source: payload.source,
     storage: payload.storage,
   };
 };
 
-/** Admin thêm email vào danh sách nhận changelog */
-export const addFeatureUpdateSubscriberEmail = async (
-  email: string,
-  accessToken?: string,
-): Promise<void> => {
-  const token = accessToken?.trim() || getStoredAccessToken();
-  const response = await fetch('/api/feature-update-email', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: email.trim(),
-      ...(token ? { accessToken: token } : {}),
-    }),
-  });
-
-  const payload = (await response.json().catch(() => ({}))) as { detail?: string; error?: string };
-  if (!response.ok) {
-    throw new Error(payload.detail ?? payload.error ?? `Add subscriber failed (${response.status})`);
-  }
-};
-
-/** Admin gửi changelog hiện tại tới email đã đăng ký */
+/** Admin gửi changelog hiện tại tới email tài khoản */
 export const sendFeatureUpdateNotify = async (options: {
   version: string;
   items: FeatureUpdatesConfig['items'];

@@ -52,7 +52,11 @@ export default async function handler(request: Request): Promise<Response> {
     (await readFeatureUpdatesConfig());
 
   try {
-    const result = await notifyFeatureUpdateSubscribers(config, { force: Boolean(body.force) });
+    const result = await notifyFeatureUpdateSubscribers(config, {
+      force: Boolean(body.force),
+      accessToken: body.accessToken,
+      cookie: request.headers.get('cookie') ?? undefined,
+    });
     return json({ ok: true, ...result, version: config.version });
   } catch (error) {
     console.error('[feature-update-notify]', error);
