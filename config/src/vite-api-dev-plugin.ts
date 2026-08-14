@@ -22,6 +22,44 @@ const writeLocalFeatureUpdatesConfig = (config: unknown): void => {
   fs.writeFileSync(LOCAL_FEATURE_UPDATES_PATH, JSON.stringify(config, null, 2), 'utf8');
 };
 
+const readLocalSubscribers = (): { emails: string[]; lastNotifiedVersion?: string } => {
+  try {
+    const raw = JSON.parse(fs.readFileSync(LOCAL_SUBSCRIBERS_PATH, 'utf8')) as {
+      emails?: unknown;
+      lastNotifiedVersion?: string;
+    };
+    const emails = Array.isArray(raw.emails)
+      ? raw.emails.filter((email): email is string => typeof email === 'string')
+      : [];
+    return raw.lastNotifiedVersion ? { emails, lastNotifiedVersion: raw.lastNotifiedVersion } : { emails };
+  } catch {
+    return { emails: [] };
+  }
+};
+
+const writeLocalSubscribers = (store: { emails: string[]; lastNotifiedVersion?: string }): void => {
+  fs.mkdirSync(path.dirname(LOCAL_SUBSCRIBERS_PATH), { recursive: true });
+  fs.writeFileSync(LOCAL_SUBSCRIBERS_PATH, JSON.stringify(store, null, 2), 'utf8');
+};
+
+const attachLocalSubscriberAdapter = async (server: ViteDevServer): Promise<void> => {
+  const { setLocalSubscriberStoreAdapter } = (await server.ssrLoadModule(
+    path.resolve(rootDir, 'api/_lib/feature-update-subscribers.ts'),
+  )) as {
+    setLocalSubscriberStoreAdapter: (adapter: {
+      read: () => Promise<{ emails: string[]; lastNotifiedVersion?: string }>;
+      write: (store: { emails: string[]; lastNotifiedVersion?: string }) => Promise<void>;
+    }) => void;
+  };
+
+  setLocalSubscriberStoreAdapter({
+    read: async () => readLocalSubscribers(),
+    write: async (store) => {
+      writeLocalSubscribers(store);
+    },
+  });
+};
+
 /** Vercel serverless routes handled locally during Vite dev (not proxied to Immich). */
 export const DEV_API_ROUTES = [
   '/api/feature-updates',
@@ -158,6 +196,10 @@ const handleDevApi = async (
       writeLocalFeatureUpdatesConfig(nextConfig);
       await sendResponse(json(nextConfig), response);
       return true;
+    }
+
+    if (pathname === '/api/feature-update-subscribe' || pathname === '/api/feature-update-notify') {
+      await attachLocalSubscriberAdapter(server);
     }
 
     const module = await server.ssrLoadModule(handlerPath);

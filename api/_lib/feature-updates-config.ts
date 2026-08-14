@@ -1,4 +1,4 @@
-import release from '../../custom/src/data/feature-updates.json';
+import release from '../../custom/src/data/feature-updates.json' with { type: 'json' };
 
 export type FeatureUpdateItem = {
   title: string;
