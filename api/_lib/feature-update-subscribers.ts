@@ -15,9 +15,20 @@ export type FeatureUpdateSubscriberStore = {
   lastNotifiedVersion?: string;
 };
 
+export type SubscriberStoreAdapter = {
+  read: () => Promise<FeatureUpdateSubscriberStore>;
+  write: (store: FeatureUpdateSubscriberStore) => Promise<void>;
+};
+
 const EMPTY_STORE: FeatureUpdateSubscriberStore = { emails: [] };
 
 let memoryStore: FeatureUpdateSubscriberStore | null = null;
+let localAdapter: SubscriberStoreAdapter | null = null;
+
+/** Vite dev gắn adapter filesystem — không import node:* trong Edge. */
+export const setLocalSubscriberStoreAdapter = (adapter: SubscriberStoreAdapter | null): void => {
+  localAdapter = adapter;
+};
 
 const fetchWithTimeout = async (url: string, init: RequestInit, ms: number): Promise<Response> => {
   const controller = new AbortController();
@@ -98,35 +109,6 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
   }
 };
 
-const resolveLocalSubscribersPath = async (): Promise<string> => {
-  const fromEnv = getEnv('FEATURE_UPDATE_SUBSCRIBERS_PATH');
-  if (fromEnv) {
-    return fromEnv;
-  }
-
-  const { dirname, join } = await import('node:path');
-  const { fileURLToPath } = await import('node:url');
-  return join(dirname(fileURLToPath(import.meta.url)), '../../.data/feature-updates/subscribers.json');
-};
-
-const readLocalStore = async (): Promise<FeatureUpdateSubscriberStore> => {
-  try {
-    const { readFile } = await import('node:fs/promises');
-    const raw = await readFile(await resolveLocalSubscribersPath(), 'utf8');
-    return normalizeStore(JSON.parse(raw) as unknown);
-  } catch {
-    return { ...EMPTY_STORE };
-  }
-};
-
-const writeLocalStore = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
-  const { mkdir, writeFile } = await import('node:fs/promises');
-  const { dirname } = await import('node:path');
-  const filePath = await resolveLocalSubscribersPath();
-  await mkdir(dirname(filePath), { recursive: true });
-  await writeFile(filePath, JSON.stringify(store, null, 2), 'utf8');
-};
-
 export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
   if (memoryStore) {
     return memoryStore;
@@ -145,8 +127,8 @@ export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubsc
     }
   }
 
-  if (!isVercelRuntime()) {
-    memoryStore = await readLocalStore();
+  if (!isVercelRuntime() && localAdapter) {
+    memoryStore = normalizeStore(await localAdapter.read());
     return memoryStore;
   }
 
@@ -182,16 +164,16 @@ export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscrib
     }
 
     memoryStore = next;
-    if (!isVercelRuntime()) {
-      await writeLocalStore(next).catch((error) => {
+    if (!isVercelRuntime() && localAdapter) {
+      await localAdapter.write(next).catch((error) => {
         console.warn('[feature-update-subscribers] local mirror failed', error);
       });
     }
     return;
   }
 
-  if (!isVercelRuntime()) {
-    await writeLocalStore(next);
+  if (!isVercelRuntime() && localAdapter) {
+    await localAdapter.write(next);
     memoryStore = next;
     return;
   }
