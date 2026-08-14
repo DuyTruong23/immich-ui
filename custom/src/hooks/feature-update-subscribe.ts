@@ -50,11 +50,15 @@ const persistNotifyEmail = (email: string, confirmed: boolean): void => {
   localStorage.setItem(STORED_EMAIL_KEY, JSON.stringify({ email: email.trim(), confirmed }));
 };
 
-/** Đăng ký email nhận changelog — fire-and-forget, không chặn đóng modal */
-export const subscribeFeatureUpdateEmail = (email: string, accessToken?: string, version?: string): void => {
+/** Đăng ký email nhận changelog — chỉ đánh dấu đã lưu khi server xác nhận */
+export const subscribeFeatureUpdateEmail = async (
+  email: string,
+  accessToken?: string,
+  version?: string,
+): Promise<void> => {
   const trimmed = email.trim();
   if (!isValidNotifyEmail(trimmed)) {
-    return;
+    throw new Error('Valid email is required');
   }
 
   if (isUiDevMode()) {
@@ -64,8 +68,7 @@ export const subscribeFeatureUpdateEmail = (email: string, accessToken?: string,
   }
 
   const token = accessToken?.trim() || getStoredAccessToken();
-
-  void fetch('/api/feature-update-subscribe', {
+  const response = await fetch('/api/feature-update-subscribe', {
     method: 'POST',
     credentials: 'include',
     keepalive: true,
@@ -75,17 +78,12 @@ export const subscribeFeatureUpdateEmail = (email: string, accessToken?: string,
       ...(token ? { accessToken: token } : {}),
       version,
     }),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        const detail = await response.text().catch(() => '');
-        console.warn('[feature-update-subscribe] Subscribe failed:', response.status, detail);
-        return;
-      }
+  });
 
-      persistNotifyEmail(trimmed, true);
-    })
-    .catch((error) => {
-      console.warn('[feature-update-subscribe] Failed to save notification email:', error);
-    });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as { detail?: string; error?: string };
+    throw new Error(payload.detail ?? payload.error ?? `Subscribe failed (${response.status})`);
+  }
+
+  persistNotifyEmail(trimmed, true);
 };

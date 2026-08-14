@@ -3,8 +3,10 @@ import { getEnv } from './email.js';
 const BLOB_PATHNAME = 'feature-updates/subscribers.json';
 const BLOB_API_URL = 'https://vercel.com/api/blob';
 const BLOB_API_VERSION = '7';
-const BLOB_READ_TIMEOUT_MS = 2500;
+const BLOB_READ_TIMEOUT_MS = 8000;
 const BLOB_WRITE_TIMEOUT_MS = 8000;
+
+const isVercelRuntime = (): boolean => getEnv('VERCEL') === '1';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -96,47 +98,105 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
   }
 };
 
+const resolveLocalSubscribersPath = async (): Promise<string> => {
+  const fromEnv = getEnv('FEATURE_UPDATE_SUBSCRIBERS_PATH');
+  if (fromEnv) {
+    return fromEnv;
+  }
+
+  const { dirname, join } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  return join(dirname(fileURLToPath(import.meta.url)), '../../.data/feature-updates/subscribers.json');
+};
+
+const readLocalStore = async (): Promise<FeatureUpdateSubscriberStore> => {
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const raw = await readFile(await resolveLocalSubscribersPath(), 'utf8');
+    return normalizeStore(JSON.parse(raw) as unknown);
+  } catch {
+    return { ...EMPTY_STORE };
+  }
+};
+
+const writeLocalStore = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
+  const { mkdir, writeFile } = await import('node:fs/promises');
+  const { dirname } = await import('node:path');
+  const filePath = await resolveLocalSubscribersPath();
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(store, null, 2), 'utf8');
+};
+
 export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
   if (memoryStore) {
     return memoryStore;
   }
 
-  const stored = await readBlobStore();
-  memoryStore = stored ?? { ...EMPTY_STORE };
-  return memoryStore;
+  const token = getEnv('BLOB_READ_WRITE_TOKEN');
+  if (token) {
+    const stored = await readBlobStore();
+    if (stored) {
+      memoryStore = stored;
+      return memoryStore;
+    }
+
+    if (isVercelRuntime()) {
+      throw new Error('Could not read subscriber list from Blob');
+    }
+  }
+
+  if (!isVercelRuntime()) {
+    memoryStore = await readLocalStore();
+    return memoryStore;
+  }
+
+  throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
 };
 
 export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
-  const token = getEnv('BLOB_READ_WRITE_TOKEN');
-  if (!token) {
-    throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
-  }
-
   const next = normalizeStore(store);
-  const params = new URLSearchParams({ pathname: BLOB_PATHNAME });
-  const response = await fetchWithTimeout(
-    `${BLOB_API_URL}/?${params.toString()}`,
-    {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'x-api-version': BLOB_API_VERSION,
-        'x-content-type': 'application/json',
-        'x-add-random-suffix': '0',
-        'x-allow-overwrite': '1',
-        'x-vercel-blob-access': 'private',
-      },
-      body: JSON.stringify(next, null, 2),
-    },
-    BLOB_WRITE_TIMEOUT_MS,
-  );
+  const token = getEnv('BLOB_READ_WRITE_TOKEN');
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`Blob put failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+  if (token) {
+    const params = new URLSearchParams({ pathname: BLOB_PATHNAME });
+    const response = await fetchWithTimeout(
+      `${BLOB_API_URL}/?${params.toString()}`,
+      {
+        method: 'PUT',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'x-api-version': BLOB_API_VERSION,
+          'x-content-type': 'application/json',
+          'x-add-random-suffix': '0',
+          'x-allow-overwrite': '1',
+          'x-vercel-blob-access': 'private',
+        },
+        body: JSON.stringify(next, null, 2),
+      },
+      BLOB_WRITE_TIMEOUT_MS,
+    );
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`Blob put failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+    }
+
+    memoryStore = next;
+    if (!isVercelRuntime()) {
+      await writeLocalStore(next).catch((error) => {
+        console.warn('[feature-update-subscribers] local mirror failed', error);
+      });
+    }
+    return;
   }
 
-  memoryStore = next;
+  if (!isVercelRuntime()) {
+    await writeLocalStore(next);
+    memoryStore = next;
+    return;
+  }
+
+  throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
 };
 
 export const addFeatureUpdateSubscriber = async (

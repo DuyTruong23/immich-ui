@@ -19,9 +19,10 @@
     type FeatureUpdateItem,
     type FeatureUpdateRelease,
   } from '$custom/utils/feature-update-items';
-  import { Field, Button, HStack, Icon, Input, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
+  import { Field, Button, HStack, Icon, Input, Modal, ModalBody, ModalFooter, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiCheckCircleOutline, mdiChevronDown } from '@mdi/js';
   import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
 
   type Props = {
@@ -52,6 +53,7 @@
   let sentFeedback = $state(false);
   let showNotifyEmail = $state(!hasConfirmedNotifyEmail());
   let savedNotifyEmail = $state(false);
+  let savingNotifyEmail = $state(false);
   let isClosing = $state(false);
   let expandedItems = $state<ReadonlySet<string>>(new Set());
 
@@ -109,22 +111,42 @@
     };
   });
 
-  const persistNotifyEmail = () => {
+  const persistNotifyEmail = async (): Promise<boolean> => {
     if (preview || savedNotifyEmail || !showNotifyEmail || !hasValidNotifyEmail) {
-      return;
+      return true;
     }
 
-    savedNotifyEmail = true;
-    showNotifyEmail = false;
-    subscribeFeatureUpdateEmail(notifyEmail, accessToken, version);
+    if (savingNotifyEmail) {
+      return false;
+    }
+
+    savingNotifyEmail = true;
+    try {
+      await subscribeFeatureUpdateEmail(notifyEmail, accessToken, version);
+      savedNotifyEmail = true;
+      showNotifyEmail = false;
+      toastManager.primary(get(t)('feature_updates_notify_email_saved'));
+      return true;
+    } catch (error) {
+      console.error('[feature-update-modal] subscribe failed', error);
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('feature_updates_notify_email_failed'),
+      );
+      return false;
+    } finally {
+      savingNotifyEmail = false;
+    }
   };
 
-  const handleDismiss = () => {
-    if (isClosing) {
+  const handleDismiss = async () => {
+    if (isClosing || savingNotifyEmail) {
       return;
     }
 
-    persistNotifyEmail();
+    const saved = await persistNotifyEmail();
+    if (!saved) {
+      return;
+    }
 
     if (!preview) {
       markFeatureUpdateSeen(version);
@@ -168,8 +190,13 @@
     card.addEventListener('animationend', onAnimationEnd);
   };
 
-  const handleSendFeedback = () => {
-    if (!canSubmit || sentFeedback) {
+  const handleSendFeedback = async () => {
+    if (!canSubmit || sentFeedback || savingNotifyEmail) {
+      return;
+    }
+
+    const saved = await persistNotifyEmail();
+    if (!saved) {
       return;
     }
 
@@ -178,9 +205,8 @@
       submitFeedback(trimmed, accessToken);
     }
 
-    persistNotifyEmail();
     sentFeedback = true;
-    handleDismiss();
+    await handleDismiss();
   };
 </script>
 
@@ -284,9 +310,11 @@
 
   <ModalFooter class="feature-update-footer">
     <HStack fullWidth gap={3}>
-      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss}>{$t('close')}</Button>
-      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!canSubmit}>
-        {$t('feature_updates_send_feedback')}
+      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={savingNotifyEmail}>
+        {$t('close')}
+      </Button>
+      <Button shape="round" fullWidth onclick={handleSendFeedback} disabled={!canSubmit || savingNotifyEmail}>
+        {savingNotifyEmail ? $t('feature_updates_notify_email_saving') : $t('feature_updates_send_feedback')}
       </Button>
     </HStack>
   </ModalFooter>
