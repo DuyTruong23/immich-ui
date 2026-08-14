@@ -61,7 +61,7 @@ Checklist: [feature-updates/FEAT-READ.md](../feature-updates/FEAT-READ.md). Form
 
 ## Commit message convention
 
-Tiêu đề nói **tính năng / lỗi / thay đổi**, tiếng Việt. Không dùng hash commit, số PR, hay `merge: develop vào main` suông.
+Tiêu đề nói **tính năng / lỗi / thay đổi**, tiếng Việt. Không dùng hash commit, số PR, hay tiêu đề merge không kèm body.
 
 ```
 feat(scope): thêm hoặc mở tính năng gì
@@ -74,16 +74,48 @@ chore(upstream): sync immich vX.Y.Z
 Scope gợi ý: `viewer`, `shared-favorites`, `auth`, `admin`, `mobile`, `branding`, `custom`, `override`
 
 ```
-# ❌ BAD
+# ❌ BAD (commit thường trên develop)
 fix: 37d544f
-merge: develop vào main
+update stuff
+wip
 
-# ✅ GOOD
+# ✅ GOOD (commit thường trên develop)
 feat(viewer): vuốt ngang next/back theo tay, peek ảnh kề
 fix(shared-favorites): hết 404 khi bấm Next trên mobile
 ```
 
-Merge `develop` → `main`: tiêu đề `merge: develop vào main`, body liệt kê từng feat/fix/update đưa lên production.
+### Merge `develop` → `main`
+
+Merge lên production **không** được chỉ có tiêu đề `merge: develop vào main` mà không body.
+
+- **Tiêu đề:** `merge: develop vào main`
+- **Body: bắt buộc** — liệt kê **tất cả** commit trên `develop` chưa có trên `main` (bullet, nhóm `feat` → `fix` → `update` → `chore` → `docs` nếu hợp lý). Không để body trống, không chỉ ghi hash.
+
+Trước khi merge:
+
+```bash
+git log main..develop --oneline
+```
+
+```
+# ❌ BAD
+merge: develop vào main
+
+merge: develop vào main
+
+- a1b2c3d
+- e4f5g6h
+
+# ✅ GOOD
+merge: develop vào main
+
+- feat(admin): thông báo email changelog
+- fix(admin): danh sách email changelog từ modal
+- fix(shared-favorites): sửa crash Edge favorite partner
+- update(viewer): nền xem ảnh dùng blur thay vì đen đặc
+```
+
+Chi tiết đầy đủ: [`.cursor/rules/commit-messages.mdc`](../.cursor/rules/commit-messages.mdc).
 
 Changelog modal **không** lấy từ commit. Thêm tay vào `custom/src/data/feature-updates.json`.
 
