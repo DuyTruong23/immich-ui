@@ -5,7 +5,13 @@
   } from '$custom/constants/feature-updates';
   import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
-  import { itemHasDetail, type FeatureUpdateItem } from '$custom/utils/feature-update-items';
+  import {
+    coerceFeatureUpdateItems,
+    getFeatureUpdateItemDetail,
+    getFeatureUpdateItemTitle,
+    itemHasDetail,
+    type FeatureUpdateItem,
+  } from '$custom/utils/feature-update-items';
   import { Field, Button, HStack, Icon, Modal, ModalBody, ModalFooter, Text, Textarea } from '@immich/ui';
   import { mdiCheckCircleOutline, mdiChevronDown } from '@mdi/js';
   import { onMount } from 'svelte';
@@ -35,6 +41,8 @@
   let sentFeedback = $state(false);
   let isClosing = $state(false);
   let expandedItems = $state<ReadonlySet<number>>(new Set());
+
+  const displayUpdates = $derived(coerceFeatureUpdateItems(updates));
 
   const hasFeedback = $derived(feedback.trim().length > 0);
 
@@ -166,8 +174,10 @@
       <Text class="feature-updates-section__heading">Các mục tính năng</Text>
 
       <ul class="feature-updates-list">
-        {#each updates as item, index (index)}
-          {@const expandable = itemHasDetail(item)}
+        {#each displayUpdates as item, index (index)}
+          {@const title = getFeatureUpdateItemTitle(item)}
+          {@const detail = getFeatureUpdateItemDetail(item)}
+          {@const expandable = itemHasDetail({ title, detail })}
           {@const expanded = expandedItems.has(index)}
           <li class="feature-updates-item" class:feature-updates-item--expanded={expanded}>
             {#if expandable}
@@ -180,7 +190,7 @@
                 <span class="feature-updates-item__icon" aria-hidden="true">
                   <Icon icon={mdiCheckCircleOutline} size="18" />
                 </span>
-                <span class="feature-updates-item__text">{item.title}</span>
+                <span class="feature-updates-item__text">{title}</span>
                 <span class="feature-updates-item__chevron" aria-hidden="true">
                   <Icon icon={mdiChevronDown} size="20" />
                 </span>
@@ -190,12 +200,12 @@
                 <span class="feature-updates-item__icon" aria-hidden="true">
                   <Icon icon={mdiCheckCircleOutline} size="18" />
                 </span>
-                <span class="feature-updates-item__text">{item.title}</span>
+                <span class="feature-updates-item__text">{title}</span>
               </div>
             {/if}
 
             {#if expandable && expanded}
-              <div class="feature-updates-item__detail">{item.detail}</div>
+              <div class="feature-updates-item__detail">{detail}</div>
             {/if}
           </li>
         {/each}

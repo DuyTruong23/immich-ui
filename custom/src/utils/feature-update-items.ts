@@ -49,3 +49,19 @@ export const normalizeFeatureUpdatesConfig = (value: unknown): FeatureUpdatesCon
 };
 
 export const itemHasDetail = (item: FeatureUpdateItem): boolean => Boolean(item.detail?.trim());
+
+/** Chuẩn hóa mảng items từ API/cache — chấp nhận string hoặc object lẫn lộn */
+export const coerceFeatureUpdateItems = (items: readonly unknown[]): FeatureUpdateItem[] =>
+  items
+    .map((item) => normalizeFeatureUpdateItem(item))
+    .filter((item): item is FeatureUpdateItem => item !== null);
+
+export const getFeatureUpdateItemTitle = (item: FeatureUpdateItem | unknown): string => {
+  const normalized = normalizeFeatureUpdateItem(item);
+  return normalized?.title ?? '';
+};
+
+export const getFeatureUpdateItemDetail = (item: FeatureUpdateItem | unknown): string | undefined => {
+  const normalized = normalizeFeatureUpdateItem(item);
+  return normalized?.detail;
+};

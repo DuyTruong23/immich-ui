@@ -6,6 +6,7 @@ import {
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { FEATURE_UPDATES_MOCK } from '$custom/mocks/feature-updates';
 import {
+  coerceFeatureUpdateItems,
   normalizeFeatureUpdatesConfig,
   type FeatureUpdateItem,
 } from '$custom/utils/feature-update-items';
@@ -27,8 +28,13 @@ export const getDefaultFeatureUpdatesConfig = (): FeatureUpdatesConfig => ({
 });
 
 /** Config đã cache, hoặc mặc định — không chờ network (dùng khi mở modal). */
-export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig =>
-  cachedConfig ?? getDefaultFeatureUpdatesConfig();
+export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig => {
+  const config = cachedConfig ?? getDefaultFeatureUpdatesConfig();
+  return {
+    version: config.version,
+    items: coerceFeatureUpdateItems(config.items),
+  };
+};
 
 const FETCH_TIMEOUT_MS = 2500;
 const SAVE_TIMEOUT_MS = 15000;
@@ -120,7 +126,7 @@ export const saveFeatureUpdatesConfig = async (
 
   cachedConfig = {
     version: payload.version,
-    items: payload.items as FeatureUpdateItem[],
+    items: coerceFeatureUpdateItems(Array.isArray(payload.items) ? payload.items : []),
   };
 
   return cachedConfig;
