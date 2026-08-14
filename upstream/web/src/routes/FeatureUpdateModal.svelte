@@ -5,11 +5,13 @@
   } from '$custom/constants/feature-updates';
   import { setHideFeatureUpdateModal, shouldHideFeatureUpdateModal } from '$custom/hooks/feature-update-seen';
   import {
+    clearStoredNotifyEmail,
     getDefaultNotifyEmail,
     getStoredNotifyEmail,
     hasConfirmedNotifyEmail,
     isValidNotifyEmail,
     subscribeFeatureUpdateEmail,
+    unsubscribeFeatureUpdateEmail,
   } from '$custom/hooks/feature-update-subscribe';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
   import {
@@ -20,8 +22,8 @@
     type FeatureUpdateItem,
     type FeatureUpdateRelease,
   } from '$custom/utils/feature-update-items';
-  import { Field, Button, HStack, Icon, Input, Modal, ModalBody, ModalFooter, Switch, Text, Textarea, toastManager } from '@immich/ui';
-  import { mdiCheckCircleOutline, mdiChevronDown } from '@mdi/js';
+  import { Field, Button, HStack, Icon, IconButton, Input, Modal, ModalBody, ModalFooter, Switch, Text, Textarea, toastManager } from '@immich/ui';
+  import { mdiCheckCircleOutline, mdiChevronDown, mdiClose } from '@mdi/js';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
@@ -76,7 +78,10 @@
   const emailNeedsSave = $derived(
     hasValidNotifyEmail && notifyEmail.trim().toLowerCase() !== lastPersistedEmail.trim().toLowerCase(),
   );
-  const canSubmit = $derived(hasFeedback || emailNeedsSave);
+  const emailNeedsUnsubscribe = $derived(
+    lastPersistedEmail.trim().length > 0 && notifyEmail.trim().length === 0,
+  );
+  const canSubmit = $derived(hasFeedback || emailNeedsSave || emailNeedsUnsubscribe);
 
   const itemKey = (releaseVersion: string, index: number) => `${releaseVersion}:${index}`;
 
@@ -145,6 +150,57 @@
     }
   };
 
+  const persistUnsubscribeEmail = async (): Promise<boolean> => {
+    const emailToRemove = lastPersistedEmail.trim();
+    if (preview || !emailToRemove) {
+      lastPersistedEmail = '';
+      if (!preview) {
+        clearStoredNotifyEmail();
+      }
+      return true;
+    }
+
+    if (savingNotifyEmail) {
+      return false;
+    }
+
+    savingNotifyEmail = true;
+    try {
+      await unsubscribeFeatureUpdateEmail(emailToRemove, accessToken);
+      lastPersistedEmail = '';
+      toastManager.primary(get(t)('feature_updates_notify_email_cleared'));
+      return true;
+    } catch (error) {
+      console.error('[feature-update-modal] unsubscribe failed', error);
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('feature_updates_notify_email_clear_failed'),
+      );
+      return false;
+    } finally {
+      savingNotifyEmail = false;
+    }
+  };
+
+  const handleClearNotifyEmail = async () => {
+    if (savingNotifyEmail) {
+      return;
+    }
+
+    notifyEmail = '';
+
+    if (preview) {
+      lastPersistedEmail = '';
+      return;
+    }
+
+    if (lastPersistedEmail.trim()) {
+      await persistUnsubscribeEmail();
+      return;
+    }
+
+    clearStoredNotifyEmail();
+  };
+
   const persistHidePreference = () => {
     if (preview) {
       return;
@@ -203,7 +259,9 @@
       return;
     }
 
-    if (emailNeedsSave) {
+    if (emailNeedsUnsubscribe) {
+      await persistUnsubscribeEmail();
+    } else if (emailNeedsSave) {
       await persistNotifyEmail();
     }
 
@@ -221,7 +279,9 @@
       sentFeedback = true;
     }
 
-    if (emailNeedsSave) {
+    if (emailNeedsUnsubscribe) {
+      await persistUnsubscribeEmail();
+    } else if (emailNeedsSave) {
       await persistNotifyEmail();
     }
 
@@ -317,7 +377,24 @@
           autocomplete="email"
           bind:value={notifyEmail}
           placeholder={$t('feature_updates_notify_email_placeholder')}
-        />
+          disabled={savingNotifyEmail}
+        >
+          {#snippet trailingIcon()}
+            {#if notifyEmail}
+              <IconButton
+                icon={mdiClose}
+                size="small"
+                variant="ghost"
+                shape="round"
+                color="secondary"
+                class="me-1"
+                disabled={savingNotifyEmail}
+                onclick={() => void handleClearNotifyEmail()}
+                aria-label={$t('clear')}
+              />
+            {/if}
+          {/snippet}
+        </Input>
       </Field>
       <Text size="tiny" class="mt-1 text-(--md-sys-color-on-surface-variant)">
         {$t('feature_updates_notify_email_hint')}

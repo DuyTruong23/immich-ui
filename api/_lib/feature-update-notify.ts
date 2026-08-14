@@ -1,9 +1,11 @@
 import { getEnv, sendViaResend } from './email.js';
 import { compareFeatureUpdateVersion, type FeatureUpdatesConfig } from './feature-updates-config.js';
 import {
+  normalizeNotifyEmail,
   readFeatureUpdateSubscribers,
   writeFeatureUpdateSubscribers,
 } from './feature-update-subscribers.js';
+import { listImmichAccountUsers } from './immich-auth.js';
 
 const escapeHtml = (value: string): string =>
   value
@@ -68,9 +70,43 @@ export const buildFeatureUpdateNotifyHtml = (options: {
   `.trim();
 };
 
+const collectNotifyEmails = async (options?: {
+  accessToken?: string;
+  cookie?: string;
+}): Promise<{ emails: string[]; storedEmails: string[]; lastNotifiedVersion?: string }> => {
+  const emails = new Set<string>();
+  let storedEmails: string[] = [];
+  let lastNotifiedVersion: string | undefined;
+
+  try {
+    const accounts = await listImmichAccountUsers({
+      accessToken: options?.accessToken,
+      cookie: options?.cookie,
+    });
+    for (const user of accounts) {
+      emails.add(user.email);
+    }
+  } catch (error) {
+    console.warn('[feature-update-notify] load Immich users failed', error);
+  }
+
+  try {
+    const store = await readFeatureUpdateSubscribers();
+    lastNotifiedVersion = store.lastNotifiedVersion;
+    storedEmails = store.emails;
+    for (const email of store.emails) {
+      emails.add(normalizeNotifyEmail(email));
+    }
+  } catch (error) {
+    console.warn('[feature-update-notify] load stored subscribers failed', error);
+  }
+
+  return { emails: [...emails], storedEmails, lastNotifiedVersion };
+};
+
 export const notifyFeatureUpdateSubscribers = async (
   config: FeatureUpdatesConfig,
-  options?: { force?: boolean },
+  options?: { force?: boolean; accessToken?: string; cookie?: string },
 ): Promise<{ sent: number; skipped: boolean; reason?: string }> => {
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('FEEDBACK_NOTIFY_FROM');
   const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
@@ -80,7 +116,10 @@ export const notifyFeatureUpdateSubscribers = async (
     return { sent: 0, skipped: true, reason: 'email_not_configured' };
   }
 
-  const store = await readFeatureUpdateSubscribers();
+  const store = await collectNotifyEmails({
+    accessToken: options?.accessToken,
+    cookie: options?.cookie,
+  });
   if (store.emails.length === 0) {
     return { sent: 0, skipped: true, reason: 'no_subscribers' };
   }
@@ -114,10 +153,14 @@ export const notifyFeatureUpdateSubscribers = async (
     }
   }
 
-  await writeFeatureUpdateSubscribers({
-    emails: store.emails,
-    lastNotifiedVersion: config.version,
-  });
+  try {
+    await writeFeatureUpdateSubscribers({
+      emails: store.storedEmails,
+      lastNotifiedVersion: config.version,
+    });
+  } catch (error) {
+    console.warn('[feature-update-notify] could not persist lastNotifiedVersion', error);
+  }
 
   return { sent, skipped: false };
 };

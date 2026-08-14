@@ -1,14 +1,15 @@
 <script lang="ts">
   import { getStoredAccessToken } from '$custom/hooks/access-token';
   import {
-    addFeatureUpdateSubscriberEmail,
     fetchFeatureUpdateSubscribers,
     getDefaultFeatureUpdatesConfig,
     sendFeatureUpdateNotify,
+    type FeatureUpdateSubscriberAccount,
   } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import AdminPageLayout from '$lib/components/layouts/AdminPageLayout.svelte';
-  import { Alert, Button, Container, Input, Stack, Text, toastManager } from '@immich/ui';
+  import { searchUsersAdmin } from '@immich/sdk';
+  import { Alert, Button, Container, Stack, Text, toastManager } from '@immich/ui';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
@@ -23,12 +24,9 @@
   const config = getDefaultFeatureUpdatesConfig();
   let sending = $state(false);
   let loadingSubscribers = $state(false);
-  let subscriberEmails = $state<string[]>([]);
+  let subscriberAccounts = $state<FeatureUpdateSubscriberAccount[]>([]);
   let lastNotifiedVersion = $state<string | null>(null);
-  let subscriberStorage = $state<'blob' | 'local' | 'none' | ''>('');
   let subscribersError = $state('');
-  let addEmail = $state('');
-  let addingEmail = $state(false);
 
   const previewModal = () => {
     showFeatureUpdateModal({
@@ -54,6 +52,17 @@
     return translate('admin.feature_updates_send_email_failed');
   };
 
+  const accountsFromUsers = (
+    users: Array<{ email?: string; name?: string; deletedAt?: string | null }>,
+  ): FeatureUpdateSubscriberAccount[] =>
+    users
+      .filter((user) => !user.deletedAt && Boolean(user.email?.includes('@')))
+      .map((user) => ({
+        email: user.email!.trim(),
+        name: user.name?.trim() || user.email!.trim(),
+      }))
+      .sort((left, right) => (left.name ?? left.email).localeCompare(right.name ?? right.email, 'vi'));
+
   const loadSubscribers = async () => {
     if (loadingSubscribers) {
       return;
@@ -62,10 +71,21 @@
     loadingSubscribers = true;
     subscribersError = '';
     try {
-      const result = await fetchFeatureUpdateSubscribers(getStoredAccessToken());
-      subscriberEmails = result.emails;
-      lastNotifiedVersion = result.lastNotifiedVersion ?? null;
-      subscriberStorage = result.storage ?? '';
+      try {
+        subscriberAccounts = accountsFromUsers(await searchUsersAdmin({ withDeleted: false }));
+      } catch (sdkError) {
+        console.warn('[feature-updates-admin] searchUsersAdmin failed, fallback API', sdkError);
+        const result = await fetchFeatureUpdateSubscribers(getStoredAccessToken());
+        const accounts = result.users?.filter((user) => user.email) ?? [];
+        subscriberAccounts = accounts.length > 0 ? accounts : result.emails.map((email) => ({ email }));
+      }
+
+      try {
+        const result = await fetchFeatureUpdateSubscribers(getStoredAccessToken());
+        lastNotifiedVersion = result.lastNotifiedVersion ?? null;
+      } catch {
+        lastNotifiedVersion = null;
+      }
     } catch (error) {
       console.error('[feature-updates-admin] load subscribers failed', error);
       subscribersError =
@@ -78,28 +98,6 @@
   onMount(() => {
     void loadSubscribers();
   });
-
-  const addSubscriberEmail = async () => {
-    const email = addEmail.trim();
-    if (!email || addingEmail) {
-      return;
-    }
-
-    addingEmail = true;
-    try {
-      await addFeatureUpdateSubscriberEmail(email, getStoredAccessToken());
-      addEmail = '';
-      toastManager.primary(get(t)('admin.feature_updates_subscribers_added', { values: { email } }));
-      void loadSubscribers();
-    } catch (error) {
-      console.error('[feature-updates-admin] add subscriber failed', error);
-      toastManager.danger(
-        error instanceof Error ? error.message : get(t)('admin.feature_updates_subscribers_add_failed'),
-      );
-    } finally {
-      addingEmail = false;
-    }
-  };
 
   const sendChangelogEmail = async () => {
     if (sending) {
@@ -186,12 +184,15 @@
           <div>
             <Text class="text-base font-semibold">{$t('admin.feature_updates_subscribers_title')}</Text>
             <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
-              {$t('admin.feature_updates_subscribers_count', { values: { count: subscriberEmails.length } })}
+              {$t('admin.feature_updates_subscribers_count', { values: { count: subscriberAccounts.length } })}
               {#if lastNotifiedVersion}
                 · {$t('admin.feature_updates_subscribers_last_notified', {
                   values: { version: lastNotifiedVersion },
                 })}
               {/if}
+            </Text>
+            <Text size="small" class="mt-1 text-(--md-sys-color-on-surface-variant)">
+              {$t('admin.feature_updates_subscribers_hint')}
             </Text>
           </div>
           <Button shape="round" color="secondary" size="small" onclick={loadSubscribers} disabled={loadingSubscribers}>
@@ -201,50 +202,29 @@
           </Button>
         </div>
 
-        {#if subscriberStorage === 'none'}
-          <Alert
-            color="warning"
-            title={$t('admin.feature_updates_subscribers_need_blob_title')}
-            description={$t('admin.feature_updates_subscribers_need_blob')}
-          />
-        {:else if subscribersError}
+        {#if subscribersError}
           <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')} description={subscribersError} />
-        {:else if loadingSubscribers && subscriberEmails.length === 0}
+        {:else if loadingSubscribers && subscriberAccounts.length === 0}
           <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
             {$t('admin.feature_updates_subscribers_loading')}
           </Text>
-        {:else if subscriberEmails.length === 0}
+        {:else if subscriberAccounts.length === 0}
           <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
             {$t('admin.feature_updates_subscribers_empty')}
           </Text>
         {:else}
           <ul class="m-0 list-none space-y-1 p-0 text-sm">
-            {#each subscriberEmails as email (email)}
-              <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2">{email}</li>
+            {#each subscriberAccounts as account (account.email)}
+              <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2">
+                {#if account.name && account.name !== account.email}
+                  <div class="font-medium">{account.name}</div>
+                  <div class="text-(--md-sys-color-on-surface-variant)">{account.email}</div>
+                {:else}
+                  {account.email}
+                {/if}
+              </li>
             {/each}
           </ul>
-        {/if}
-
-        {#if subscriberStorage === 'blob' || subscriberStorage === 'local'}
-          <form
-            class="mt-3 flex flex-wrap items-center gap-2"
-            onsubmit={(event) => {
-              event.preventDefault();
-              void addSubscriberEmail();
-            }}
-          >
-            <Input
-              type="email"
-              bind:value={addEmail}
-              placeholder={$t('admin.feature_updates_subscribers_add_placeholder')}
-              class="min-w-56 flex-1"
-            />
-            <Button type="submit" shape="round" size="small" disabled={addingEmail || !addEmail.trim()}>
-              {addingEmail
-                ? $t('admin.feature_updates_subscribers_adding')
-                : $t('admin.feature_updates_subscribers_add')}
-            </Button>
-          </form>
         {/if}
       </div>
     </Stack>
