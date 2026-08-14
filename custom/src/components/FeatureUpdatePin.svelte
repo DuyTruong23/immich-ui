@@ -22,7 +22,10 @@
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
   const currentVersion = $derived(peekFeatureUpdatesConfig().version.trim());
   const visible = $derived(
-    authManager.authenticated && !viewingAsset && dismissedVersion !== currentVersion,
+    authManager.authenticated &&
+      !authManager.user.isAdmin &&
+      !viewingAsset &&
+      dismissedVersion !== currentVersion,
   );
 
   const openWhatsNew = (event: MouseEvent) => {
