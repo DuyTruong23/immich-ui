@@ -17,6 +17,15 @@ type NetworkConnection = {
 const getConnection = (): NetworkConnection | undefined =>
   (navigator as Navigator & { connection?: NetworkConnection }).connection;
 
+const matchesMedia = (query: string): boolean => {
+  try {
+    return Boolean(globalThis.matchMedia?.(query)?.matches);
+  } catch {
+    return false;
+  }
+};
+
+/** Port thuần của getServiceWorkerThumbnailCacheLimit() — không import Svelte. */
 const getThumbnailCacheLimit = (): number => {
   const connection = getConnection();
   if (connection?.saveData) {
@@ -26,6 +35,10 @@ const getThumbnailCacheLimit = (): number => {
   const type = connection?.effectiveType;
   if (type === 'slow-2g' || type === '2g' || type === '3g') {
     return 180;
+  }
+
+  if (matchesMedia('(pointer: coarse)') || matchesMedia('(max-width: 767px)')) {
+    return 280;
   }
 
   return 400;

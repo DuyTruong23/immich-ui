@@ -180,7 +180,7 @@
   }
 
   .crop-area.rotated {
-    max-width: calc(100vh - 16 * var(--spacing));
+    max-width: calc(100dvh - 16 * var(--spacing));
     max-height: calc(100vw - 400px - 16 * var(--spacing));
 
     .left,
