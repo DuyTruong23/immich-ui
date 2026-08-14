@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "develop": false
+    }
+  },
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "upstream/web/build",
