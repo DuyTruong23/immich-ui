@@ -1,5 +1,3 @@
-import release from '../../custom/src/data/feature-updates.json' with { type: 'json' };
-
 export type FeatureUpdateItem = {
   title: string;
   detail?: string;
@@ -120,7 +118,8 @@ export const normalizeFeatureUpdatesConfig = (value: unknown): FeatureUpdatesCon
   };
 };
 
-export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = normalizeFeatureUpdatesConfig(release) ?? {
+/** Không import JSON — Vercel Edge / NodeNext không bundle được file .json từ ngoài api/. */
+export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = {
   version: 'v0.0.0',
   items: [],
   releases: [],

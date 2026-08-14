@@ -36,6 +36,37 @@ export type FeatureUpdateNotifyResult = {
   detail?: string;
 };
 
+export type FeatureUpdateSubscriberList = {
+  ok?: boolean;
+  emails: string[];
+  count: number;
+  lastNotifiedVersion?: string | null;
+  error?: string;
+  detail?: string;
+};
+
+/** Admin xem danh sách email đã đăng ký nhận changelog */
+export const fetchFeatureUpdateSubscribers = async (
+  accessToken?: string,
+): Promise<FeatureUpdateSubscriberList> => {
+  const token = accessToken?.trim() || getStoredAccessToken();
+  const response = await fetch('/api/feature-update-subscribe?list=1', {
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as FeatureUpdateSubscriberList;
+  if (!response.ok) {
+    throw new Error(payload.detail ?? payload.error ?? `Load subscribers failed (${response.status})`);
+  }
+
+  return {
+    emails: Array.isArray(payload.emails) ? payload.emails : [],
+    count: typeof payload.count === 'number' ? payload.count : payload.emails?.length ?? 0,
+    lastNotifiedVersion: payload.lastNotifiedVersion ?? null,
+  };
+};
+
 /** Admin gửi changelog hiện tại tới email đã đăng ký */
 export const sendFeatureUpdateNotify = async (options: {
   version: string;

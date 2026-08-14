@@ -1,12 +1,14 @@
 <script lang="ts">
   import { getStoredAccessToken } from '$custom/hooks/access-token';
   import {
+    fetchFeatureUpdateSubscribers,
     getDefaultFeatureUpdatesConfig,
     sendFeatureUpdateNotify,
   } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import AdminPageLayout from '$lib/components/layouts/AdminPageLayout.svelte';
   import { Alert, Button, Container, Stack, Text, toastManager } from '@immich/ui';
+  import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -19,6 +21,10 @@
 
   const config = getDefaultFeatureUpdatesConfig();
   let sending = $state(false);
+  let loadingSubscribers = $state(false);
+  let subscriberEmails = $state<string[]>([]);
+  let lastNotifiedVersion = $state<string | null>(null);
+  let subscribersError = $state('');
 
   const previewModal = () => {
     showFeatureUpdateModal({
@@ -43,6 +49,30 @@
     }
     return translate('admin.feature_updates_send_email_failed');
   };
+
+  const loadSubscribers = async () => {
+    if (loadingSubscribers) {
+      return;
+    }
+
+    loadingSubscribers = true;
+    subscribersError = '';
+    try {
+      const result = await fetchFeatureUpdateSubscribers(getStoredAccessToken());
+      subscriberEmails = result.emails;
+      lastNotifiedVersion = result.lastNotifiedVersion ?? null;
+    } catch (error) {
+      console.error('[feature-updates-admin] load subscribers failed', error);
+      subscribersError =
+        error instanceof Error ? error.message : get(t)('admin.feature_updates_subscribers_load_failed');
+    } finally {
+      loadingSubscribers = false;
+    }
+  };
+
+  onMount(() => {
+    void loadSubscribers();
+  });
 
   const sendChangelogEmail = async () => {
     if (sending) {
@@ -74,6 +104,7 @@
           values: { sent: result.sent ?? 0, version: result.version ?? config.version },
         }),
       );
+      void loadSubscribers();
     } catch (error) {
       console.error('[feature-updates-admin] notify failed', error);
       toastManager.danger(
@@ -121,6 +152,45 @@
         <Button shape="round" onclick={sendChangelogEmail} disabled={sending}>
           {sending ? $t('admin.feature_updates_sending_email') : $t('admin.feature_updates_send_email')}
         </Button>
+      </div>
+
+      <div class="rounded-xl border border-(--md-sys-color-outline-variant) p-4">
+        <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <Text class="text-base font-semibold">{$t('admin.feature_updates_subscribers_title')}</Text>
+            <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
+              {$t('admin.feature_updates_subscribers_count', { values: { count: subscriberEmails.length } })}
+              {#if lastNotifiedVersion}
+                · {$t('admin.feature_updates_subscribers_last_notified', {
+                  values: { version: lastNotifiedVersion },
+                })}
+              {/if}
+            </Text>
+          </div>
+          <Button shape="round" color="secondary" size="small" onclick={loadSubscribers} disabled={loadingSubscribers}>
+            {loadingSubscribers
+              ? $t('admin.feature_updates_subscribers_loading')
+              : $t('admin.feature_updates_subscribers_refresh')}
+          </Button>
+        </div>
+
+        {#if subscribersError}
+          <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')} description={subscribersError} />
+        {:else if loadingSubscribers && subscriberEmails.length === 0}
+          <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
+            {$t('admin.feature_updates_subscribers_loading')}
+          </Text>
+        {:else if subscriberEmails.length === 0}
+          <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
+            {$t('admin.feature_updates_subscribers_empty')}
+          </Text>
+        {:else}
+          <ul class="m-0 list-none space-y-1 p-0 text-sm">
+            {#each subscriberEmails as email (email)}
+              <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2">{email}</li>
+            {/each}
+          </ul>
+        {/if}
       </div>
     </Stack>
   </Container>
