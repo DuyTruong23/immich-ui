@@ -1,8 +1,9 @@
 import { getEnv, json, sendViaResend } from './_lib/email.js';
-import { verifySession, type ImmichUser } from './_lib/immich-auth.js';
+import { verifyAdminSession, verifySession, type ImmichUser } from './_lib/immich-auth.js';
 import {
   addFeatureUpdateSubscriber,
   isValidNotifyEmail,
+  readFeatureUpdateSubscribers,
   removeFeatureUpdateSubscriber,
 } from './_lib/feature-update-subscribers.js';
 
@@ -90,11 +91,41 @@ const unsubscribeResponse = async (email: string): Promise<Response> => {
 export default async function handler(request: Request): Promise<Response> {
   if (request.method === 'GET') {
     const url = new URL(request.url);
-    if (url.searchParams.get('unsubscribe') !== '1') {
-      return json({ error: 'Method not allowed' }, 405);
+    if (url.searchParams.get('unsubscribe') === '1') {
+      return unsubscribeResponse(url.searchParams.get('email') ?? '');
     }
 
-    return unsubscribeResponse(url.searchParams.get('email') ?? '');
+    if (url.searchParams.get('list') === '1') {
+      const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+      const admin = await verifyAdminSession(
+        bearer || url.searchParams.get('accessToken') || undefined,
+        request.headers.get('cookie') ?? undefined,
+      );
+      if (!admin) {
+        return json({ error: 'Unauthorized' }, 401);
+      }
+
+      try {
+        const store = await readFeatureUpdateSubscribers();
+        return json({
+          ok: true,
+          emails: store.emails,
+          count: store.emails.length,
+          lastNotifiedVersion: store.lastNotifiedVersion ?? null,
+        });
+      } catch (error) {
+        console.error('[feature-update-subscribe] list failed', error);
+        return json(
+          {
+            error: 'Could not load subscribers',
+            detail: error instanceof Error ? error.message : 'Unknown error',
+          },
+          503,
+        );
+      }
+    }
+
+    return json({ error: 'Method not allowed' }, 405);
   }
 
   if (request.method !== 'POST') {

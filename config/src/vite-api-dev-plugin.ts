@@ -6,7 +6,16 @@ import type { Plugin, ViteDevServer } from 'vite';
 
 const rootDir = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const LOCAL_FEATURE_UPDATES_PATH = path.join(rootDir, '.data/feature-updates/config.json');
+const CHANGELOG_FILE_PATH = path.join(rootDir, 'custom/src/data/feature-updates.json');
 const LOCAL_SUBSCRIBERS_PATH = path.join(rootDir, '.data/feature-updates/subscribers.json');
+
+const readChangelogFile = (): unknown | null => {
+  try {
+    return JSON.parse(fs.readFileSync(CHANGELOG_FILE_PATH, 'utf8')) as unknown;
+  } catch {
+    return null;
+  }
+};
 
 const readLocalFeatureUpdatesConfig = (): unknown | null => {
   try {
@@ -146,11 +155,12 @@ const handleDevApi = async (
     const webRequest = new Request(url, init);
 
     if (pathname === '/api/feature-updates' && request.method === 'GET') {
-      const [{ DEFAULT_FEATURE_UPDATES }, { json }] = await Promise.all([
+      const [{ normalizeFeatureUpdatesConfig, DEFAULT_FEATURE_UPDATES }, { json }] = await Promise.all([
         server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
         server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
       ]);
-      await sendResponse(json(DEFAULT_FEATURE_UPDATES), response);
+      const fromFile = normalizeFeatureUpdatesConfig(readLocalFeatureUpdatesConfig() ?? readChangelogFile());
+      await sendResponse(json(fromFile ?? DEFAULT_FEATURE_UPDATES), response);
       return true;
     }
 
