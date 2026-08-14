@@ -14,17 +14,12 @@ export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = {
     {
       title: 'Cải thiện tốc độ xem video trên thiết bị di động',
       detail:
-        'Video trên điện thoại tải nhanh hơn nhờ preload thông minh và HLS lazy-load. Mở một video bất kỳ trong thư viện để thử — thời gian chờ buffer ngắn hơn so với trước.',
+        'Video trên điện thoại tải nhanh hơn, khả năng chờ khi loading.',
     },
     {
       title: 'Cho phép đổi avatar, tên',
       detail:
-        'Vào Cài đặt → Tài khoản, bấm avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái.',
-    },
-    {
-      title: 'Form đăng nhập hỗ trợ chặn autofill mật khẩu tốt hơn khi dùng OAuth',
-      detail:
-        'Khi đăng nhập bằng OAuth, trình duyệt sẽ không tự điền mật khẩu vào form nữa. Dùng email/mật khẩu hoặc nút OAuth như bình thường.',
+        'Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái.',
     },
     {
       title: 'Giao diện admin dễ đọc hơn trên mobile — bảng, thư viện ngoài, chọn ảnh',
