@@ -11,7 +11,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/side-bar/StorageSpace.svelte` | Sửa dark mode cho Storage space |
 | `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
 | `lib/components/Image.svelte` | Không abort request thumbnail khi unmount (tránh 204 khi scroll/scrub) |
-| `lib/components/assets/thumbnail/Thumbnail.svelte` | Chờ `sessionKey`, eager load (ảo hóa đã cắt viewport) |
+| `lib/components/assets/thumbnail/Thumbnail.svelte` | Chờ `sessionKey`; `preload={!lazy}` theo `shouldLazyLoadThumbnails()`; giữ thumbhash |
 | `lib/components/assets/thumbnail/ImageThumbnail.svelte` | Retry 2 lần trước khi hiện "Error loading image" |
 | `lib/components/timeline/Month.svelte` | Tắt `content-visibility` trên mobile (Safari gãy ảnh khi scrub) |
 | `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |

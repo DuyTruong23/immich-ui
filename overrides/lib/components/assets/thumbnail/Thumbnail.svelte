@@ -8,6 +8,7 @@
   import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
   import {
     networkManager,
+    shouldLazyLoadThumbnails,
     shouldLoadAnimatedPreview,
     shouldLoadLivePhotoPreview,
     shouldPlayVideoThumbnailOnHover,
@@ -81,6 +82,10 @@
   }: Props = $props();
 
   let usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
+  const lazyThumbnails = $derived.by(() => {
+    networkManager.quality;
+    return shouldLazyLoadThumbnails();
+  });
   const allowVideoHover = $derived.by(() => {
     networkManager.quality;
     return shouldPlayVideoThumbnailOnHover() && $playVideoThumbnailOnHover;
@@ -299,6 +304,7 @@
           widthStyle="{width}px"
           heightStyle="{height}px"
           curve={selected}
+          preload={!lazyThumbnails}
           onComplete={(errored) => {
             const rect = element?.getBoundingClientRect();
             skipFade = !rect || rect.bottom < 0 || rect.top > window.innerHeight;
