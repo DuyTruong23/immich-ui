@@ -77,7 +77,7 @@ Chỉ cần kiểm tra nếu tính năng dùng email. Dashboard Vercel → Envir
 | Việc | Biến |
 |---|---|
 | Góp ý trên modal | `FEEDBACK_ENABLED=true`, `RESEND_API_KEY`, `ADMIN_NOTIFY_EMAIL`, `LOGIN_NOTIFY_FROM` |
-| User đăng ký nhận changelog | `BLOB_READ_WRITE_TOKEN` (lưu email), `RESEND_API_KEY`, `LOGIN_NOTIFY_FROM`, `PUBLIC_APP_URL` (tùy chọn) |
+| User đăng ký nhận changelog | `BLOB_READ_WRITE_TOKEN` **bắt buộc** (lưu danh sách email). `RESEND_API_KEY` chỉ gửi mail — key restricted không lưu được contact |
 | Gửi mail changelog | Trang `/admin/feature-updates` → **Gửi mail changelog** (admin session). Hoặc POST `/api/feature-update-notify` với `FEATURE_UPDATE_NOTIFY_SECRET`. CI không tự gửi khi merge |
 
 Danh sách đầy đủ: [Environment.md](../docs/Environment.md).

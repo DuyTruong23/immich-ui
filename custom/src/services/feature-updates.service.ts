@@ -41,7 +41,7 @@ export type FeatureUpdateSubscriberList = {
   emails: string[];
   count: number;
   lastNotifiedVersion?: string | null;
-  storage?: 'resend' | 'blob' | 'local' | 'none';
+  storage?: 'blob' | 'local' | 'none';
   error?: string;
   detail?: string;
 };
@@ -72,6 +72,28 @@ export const fetchFeatureUpdateSubscribers = async (
     lastNotifiedVersion: payload.lastNotifiedVersion ?? null,
     storage: payload.storage,
   };
+};
+
+/** Admin thêm email vào danh sách nhận changelog */
+export const addFeatureUpdateSubscriberEmail = async (
+  email: string,
+  accessToken?: string,
+): Promise<void> => {
+  const token = accessToken?.trim() || getStoredAccessToken();
+  const response = await fetch('/api/feature-update-email', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: email.trim(),
+      ...(token ? { accessToken: token } : {}),
+    }),
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as { detail?: string; error?: string };
+  if (!response.ok) {
+    throw new Error(payload.detail ?? payload.error ?? `Add subscriber failed (${response.status})`);
+  }
 };
 
 /** Admin gửi changelog hiện tại tới email đã đăng ký */

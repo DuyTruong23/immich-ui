@@ -1,13 +1,14 @@
 <script lang="ts">
   import { getStoredAccessToken } from '$custom/hooks/access-token';
   import {
+    addFeatureUpdateSubscriberEmail,
     fetchFeatureUpdateSubscribers,
     getDefaultFeatureUpdatesConfig,
     sendFeatureUpdateNotify,
   } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import AdminPageLayout from '$lib/components/layouts/AdminPageLayout.svelte';
-  import { Alert, Button, Container, Stack, Text, toastManager } from '@immich/ui';
+  import { Alert, Button, Container, Input, Stack, Text, toastManager } from '@immich/ui';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
@@ -24,8 +25,10 @@
   let loadingSubscribers = $state(false);
   let subscriberEmails = $state<string[]>([]);
   let lastNotifiedVersion = $state<string | null>(null);
-  let subscriberStorage = $state<'resend' | 'blob' | 'local' | 'none' | ''>('');
+  let subscriberStorage = $state<'blob' | 'local' | 'none' | ''>('');
   let subscribersError = $state('');
+  let addEmail = $state('');
+  let addingEmail = $state(false);
 
   const previewModal = () => {
     showFeatureUpdateModal({
@@ -75,6 +78,28 @@
   onMount(() => {
     void loadSubscribers();
   });
+
+  const addSubscriberEmail = async () => {
+    const email = addEmail.trim();
+    if (!email || addingEmail) {
+      return;
+    }
+
+    addingEmail = true;
+    try {
+      await addFeatureUpdateSubscriberEmail(email, getStoredAccessToken());
+      addEmail = '';
+      toastManager.primary(get(t)('admin.feature_updates_subscribers_added', { values: { email } }));
+      void loadSubscribers();
+    } catch (error) {
+      console.error('[feature-updates-admin] add subscriber failed', error);
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('admin.feature_updates_subscribers_add_failed'),
+      );
+    } finally {
+      addingEmail = false;
+    }
+  };
 
   const sendChangelogEmail = async () => {
     if (sending) {
@@ -198,6 +223,28 @@
               <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2">{email}</li>
             {/each}
           </ul>
+        {/if}
+
+        {#if subscriberStorage === 'blob' || subscriberStorage === 'local'}
+          <form
+            class="mt-3 flex flex-wrap items-center gap-2"
+            onsubmit={(event) => {
+              event.preventDefault();
+              void addSubscriberEmail();
+            }}
+          >
+            <Input
+              type="email"
+              bind:value={addEmail}
+              placeholder={$t('admin.feature_updates_subscribers_add_placeholder')}
+              class="min-w-56 flex-1"
+            />
+            <Button type="submit" shape="round" size="small" disabled={addingEmail || !addEmail.trim()}>
+              {addingEmail
+                ? $t('admin.feature_updates_subscribers_adding')
+                : $t('admin.feature_updates_subscribers_add')}
+            </Button>
+          </form>
         {/if}
       </div>
     </Stack>
