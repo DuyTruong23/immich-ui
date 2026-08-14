@@ -38,6 +38,7 @@
   let loadingRole = $state<UiDevRole | null>(null);
   let passwordVisible = $state(false);
   let blockAutofill = $state(true);
+  let loginFieldsMounted = $state(true);
 
   const serverConfig = $derived(serverConfigManager.value);
   const passwordToggleLabel = $derived(passwordVisible ? $t('hide_password') : $t('show_password'));
@@ -45,6 +46,14 @@
   const unlockAutofill = () => {
     blockAutofill = false;
   };
+
+  const stripPasswordManagerSignals = () => {
+    password = '';
+    email = '';
+    passwordVisible = true;
+    loginFieldsMounted = false;
+  };
+
   const { publicEnv } = getAppConfig();
 
   const enterAs = async (role: UiDevRole) => {
@@ -88,8 +97,7 @@
       }
     }
 
-    password = '';
-    email = '';
+    stripPasswordManagerSignals();
 
     await notifyAdminOnLogin(user.accessToken);
     await goto(data.continueUrl, { invalidateAll: true });
@@ -146,10 +154,17 @@
   });
 
   const handleLogin = async () => {
+    if (loading) {
+      return;
+    }
+
+    const creds = { email, password };
+    errorMessage = '';
+    loading = true;
+    stripPasswordManagerSignals();
+
     try {
-      errorMessage = '';
-      loading = true;
-      const user = await login({ loginCredentialDto: { email, password } });
+      const user = await login({ loginCredentialDto: creds });
 
       if (user.isAdmin && !serverConfig.isOnboarded) {
         await onOnboarding();
@@ -170,6 +185,9 @@
       return;
     } catch (error) {
       errorMessage = getServerErrorMessage(error) || $t('errors.incorrect_email_or_password');
+      email = creds.email;
+      loginFieldsMounted = true;
+      passwordVisible = false;
       loading = false;
       return;
     }
@@ -185,9 +203,13 @@
     }
   };
 
-  const onsubmit = async (event: Event) => {
+  const onLoginKeydown = (event: KeyboardEvent) => {
+    if (event.key !== 'Enter' || loading) {
+      return;
+    }
+
     event.preventDefault();
-    await handleLogin();
+    void handleLogin();
   };
 </script>
 
@@ -253,90 +275,73 @@
       {/if}
 
       {#if featureFlagsManager.value.passwordLogin}
-        <form
-          autocomplete="off"
+        <div
+          class="relative flex flex-col gap-4"
+          hidden={oauthLoading}
           data-1p-ignore
           data-lpignore="true"
           data-bwignore
           data-form-type="other"
-          {onsubmit}
-          class="relative flex flex-col gap-4"
-          hidden={oauthLoading}
         >
-          <!-- Decoy fields — trình duyệt autofill vào đây thay vì ô thật -->
-          <input
-            type="text"
-            name="username"
-            autocomplete="username"
-            tabindex="-1"
-            aria-hidden="true"
-            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
-          />
-          <input
-            type="password"
-            name="password"
-            autocomplete="current-password"
-            tabindex="-1"
-            aria-hidden="true"
-            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
-          />
-          <input
-            type="password"
-            name="prevent-save-password"
-            autocomplete="new-password"
-            tabindex="-1"
-            aria-hidden="true"
-            class="pointer-events-none absolute -left-[9999px] size-0 opacity-0"
-          />
-
           {#if errorMessage}
             <Alert color="danger" title={errorMessage} closable />
           {/if}
 
-          <Field label={$t('email')} required="indicator">
-            <Input
-              id="pg-login-email"
-              name="pg-login-email"
-              type="text"
-              inputmode="email"
-              autocapitalize="none"
-              autocorrect="off"
-              spellcheck={false}
-              autocomplete="off"
-              readonly={blockAutofill}
-              onfocus={unlockAutofill}
-              bind:value={email}
-            />
-          </Field>
+          {#if loginFieldsMounted}
+            <Field label={$t('email')} required="indicator">
+              <Input
+                id="pg-login-email"
+                name="pg-login-email"
+                type="text"
+                inputmode="email"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck={false}
+                autocomplete="off"
+                readonly={blockAutofill}
+                onfocus={unlockAutofill}
+                onkeydown={onLoginKeydown}
+                bind:value={email}
+              />
+            </Field>
 
-          <Field label={$t('password')} required="indicator">
-            <Input
-              id="pg-login-password"
-              name="pg-login-password"
-              type={passwordVisible ? 'text' : 'password'}
-              autocomplete="off"
-              readonly={blockAutofill}
-              onfocus={unlockAutofill}
-              bind:value={password}
-            >
-              {#snippet trailingIcon()}
-                <IconButton
-                  variant="ghost"
-                  shape="round"
-                  color="secondary"
-                  size="small"
-                  class="me-1"
-                  icon={passwordVisible ? mdiEyeOffOutline : mdiEyeOutline}
-                  onclick={() => (passwordVisible = !passwordVisible)}
-                  title={passwordToggleLabel}
-                  aria-label={passwordToggleLabel}
-                />
-              {/snippet}
-            </Input>
-          </Field>
+            <Field label={$t('password')} required="indicator">
+              <div class:pg-login-password-masked={!passwordVisible}>
+                <Input
+                  id="pg-login-password"
+                  name="pg-login-password"
+                  type="text"
+                  autocapitalize="none"
+                  autocorrect="off"
+                  spellcheck={false}
+                  autocomplete="off"
+                  readonly={blockAutofill}
+                  onfocus={unlockAutofill}
+                  onkeydown={onLoginKeydown}
+                  bind:value={password}
+                >
+                  {#snippet trailingIcon()}
+                    <IconButton
+                      variant="ghost"
+                      shape="round"
+                      color="secondary"
+                      size="small"
+                      class="me-1"
+                      icon={passwordVisible ? mdiEyeOffOutline : mdiEyeOutline}
+                      onclick={() => (passwordVisible = !passwordVisible)}
+                      title={passwordToggleLabel}
+                      aria-label={passwordToggleLabel}
+                    />
+                  {/snippet}
+                </Input>
+              </div>
+            </Field>
+          {/if}
 
-          <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
-        </form>
+          <Button type="button" size="large" shape="round" fullWidth {loading} class="mt-6" onclick={handleLogin}>
+            {$t('to_login')}
+          </Button>
+        </div>
       {/if}
 
       {#if featureFlagsManager.value.oauth}
@@ -372,3 +377,9 @@
     </Stack>
   {/if}
 </AuthPageLayout>
+
+<style>
+  :global(.pg-login-password-masked input) {
+    -webkit-text-security: disc;
+  }
+</style>
