@@ -18,6 +18,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/UserAvatar.svelte` | URL avatar kèm `sessionKey` khi media cross-origin |
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar; banner gợi ý thumbnail lỗi trên mobile |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
+| `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; `touch-action: pan-y pinch-zoom` khi zoom=1 |
 | `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile preload, HLS lazy-load, cross-origin fallback |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
