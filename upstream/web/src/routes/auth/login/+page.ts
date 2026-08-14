@@ -24,7 +24,7 @@ export const load = (async ({ parent, url }) => {
 
   return {
     meta: {
-      title: uiDevMode ? 'Dev — Chọn role' : $t('login'),
+      title: uiDevMode ? $t('ui_dev_mode_title') : $t('login'),
     },
     continueUrl,
     uiDevMode,

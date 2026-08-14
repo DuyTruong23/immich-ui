@@ -35,7 +35,7 @@
   >
     <Icon icon={mdiInformationOutline} size="16" class="shrink-0 opacity-80" />
     <p class="min-w-0 flex-1 text-[11px] leading-snug">
-      Ảnh lỗi vẫn bấm xem được; lát nữa sẽ hiện lại trong danh sách.
+      {$t('mobile_thumbnail_hint')}
     </p>
     <button
       type="button"

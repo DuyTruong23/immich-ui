@@ -137,6 +137,34 @@ const publishBlob = async (config) => {
   return true;
 };
 
+const notifySubscribers = async (config) => {
+  const url = process.env.FEATURE_UPDATE_NOTIFY_URL?.trim();
+  const secret = process.env.FEATURE_UPDATE_NOTIFY_SECRET?.trim();
+  if (!url || !secret) {
+    console.log('[release] FEATURE_UPDATE_NOTIFY_URL/SECRET not set — skip subscriber emails');
+    return;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      version: config.version,
+      items: config.items,
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Notify failed (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+  }
+
+  console.log('[release] Notified feature-update subscribers');
+};
+
 const headMessage = git(['log', '-1', '--pretty=%s']);
 if (isReleaseCommit(headMessage)) {
   console.log('[release] HEAD is already a release commit — skip');
@@ -170,10 +198,18 @@ if (dryRun) {
 writeRelease(release);
 clearPending(pendingFiles);
 
+const published = { version: release.version, items: release.items };
+
 try {
-  await publishBlob({ version: release.version, items: release.items });
+  await publishBlob(published);
 } catch (error) {
   console.warn('[release] Blob publish failed (git file still updated):', error);
+}
+
+try {
+  await notifySubscribers(published);
+} catch (error) {
+  console.warn('[release] Subscriber notify failed:', error);
 }
 
 console.log(`[release] wrote ${path.relative(ROOT, CURRENT_PATH)}`);

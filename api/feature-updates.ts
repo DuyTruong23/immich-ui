@@ -1,9 +1,11 @@
 import { verifyAdminSession } from './_lib/immich-auth.js';
 import {
   DEFAULT_FEATURE_UPDATES,
+  compareFeatureUpdateVersion,
   normalizeFeatureUpdatesConfig,
   type FeatureUpdatesConfig,
 } from './_lib/feature-updates-config.js';
+import { notifyFeatureUpdateSubscribers } from './_lib/feature-update-notify.js';
 import { readFeatureUpdatesConfig, writeFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
 import { json } from './_lib/email.js';
 
@@ -54,6 +56,7 @@ export default async function handler(request: Request): Promise<Response> {
       return json({ error: 'Admin authentication required' }, 401);
     }
 
+    const previous = await readFeatureUpdatesConfig();
     const nextConfig = normalizeFeatureUpdatesConfig({
       version: body.version,
       items: body.items,
@@ -74,6 +77,14 @@ export default async function handler(request: Request): Promise<Response> {
         },
         503,
       );
+    }
+
+    if (compareFeatureUpdateVersion(nextConfig.version, previous.version) > 0) {
+      try {
+        await notifyFeatureUpdateSubscribers(nextConfig);
+      } catch (error) {
+        console.error('[feature-updates] notify failed', error);
+      }
     }
 
     return json(nextConfig satisfies FeatureUpdatesConfig);
