@@ -231,13 +231,6 @@ const handleDevApi = async (
       return true;
     }
 
-    if (pathname === '/api/feature-update-notify' && request.method === 'POST') {
-      const { json } = await server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts'));
-      console.info('[vite-api-dev] feature-update notify skipped in local dev');
-      await sendResponse(json({ ok: true, skipped: true, reason: 'dev', sent: 0 }), response);
-      return true;
-    }
-
     const module = await server.ssrLoadModule(handlerPath);
     const handler = module.default as (req: Request) => Promise<Response>;
 

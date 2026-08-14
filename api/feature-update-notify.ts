@@ -2,9 +2,18 @@ import { getEnv, json } from './_lib/email.js';
 import { normalizeFeatureUpdatesConfig } from './_lib/feature-updates-config.js';
 import { notifyFeatureUpdateSubscribers } from './_lib/feature-update-notify.js';
 import { readFeatureUpdatesConfig } from './_lib/feature-updates-store.js';
+import { verifyAdminSession } from './_lib/immich-auth.js';
 
 export const config = {
   runtime: 'edge',
+};
+
+type NotifyBody = {
+  secret?: string;
+  accessToken?: string;
+  version?: string;
+  items?: unknown[];
+  force?: boolean;
 };
 
 const hasValidSecret = (request: Request, bodySecret?: string): boolean => {
@@ -17,23 +26,24 @@ const hasValidSecret = (request: Request, bodySecret?: string): boolean => {
   return header === expected || bodySecret === expected;
 };
 
-/** POST /api/feature-update-notify — CI gọi sau khi publish version mới */
+/** POST /api/feature-update-notify — admin hoặc secret gửi changelog tới subscriber */
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
   }
 
-  let body: { secret?: string; version?: string; items?: unknown[] } = {};
+  let body: NotifyBody = {};
   try {
     const text = await request.text();
     if (text) {
-      body = JSON.parse(text) as typeof body;
+      body = JSON.parse(text) as NotifyBody;
     }
   } catch {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  if (!hasValidSecret(request, body.secret)) {
+  const admin = await verifyAdminSession(body.accessToken, request.headers.get('cookie') ?? undefined);
+  if (!hasValidSecret(request, body.secret) && !admin) {
     return json({ error: 'Unauthorized' }, 401);
   }
 
@@ -42,7 +52,7 @@ export default async function handler(request: Request): Promise<Response> {
     (await readFeatureUpdatesConfig());
 
   try {
-    const result = await notifyFeatureUpdateSubscribers(config);
+    const result = await notifyFeatureUpdateSubscribers(config, { force: Boolean(body.force) });
     return json({ ok: true, ...result, version: config.version });
   } catch (error) {
     console.error('[feature-update-notify]', error);

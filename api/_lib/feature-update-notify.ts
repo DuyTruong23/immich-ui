@@ -70,6 +70,7 @@ export const buildFeatureUpdateNotifyHtml = (options: {
 
 export const notifyFeatureUpdateSubscribers = async (
   config: FeatureUpdatesConfig,
+  options?: { force?: boolean },
 ): Promise<{ sent: number; skipped: boolean; reason?: string }> => {
   const fromEmail = getEnv('LOGIN_NOTIFY_FROM') ?? getEnv('FEEDBACK_NOTIFY_FROM');
   const appName = getEnv('PUBLIC_APP_NAME') ?? 'Photo Gallery';
@@ -85,6 +86,7 @@ export const notifyFeatureUpdateSubscribers = async (
   }
 
   if (
+    !options?.force &&
     store.lastNotifiedVersion &&
     compareFeatureUpdateVersion(config.version, store.lastNotifiedVersion) <= 0
   ) {
