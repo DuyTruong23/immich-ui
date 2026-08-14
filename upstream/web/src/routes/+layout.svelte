@@ -9,6 +9,7 @@
   import UploadPanel from './UploadPanel.svelte';
   import VersionAnnouncement from './VersionAnnouncement.svelte';
   import FeatureUpdateOnLogin from './FeatureUpdateOnLogin.svelte';
+  import FeatureUpdatePin from '$custom/components/FeatureUpdatePin.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { eventManager } from '$lib/managers/event-manager.svelte';
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
@@ -237,6 +238,7 @@
 <VersionAnnouncement />
 
 <FeatureUpdateOnLogin />
+<FeatureUpdatePin />
 
 <svelte:head>
   <title>{page.data.meta?.title || 'Web'} - Immich</title>

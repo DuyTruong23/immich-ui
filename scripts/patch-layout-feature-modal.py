@@ -15,6 +15,14 @@ def patch_layout(layout_path: pathlib.Path) -> None:
             "import FeatureUpdateOnLogin from '$custom/components/FeatureUpdateOnLogin.svelte';",
             "import FeatureUpdateOnLogin from './FeatureUpdateOnLogin.svelte';",
         )
+        if "FeatureUpdatePin" not in text:
+            text = text.replace(
+                "import FeatureUpdateOnLogin from './FeatureUpdateOnLogin.svelte';\n",
+                "import FeatureUpdateOnLogin from './FeatureUpdateOnLogin.svelte';\n"
+                "  import FeatureUpdatePin from '$custom/components/FeatureUpdatePin.svelte';\n",
+                1,
+            )
+            text = text.replace('<FeatureUpdateOnLogin />', '<FeatureUpdateOnLogin />\n<FeatureUpdatePin />', 1)
         layout_path.write_text(text, encoding='utf-8')
         if "from './FeatureUpdateOnLogin.svelte'" in text:
             return

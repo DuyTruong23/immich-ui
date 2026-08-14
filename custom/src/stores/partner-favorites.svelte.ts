@@ -117,20 +117,34 @@ class PartnerFavoritesStore {
   }
 
   async loadFavoriteBuckets(onChunk: (assets: TimelineAsset[]) => void): Promise<string[]> {
-    const buckets = await getTimeBuckets({ isFavorite: true });
+    const buckets = [...(await getTimeBuckets({ isFavorite: true }))].sort((left, right) =>
+      right.timeBucket.localeCompare(left.timeBucket),
+    );
     const assetIds: string[] = [];
 
-    await Promise.all(
-      buckets.map(async (bucket) => {
-        try {
-          const chunk = await getTimeBucket({ timeBucket: bucket.timeBucket, isFavorite: true });
-          assetIds.push(...chunk.id);
-          onChunk(timeBucketToTimelineAssets(chunk));
-        } catch (error) {
-          console.warn('[partner-favorites] failed to load bucket', bucket.timeBucket, error);
-        }
-      }),
-    );
+    const loadOne = async (timeBucket: string) => {
+      try {
+        const chunk = await getTimeBucket({ timeBucket, isFavorite: true });
+        assetIds.push(...chunk.id);
+        onChunk(timeBucketToTimelineAssets(chunk));
+      } catch (error) {
+        console.warn('[partner-favorites] failed to load bucket', timeBucket, error);
+      }
+    };
+
+    const [first, ...rest] = buckets;
+    if (first) {
+      await loadOne(first.timeBucket);
+    }
+
+    let next = 0;
+    const workers = Array.from({ length: Math.min(2, rest.length) }, async () => {
+      while (next < rest.length) {
+        const bucket = rest[next++];
+        await loadOne(bucket.timeBucket);
+      }
+    });
+    await Promise.all(workers);
 
     return assetIds;
   }

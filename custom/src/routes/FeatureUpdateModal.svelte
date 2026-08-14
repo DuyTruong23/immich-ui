@@ -334,6 +334,33 @@
     overflow: hidden;
   }
 
+  @media (max-width: 767px) {
+    :global(html[data-feature-update-modal] [data-dialog-content]),
+    :global(html[data-feature-update-modal] [data-slot='dialog-content']),
+    :global(html[data-feature-update-modal] [data-bits-dialog-content]) {
+      padding: 0 !important;
+      max-width: none !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      border-radius: 0 !important;
+    }
+
+    :global(.pg-feature-update-modal) {
+      flex: 1 1 auto;
+      align-self: stretch;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      min-height: 100% !important;
+      max-height: 100dvh !important;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border-width: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+  }
+
   /* Card inner column — must shrink so footer stays in viewport */
   :global(.pg-feature-update-modal > div) {
     display: flex;
@@ -572,6 +599,43 @@
 
     to {
       opacity: 0;
+    }
+  }
+
+  @keyframes pg-feature-update-fullscreen-in {
+    from {
+      opacity: 0;
+      transform: translateY(12%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pg-feature-update-fullscreen-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(8%);
+    }
+  }
+
+  @media (max-width: 767px) {
+    :global(.pg-feature-update-modal:not(.pg-feature-update-modal--closing)) {
+      transform-origin: center bottom;
+      animation: pg-feature-update-fullscreen-in var(--md-motion-duration-short, 200ms)
+        var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)) both;
+    }
+
+    :global(.pg-feature-update-modal--closing) {
+      transform-origin: center bottom;
+      animation: pg-feature-update-fullscreen-out 180ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
     }
   }
 </style>

@@ -459,7 +459,7 @@
         dir="ltr"
         lang={$lang}
         nohotkeys
-        class="dark h-full max-w-full"
+        class="dark mx-auto h-full max-w-full"
         style:aspect-ratio={aspectRatio}
         defaultduration={asset.duration! / 1000}
       >
