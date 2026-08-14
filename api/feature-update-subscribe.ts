@@ -131,6 +131,9 @@ export default async function handler(request: Request): Promise<Response> {
     return json({ ok: true, added: result.added });
   } catch (error) {
     console.error('[feature-update-subscribe] subscribe failed', error);
+    await notifyAdminNewSubscriber(email, user).catch((notifyError) => {
+      console.error('[feature-update-subscribe] admin notify failed', notifyError);
+    });
     return json(
       {
         error: 'Could not save notification email',

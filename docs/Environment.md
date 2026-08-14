@@ -244,7 +244,9 @@ FEATURE_UPDATE_NOTIFY_URL=https://<domain>/api/feature-update-notify
 FEATURE_UPDATE_NOTIFY_SECRET=replace-me
 ```
 
-Luồng: user nhập email → POST `/api/feature-update-subscribe`. Mail changelog không tự gửi khi merge. Admin gửi từ `/admin/feature-updates` hoặc gọi `/api/feature-update-notify`.
+Luồng: user nhập email → POST `/api/feature-update-subscribe` (chờ server lưu xong mới ẩn ô) → lưu danh sách + email admin «user vừa đăng ký». Mail changelog không tự gửi khi merge. Admin gửi từ `/admin/feature-updates`.
+
+Local (`pnpm dev`): cùng handler, danh sách ghi `.data/feature-updates/subscribers.json` nếu chưa có Blob token. Production: Vercel Blob.
 
 > Đăng ký changelog gửi tới email user — **bắt buộc verify domain** trước khi dùng production. Xem **[Resend (gửi email)](#resend-gửi-email)**.
 

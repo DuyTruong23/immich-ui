@@ -22,26 +22,6 @@ const writeLocalFeatureUpdatesConfig = (config: unknown): void => {
   fs.writeFileSync(LOCAL_FEATURE_UPDATES_PATH, JSON.stringify(config, null, 2), 'utf8');
 };
 
-const readLocalSubscribers = (): { emails: string[]; lastNotifiedVersion?: string } => {
-  try {
-    const raw = JSON.parse(fs.readFileSync(LOCAL_SUBSCRIBERS_PATH, 'utf8')) as {
-      emails?: unknown;
-      lastNotifiedVersion?: string;
-    };
-    const emails = Array.isArray(raw.emails)
-      ? raw.emails.filter((email): email is string => typeof email === 'string')
-      : [];
-    return raw.lastNotifiedVersion ? { emails, lastNotifiedVersion: raw.lastNotifiedVersion } : { emails };
-  } catch {
-    return { emails: [] };
-  }
-};
-
-const writeLocalSubscribers = (store: { emails: string[]; lastNotifiedVersion?: string }): void => {
-  fs.mkdirSync(path.dirname(LOCAL_SUBSCRIBERS_PATH), { recursive: true });
-  fs.writeFileSync(LOCAL_SUBSCRIBERS_PATH, JSON.stringify(store, null, 2), 'utf8');
-};
-
 /** Vercel serverless routes handled locally during Vite dev (not proxied to Immich). */
 export const DEV_API_ROUTES = [
   '/api/feature-updates',
@@ -180,57 +160,6 @@ const handleDevApi = async (
       return true;
     }
 
-    if (pathname === '/api/feature-update-subscribe') {
-      const { json } = await server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts'));
-      const url = new URL(request.url ?? pathname, `http://${request.headers.host ?? '127.0.0.1'}`);
-      const isUnsubscribeGet = request.method === 'GET' && url.searchParams.get('unsubscribe') === '1';
-
-      let email = url.searchParams.get('email') ?? '';
-      let unsubscribe = isUnsubscribeGet;
-      let version: string | undefined;
-
-      if (request.method === 'POST') {
-        try {
-          const text = body ? Buffer.from(body).toString('utf8') : '';
-          const parsed = text ? (JSON.parse(text) as { email?: string; unsubscribe?: boolean; version?: string }) : {};
-          email = parsed.email ?? email;
-          unsubscribe = Boolean(parsed.unsubscribe);
-          version = parsed.version;
-        } catch {
-          await sendResponse(json({ error: 'Invalid JSON body' }, 400), response);
-          return true;
-        }
-      } else if (!isUnsubscribeGet) {
-        await sendResponse(json({ error: 'Method not allowed' }, 405), response);
-        return true;
-      }
-
-      const normalized = email.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-        await sendResponse(json({ error: 'Valid email is required' }, 400), response);
-        return true;
-      }
-
-      const store = readLocalSubscribers();
-      if (unsubscribe) {
-        writeLocalSubscribers({
-          ...store,
-          emails: store.emails.filter((item) => item !== normalized),
-        });
-        await sendResponse(json({ ok: true, unsubscribed: store.emails.includes(normalized) }), response);
-        return true;
-      }
-
-      const exists = store.emails.includes(normalized);
-      writeLocalSubscribers({
-        emails: exists ? store.emails : [...store.emails, normalized],
-        lastNotifiedVersion: store.lastNotifiedVersion ?? version,
-      });
-      console.info('[vite-api-dev] feature-update subscribe', normalized);
-      await sendResponse(json({ ok: true, added: !exists }), response);
-      return true;
-    }
-
     const module = await server.ssrLoadModule(handlerPath);
     const handler = module.default as (req: Request) => Promise<Response>;
 
@@ -253,6 +182,9 @@ const handleDevApi = async (
 export const viteApiDevPlugin = (): Plugin => ({
   name: 'vite-api-dev',
   enforce: 'pre',
+  config() {
+    process.env.FEATURE_UPDATE_SUBSCRIBERS_PATH = LOCAL_SUBSCRIBERS_PATH;
+  },
   configureServer(server) {
     // Must run before Vite's /api proxy (Vite 8 bypass(null) still proxies).
     server.middlewares.use((request, response, next) => {
