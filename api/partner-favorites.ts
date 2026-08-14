@@ -5,6 +5,7 @@ import {
   buildFavoriteItems,
   isAssetId,
   isShareWithEveryone,
+  listUserFavoriteAssetIds,
   normalizeFavoriteUser,
   readPartnerFavorites,
   setShareWithEveryone,
@@ -25,6 +26,7 @@ type PartnerRecord = {
   id?: string;
   email?: string;
   name?: string;
+  isAdmin?: boolean;
   avatarColor?: string;
   profileImagePath?: string;
   profileChangedAt?: string;
@@ -96,7 +98,7 @@ const fetchPartners = async (
               id: partner.id,
               name: partner.name,
               email: partner.email,
-              isAdmin: false,
+              isAdmin: Boolean(partner.isAdmin),
               avatarColor: partner.avatarColor,
               profileImagePath: partner.profileImagePath,
               profileChangedAt: partner.profileChangedAt,
@@ -132,7 +134,9 @@ const jsonPayload = (
     me,
     partners,
     shareWithEveryone: isShareWithEveryone(store, me.id),
+    mineAssetIds: listUserFavoriteAssetIds(store, me.id),
     items: buildFavoriteItems(store, [me.id, ...partners.map((partner) => partner.id)], {
+      id: me.id,
       isAdmin: me.isAdmin,
     }),
     ...extra,
@@ -245,7 +249,7 @@ export default async function handler(request: Request): Promise<Response> {
   await writePartnerFavorites(store);
 
   let emailed = 0;
-  if (addedIds.length > 0 && isShareWithEveryone(store, me.id)) {
+  if (addedIds.length > 0 && (me.isAdmin || isShareWithEveryone(store, me.id))) {
     const bothFavorited = addedIds.some((assetId) => {
       const item = buildFavoriteItems(
         store,

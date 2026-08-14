@@ -20,6 +20,7 @@ export type PartnerFavoritesResponse = {
   me: PartnerFavoriteUser;
   partners: PartnerFavoriteUser[];
   items: PartnerFavoriteItem[];
+  mineAssetIds?: string[];
   shareWithEveryone?: boolean;
   ok?: boolean;
   added?: boolean;

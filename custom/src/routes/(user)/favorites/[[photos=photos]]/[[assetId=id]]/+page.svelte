@@ -38,16 +38,23 @@
   let timelineManager = $state<TimelineManager>() as TimelineManager;
   let savingShare = $state(false);
   const options = { isFavorite: true, withStacked: true };
+  const showShareToggle = $derived(
+    features.sharedFavorites && !assetMultiSelectManager.selectionActive && !authManager.user.isAdmin,
+  );
 
   onMount(() => {
-    if (features.sharedFavorites) {
-      void partnerFavoritesStore.ensureLoaded();
+    if (!features.sharedFavorites) {
+      return;
     }
+    void partnerFavoritesStore.ensureLoaded();
   });
 
   const handleShareToggle = async (enabled: boolean) => {
     savingShare = true;
     try {
+      if (enabled) {
+        await partnerFavoritesStore.syncMineFromImmich();
+      }
       await partnerFavoritesStore.setShareWithEveryone(enabled);
     } catch (error) {
       handleError(error, $t('shared_favorites_load_error'));
@@ -73,7 +80,7 @@
 
 <UserPageLayout hideNavbar={assetMultiSelectManager.selectionActive} title={data.meta.title} scrollbar={false}>
   {#snippet buttons()}
-    {#if features.sharedFavorites && !assetMultiSelectManager.selectionActive}
+    {#if showShareToggle}
       <label class="flex max-w-72 items-center gap-2 pe-1" title={$t('shared_favorites_share_toggle_subtitle')}>
         <span class="text-end text-xs font-medium text-primary sm:text-sm">{$t('shared_favorites_share_toggle')}</span>
         <Switch
