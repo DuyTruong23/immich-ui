@@ -135,7 +135,7 @@
 
     savingNotifyEmail = true;
     try {
-      await subscribeFeatureUpdateEmail(notifyEmail, accessToken, version);
+      await subscribeFeatureUpdateEmail(notifyEmail, accessToken, version, lastPersistedEmail);
       lastPersistedEmail = notifyEmail.trim();
       toastManager.primary(get(t)('feature_updates_notify_email_saved'));
       return true;
