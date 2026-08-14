@@ -21,8 +21,43 @@ function reloadOnceForStaleChunk(): boolean {
   return true;
 }
 
+function isImmutableAssetUrl(url: string | undefined): boolean {
+  return Boolean(url && url.includes('/_app/immutable/'));
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    reloadOnceForStaleChunk();
+  });
+
+  window.addEventListener(
+    'error',
+    (event) => {
+      const target = event.target;
+      if (target instanceof HTMLScriptElement && isImmutableAssetUrl(target.src)) {
+        event.preventDefault();
+        reloadOnceForStaleChunk();
+        return;
+      }
+
+      if (target instanceof HTMLLinkElement && isImmutableAssetUrl(target.href)) {
+        event.preventDefault();
+        reloadOnceForStaleChunk();
+        return;
+      }
+
+      if (isStaleChunkError(event.error)) {
+        reloadOnceForStaleChunk();
+      }
+    },
+    true,
+  );
+
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!isStaleChunkError(event.reason)) {
+      return;
+    }
     event.preventDefault();
     reloadOnceForStaleChunk();
   });

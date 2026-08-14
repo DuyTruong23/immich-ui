@@ -54,13 +54,33 @@ def patch_app_d_ts(app_d_path: pathlib.Path) -> None:
 def patch_svelte_config(svelte_config_path: pathlib.Path) -> None:
     text = svelte_config_path.read_text(encoding='utf-8')
     line = "process.env.PUBLIC_IMMICH_MEDIA_URL = process.env.PUBLIC_IMMICH_MEDIA_URL || '';\n"
-    if line in text:
-        return
+    if line not in text:
+        marker = "process.env.PUBLIC_IMMICH_PAY_HOST = process.env.PUBLIC_IMMICH_PAY_HOST || 'https://pay.futo.org';\n"
+        if marker not in text:
+            raise SystemExit(f"Cannot find PUBLIC_IMMICH_PAY_HOST default in {svelte_config_path}")
+        text = text.replace(marker, marker + line, 1)
 
-    marker = "process.env.PUBLIC_IMMICH_PAY_HOST = process.env.PUBLIC_IMMICH_PAY_HOST || 'https://pay.futo.org';\n"
-    if marker not in text:
-        raise SystemExit(f"Cannot find PUBLIC_IMMICH_PAY_HOST default in {svelte_config_path}")
-    text = text.replace(marker, marker + line, 1)
+    old_version = (
+        "    version: {\n"
+        "      name: process.env.IMMICH_BUILD || process.env.npm_package_version || 'local',\n"
+        "    },\n"
+    )
+    new_version = (
+        "    version: {\n"
+        "      name:\n"
+        "        process.env.VERCEL_GIT_COMMIT_SHA ||\n"
+        "        process.env.VERCEL_DEPLOYMENT_ID ||\n"
+        "        process.env.IMMICH_BUILD ||\n"
+        "        process.env.npm_package_version ||\n"
+        "        'local',\n"
+        "      pollInterval: 60_000,\n"
+        "    },\n"
+    )
+    if old_version in text:
+        text = text.replace(old_version, new_version, 1)
+    elif new_version not in text:
+        raise SystemExit(f'Cannot find kit.version in {svelte_config_path}')
+
     svelte_config_path.write_text(text, encoding='utf-8')
 
 
