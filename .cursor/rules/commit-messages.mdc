@@ -1,0 +1,33 @@
+---
+description: Commit và merge phải ghi rõ feat/fix/update, không dùng hash
+alwaysApply: true
+---
+
+# Commit message
+
+Viết tiếng Việt, Conventional Commits. Tiêu đề nói **tính năng / lỗi / thay đổi**, không dùng hash commit, số PR, hay "merge develop" suông.
+
+```
+feat(scope): thêm hoặc mở tính năng gì
+fix(scope): sửa lỗi gì (triệu chứng người dùng thấy)
+update(scope): chỉnh hành vi / UX đã có
+docs(scope): tài liệu
+chore(scope): tooling, sync, không đổi hành vi user
+```
+
+Scope gợi ý: `viewer`, `shared-favorites`, `auth`, `admin`, `mobile`, `custom`, `override`.
+
+```
+# ❌ BAD
+merge: develop vào main
+fix: 37d544f
+update stuff
+wip
+
+# ✅ GOOD
+feat(viewer): vuốt ngang next/back theo tay, peek ảnh kề
+fix(shared-favorites): hết 404 khi bấm Next trên mobile
+update(viewer): nền xem ảnh dùng blur thay vì đen đặc
+```
+
+Merge `develop` → `main`: tiêu đề `merge: develop vào main`, body liệt kê từng feat/fix/update đưa lên production. Không chỉ ghi hash.
