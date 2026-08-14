@@ -1,6 +1,27 @@
 {
   "releases": [
     {
+      "version": "v1.0.10",
+      "items": [
+        {
+          "title": "Vuốt xem ảnh và video trên điện thoại",
+          "detail": "Vuốt ngang để xem ảnh kế bên, có xem trước ảnh kề. Vuốt ngang video cũng được, không đụng thanh tua. Vuốt xuống để đóng khi chưa phóng to."
+        },
+        {
+          "title": "Đóng ảnh và quay lại lưới dễ hơn",
+          "detail": "Vuốt từ mép trái hoặc vuốt back để đóng ảnh như nút mũi tên, không tải lại trang. Đổi ảnh trong lúc xem không chồng lịch sử — Back một lần là về lưới. Mở ảnh từ Khám phá có đường dẫn riêng, chia sẻ và Back giống trang Ảnh."
+        },
+        {
+          "title": "Tải ảnh nhanh hơn trên mạng chậm",
+          "detail": "Ảnh thu nhỏ trên điện thoại tải dần khi cần, phù hợp mạng chậm. Quay lại tab vẫn giữ đăng nhập, không bị mất kết nối. Giao diện vừa khít màn hình điện thoại."
+        },
+        {
+          "title": "Gợi ý thêm vào màn hình chính",
+          "detail": "Nếu chưa cài Gallery trên điện thoại, bạn sẽ thấy gợi ý Thêm vào màn hình chính để mở nhanh như ứng dụng."
+        }
+      ]
+    },
+    {
       "version": "v1.0.9",
       "items": [
         {
