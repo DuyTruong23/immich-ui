@@ -47,6 +47,97 @@ Khi `false`, route **biến mất hoàn toàn** (sidebar + redirect).
 | `PUBLIC_ENABLE_ARCHIVE` | `/archive` |
 | `PUBLIC_ENABLE_DASHBOARD` | `/dashboard` |
 
+## Resend (gửi email)
+
+App dùng [Resend](https://resend.com) cho login notify, deploy notify, feedback và changelog. Các tính năng email dùng chung `RESEND_API_KEY` và `LOGIN_NOTIFY_FROM`.
+
+### Bắt đầu nhanh (chưa verify domain)
+
+```env
+RESEND_API_KEY=re_xxxxxxxx
+LOGIN_NOTIFY_FROM=Photo Gallery <onboarding@resend.dev>
+ADMIN_NOTIFY_EMAIL=<email đăng ký tài khoản Resend>
+```
+
+`onboarding@resend.dev` gửi được ngay, không cần verify domain.
+
+### Giới hạn quan trọng
+
+**Khi chưa verify domain**, Resend **chỉ gửi được tới email đã đăng ký tài khoản Resend** (email bạn dùng đăng ký/sign up Resend).
+
+| Mục đích | Biến cần khớp email Resend |
+|---|---|
+| Thông báo admin (login, deploy, feedback) | `ADMIN_NOTIFY_EMAIL` |
+| Test local / staging | Mọi địa chỉ `to` trong script test |
+
+Các tính năng gửi tới **user bất kỳ** (đăng ký changelog, partner favorite, …) **sẽ thất bại** nếu user nhập email khác email đăng ký Resend.
+
+### Gửi cho mọi user (production)
+
+#### Bước 1 — Thêm domain trên Resend
+
+1. Mở [Resend → Domains](https://resend.com/domains) → **Add domain**.
+2. Điền form (ví dụ setup `gallery-app.pp.ua`):
+
+| Trường | Gợi ý | Ghi chú |
+|---|---|---|
+| **Name** | `gallery-app.pp.ua` | Domain bạn sở hữu (DNS đang ở Cloudflare) |
+| **Region** | `Tokyo (ap-northeast-1)` | Chọn region gần user (VN → Tokyo hợp lý) |
+| **Custom Return-Path** | `send` | Mặc định; tạo subdomain `send.gallery-app.pp.ua` cho bounce |
+| **Enable click tracking** | Bật/tắt tùy ý | Email transactional (login notify) có thể **tắt** |
+| **Enable open tracking** | Khuyến nghị **tắt** | Resend cảnh báo open tracking dễ sai số |
+
+3. Bấm **+ Add domain**.
+4. Vào tab **Records** của domain vừa tạo — Resend hiển thị **3 bản ghi** cần thêm (giá trị copy từ dashboard, **không** tự đoán).
+
+#### Bước 2 — Thêm DNS trên Cloudflare (thủ công)
+
+Sau **+ Add domain**, Resend mở trang chi tiết domain với tab **Records** — đây là bước chính. Copy từng dòng sang Cloudflare.
+
+Zone DNS: `gallery-app.pp.ua` (cùng zone với tunnel `api.*`, `immich.*`).
+
+Cloudflare Dashboard → **DNS** → **Add record** cho từng dòng trong tab **Records** của Resend:
+
+| Loại | Name (Cloudflare) | Nội dung | Priority | Proxy |
+|---|---|---|---|---|
+| `MX` | `send` | Copy **Content** từ Resend | `10` | **DNS only** (grey cloud) |
+| `TXT` | `send` | Copy SPF (`v=spf1 include:…`) | — | DNS only |
+| `TXT` | `resend._domainkey` | Copy DKIM public key (`p=…`) | — | DNS only |
+
+> **Không thấy "Sign in to Cloudflare"?** Bình thường — nút này không phải lúc nào cũng hiện (Resend chỉ bật Domain Connect cho một số tài khoản/flow). **Thêm 3 bản ghi thủ công** như bảng trên là đủ.
+
+Lưu ý khi paste vào Cloudflare:
+
+- **Name** chỉ gõ `send` hoặc `resend._domainkey` — Cloudflare tự thêm `.gallery-app.pp.ua`.
+- **Không** bật proxy (orange cloud) cho bản ghi email.
+- Copy **nguyên xi** từ Resend; mỗi domain có giá trị MX/DKIM riêng.
+- Nếu Priority `10` đã dùng cho MX khác, thử `20` hoặc `30`.
+
+Resend khuyến nghị dùng **subdomain** gửi mail (ví dụ `mail.gallery-app.pp.ua`) thay vì root domain — tách reputation email khỏi web. Root domain vẫn dùng được nếu bạn chỉ gửi transactional.
+
+#### Bước 3 — Verify và chờ Verified
+
+1. Quay lại Resend → domain → bấm **Verify DNS Records**.
+2. Thường verify trong **15–30 phút**; DNS có thể propagate tới **72 giờ**.
+3. Trạng thái chuyển **Verified** khi cả SPF, DKIM, MX đều pass.
+4. Nếu lâu không verify: kiểm tra [dns.email](https://dns.email/) hoặc bấm **Restart verification** trên Resend.
+
+Tài liệu Resend: [Cloudflare + Resend](https://resend.com/docs/knowledge-base/cloudflare), [Domain không verify](https://resend.com/docs/knowledge-base/what-if-my-domain-is-not-verifying).
+
+#### Bước 4 — Cập nhật Vercel và redeploy
+
+Sau **Verified**, đổi địa chỉ gửi (bất kỳ local-part nào trên domain đã verify — không cần tạo mailbox):
+
+```env
+LOGIN_NOTIFY_FROM=Photo Gallery <noreply@gallery-app.pp.ua>
+```
+
+Redeploy Vercel. Từ đây Resend gửi được tới **mọi email hợp lệ** (changelog subscribe, admin notify, …) — không còn giới hạn email đăng ký Resend.
+
+> Tuỳ chọn sau verify: thêm DMARC (`_dmarc`) để chống spoof — Resend không tự thêm. Xem [Resend — DMARC](https://resend.com/docs/dashboard/domains/dmarc).
+
+---
+
 ## Thông báo đăng nhập (email admin)
 
 Chỉ hoạt động trên **Vercel production** (serverless function `api/notify-login.ts`). Dev local (`pnpm dev`) không có endpoint này.
@@ -78,7 +169,7 @@ ADMIN_NOTIFY_EMAIL=admin@example.com
 LOGIN_NOTIFY_FROM=Photo Gallery <onboarding@resend.dev>
 ```
 
-> **Resend onboarding:** `onboarding@resend.dev` gửi được ngay, không cần verify domain. Trên free tier, email chỉ tới địa chỉ đã đăng ký Resend — đặt `ADMIN_NOTIFY_EMAIL` khớp email đó.
+> Xem mục **[Resend (gửi email)](#resend-gửi-email)** — đặt `ADMIN_NOTIFY_EMAIL` khớp email đăng ký Resend nếu chưa verify domain.
 
 Luồng: user login → client gửi `accessToken` tới `/api/notify-login` → server xác minh qua `/api/users/me` → gửi email qua Resend.
 
@@ -153,9 +244,9 @@ FEATURE_UPDATE_NOTIFY_URL=https://<domain>/api/feature-update-notify
 FEATURE_UPDATE_NOTIFY_SECRET=replace-me
 ```
 
-Luồng: user nhập email → POST `/api/feature-update-subscribe`. Mail changelog không tự gửi khi merge; gọi `/api/feature-update-notify` nếu cần.
+Luồng: user nhập email → POST `/api/feature-update-subscribe`. Mail changelog không tự gửi khi merge. Admin gửi từ `/admin/feature-updates` hoặc gọi `/api/feature-update-notify`.
 
-> Resend free/`onboarding@resend.dev` chỉ gửi được tới email đã đăng ký Resend. Để gửi tới mọi user cần verify domain và dùng `LOGIN_NOTIFY_FROM` thuộc domain đó.
+> Đăng ký changelog gửi tới email user — **bắt buộc verify domain** trước khi dùng production. Xem **[Resend (gửi email)](#resend-gửi-email)**.
 
 ## Trang "Hệ thống đang cập nhật dữ liệu."
 

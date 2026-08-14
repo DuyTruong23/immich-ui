@@ -1,8 +1,13 @@
 <script lang="ts">
-  import { getDefaultFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
+  import { getStoredAccessToken } from '$custom/hooks/access-token';
+  import {
+    getDefaultFeatureUpdatesConfig,
+    sendFeatureUpdateNotify,
+  } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import AdminPageLayout from '$lib/components/layouts/AdminPageLayout.svelte';
-  import { Alert, Button, Container, Stack, Text } from '@immich/ui';
+  import { Alert, Button, Container, Stack, Text, toastManager } from '@immich/ui';
+  import { get } from 'svelte/store';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
@@ -13,6 +18,7 @@
   const { data }: Props = $props();
 
   const config = getDefaultFeatureUpdatesConfig();
+  let sending = $state(false);
 
   const previewModal = () => {
     showFeatureUpdateModal({
@@ -22,6 +28,60 @@
     }).catch((error) => {
       console.error('[feature-updates-admin] preview failed', error);
     });
+  };
+
+  const skipMessage = (reason?: string): string => {
+    const $t = get(t);
+    if (reason === 'no_subscribers') {
+      return $t('admin.feature_updates_send_email_skipped_none');
+    }
+    if (reason === 'already_notified') {
+      return $t('admin.feature_updates_send_email_skipped_already');
+    }
+    if (reason === 'email_not_configured') {
+      return $t('admin.feature_updates_send_email_skipped_not_configured');
+    }
+    return $t('admin.feature_updates_send_email_failed');
+  };
+
+  const sendChangelogEmail = async () => {
+    if (sending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      get(t)('admin.feature_updates_send_email_confirm', { values: { version: config.version } }),
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    sending = true;
+    try {
+      const result = await sendFeatureUpdateNotify({
+        version: config.version,
+        items: config.items,
+        accessToken: getStoredAccessToken(),
+      });
+
+      if (result.skipped) {
+        toastManager.info(skipMessage(result.reason));
+        return;
+      }
+
+      toastManager.primary(
+        get(t)('admin.feature_updates_send_email_success', {
+          values: { sent: result.sent ?? 0, version: result.version ?? config.version },
+        }),
+      );
+    } catch (error) {
+      console.error('[feature-updates-admin] notify failed', error);
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('admin.feature_updates_send_email_failed'),
+      );
+    } finally {
+      sending = false;
+    }
   };
 </script>
 
@@ -54,9 +114,14 @@
         {/each}
       </Stack>
 
-      <Button shape="round" color="secondary" onclick={previewModal}>
-        {$t('admin.feature_updates_preview_modal')}
-      </Button>
+      <div class="flex flex-wrap gap-2">
+        <Button shape="round" color="secondary" onclick={previewModal}>
+          {$t('admin.feature_updates_preview_modal')}
+        </Button>
+        <Button shape="round" onclick={sendChangelogEmail} disabled={sending}>
+          {sending ? $t('admin.feature_updates_sending_email') : $t('admin.feature_updates_send_email')}
+        </Button>
+      </div>
     </Stack>
   </Container>
 </AdminPageLayout>

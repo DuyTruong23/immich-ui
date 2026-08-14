@@ -78,7 +78,7 @@ Chỉ cần kiểm tra nếu tính năng dùng email. Dashboard Vercel → Envir
 |---|---|
 | Góp ý trên modal | `FEEDBACK_ENABLED=true`, `RESEND_API_KEY`, `ADMIN_NOTIFY_EMAIL`, `LOGIN_NOTIFY_FROM` |
 | User đăng ký nhận changelog | `BLOB_READ_WRITE_TOKEN` (lưu email), `RESEND_API_KEY`, `LOGIN_NOTIFY_FROM`, `PUBLIC_APP_URL` (tùy chọn) |
-| Gửi mail changelog thủ công | POST `/api/feature-update-notify` với `FEATURE_UPDATE_NOTIFY_SECRET` — **không còn CI tự gửi** khi merge |
+| Gửi mail changelog | Trang `/admin/feature-updates` → **Gửi mail changelog** (admin session). Hoặc POST `/api/feature-update-notify` với `FEATURE_UPDATE_NOTIFY_SECRET`. CI không tự gửi khi merge |
 
 Danh sách đầy đủ: [Environment.md](../docs/Environment.md).
 
