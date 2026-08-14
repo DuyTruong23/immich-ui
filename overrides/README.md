@@ -26,6 +26,11 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/managers/timeline-manager/timeline-day.svelte.ts` | Giữ asset đích trong DOM khi jump-to-date |
 | `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
+| `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
+| `lib/utils/mobile-back-navigation.ts` | Intercept popstate/willUnload, đóng viewer SPA |
+| `lib/actions/swipe-back.ts` | Gesture vuốt từ mép (LTR/RTL) |
+| `lib/components/shared-components/MobileBackGuard.svelte` | Guard back hệ thống trên layout user |
+| `lib/components/shared-components/SwipeBackEdge.svelte` | Vùng vuốt back trong asset viewer |
 | `lib/services/asset.service.ts` | Favorite ảnh partner + ghi overlay yêu thích chung |
 | `lib/components/timeline/actions/FavoriteAction.svelte` | Bulk favorite gồm ảnh partner |
 

@@ -62,7 +62,7 @@ export const shouldLoadAnimatedPreview = (): boolean => shouldPlayVideoThumbnail
 export const shouldLoadLivePhotoPreview = (): boolean => shouldPlayVideoThumbnailOnHover();
 
 export const shouldPreloadAdjacentAssets = (): boolean => {
-  return getNetworkQuality() === 'fast' && !prefersReducedMotion() && !isCoarsePointer();
+  return getNetworkQuality() !== 'save-data' && !prefersReducedMotion();
 };
 
 export const getTimelineIntersectionExpand = (options?: { scrolling?: boolean }): number => {

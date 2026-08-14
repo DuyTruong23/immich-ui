@@ -516,6 +516,59 @@ def patch_auth_manager_media_session(path: pathlib.Path) -> None:
     path.write_text(text, encoding='utf-8')
 
 
+def patch_asset_viewer_swipe_back(path: pathlib.Path) -> None:
+    text = path.read_text(encoding='utf-8')
+    text = insert_after(
+        text,
+        "  import SlideshowMetadataOverlay from './SlideshowMetadataOverlay.svelte';\n",
+        "  import SwipeBackEdge from '$lib/components/shared-components/SwipeBackEdge.svelte';\n",
+        'AssetViewer SwipeBackEdge import',
+    )
+    text = replace_once(
+        text,
+        """  bind:this={assetViewerHtmlElement}
+>
+  <!-- Top navigation bar -->
+""",
+        """  bind:this={assetViewerHtmlElement}
+>
+  <SwipeBackEdge
+    onBack={closeViewer}
+    enabled={$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor && !assetViewerManager.isFaceEditMode}
+  />
+  <!-- Top navigation bar -->
+""",
+        'AssetViewer SwipeBackEdge markup',
+    )
+    path.write_text(text, encoding='utf-8')
+
+
+def patch_user_layout_back_guard(path: pathlib.Path) -> None:
+    text = path.read_text(encoding='utf-8')
+    text = insert_after(
+        text,
+        "  import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';\n",
+        "  import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';\n",
+        'user layout MobileBackGuard import',
+    )
+    text = replace_once(
+        text,
+        """<div class:display-none={assetViewerManager.isViewing}>
+  {@render children?.()}
+</div>
+<UploadCover />
+""",
+        """<MobileBackGuard />
+<div class:display-none={assetViewerManager.isViewing}>
+  {@render children?.()}
+</div>
+<UploadCover />
+""",
+        'user layout MobileBackGuard markup',
+    )
+    path.write_text(text, encoding='utf-8')
+
+
 def override_exists(root: pathlib.Path, relative: str) -> bool:
     return (root / 'overrides/lib' / relative).is_file()
 
@@ -542,6 +595,8 @@ def main() -> None:
     patch_force_compressed_media(web)
     patch_app_html(web / 'src/app.html')
     patch_layout_head(web / 'src/routes/+layout.svelte')
+    patch_asset_viewer_swipe_back(web / 'src/lib/components/asset-viewer/AssetViewer.svelte')
+    patch_user_layout_back_guard(web / 'src/routes/(user)/+layout.svelte')
 
 
 if __name__ == '__main__':

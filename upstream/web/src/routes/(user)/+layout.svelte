@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import UploadCover from './DragAndDropUploadOverlay.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
+  import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';
   import type { Snippet } from 'svelte';
   interface Props {
     children?: Snippet;
@@ -22,6 +23,7 @@
   });
 </script>
 
+<MobileBackGuard />
 <div class:display-none={assetViewerManager.isViewing}>
   {@render children?.()}
 </div>

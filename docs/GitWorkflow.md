@@ -61,15 +61,29 @@ Checklist: [feature-updates/FEAT-READ.md](../feature-updates/FEAT-READ.md). Form
 
 ## Commit message convention
 
+Tiêu đề nói **tính năng / lỗi / thay đổi**, tiếng Việt. Không dùng hash commit, số PR, hay `merge: develop vào main` suông.
+
 ```
-feat(scope): mô tả ngắn tiếng Việt
-fix(scope): mô tả ngắn tiếng Việt
-improve(scope): mô tả ngắn tiếng Việt
-chore(upstream): sync immich vX.Y.Z
+feat(scope): thêm hoặc mở tính năng gì
+fix(scope): sửa lỗi gì (triệu chứng người dùng thấy)
+update(scope): chỉnh hành vi / UX đã có
 docs(scope): cập nhật tài liệu
+chore(upstream): sync immich vX.Y.Z
 ```
 
-Scope gợi ý: `branding`, `custom`, `override`, `patch`, `upstream`, `config`
+Scope gợi ý: `viewer`, `shared-favorites`, `auth`, `admin`, `mobile`, `branding`, `custom`, `override`
+
+```
+# ❌ BAD
+fix: 37d544f
+merge: develop vào main
+
+# ✅ GOOD
+feat(viewer): vuốt ngang next/back theo tay, peek ảnh kề
+fix(shared-favorites): hết 404 khi bấm Next trên mobile
+```
+
+Merge `develop` → `main`: tiêu đề `merge: develop vào main`, body liệt kê từng feat/fix/update đưa lên production.
 
 Changelog modal **không** lấy từ commit. Thêm tay vào `custom/src/data/feature-updates.json`.
 

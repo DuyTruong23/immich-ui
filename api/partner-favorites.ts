@@ -41,17 +41,17 @@ const toFavoriteUser = (user: ImmichUser, extra?: Partial<PartnerFavoriteUser>):
     name: user.name,
     email: user.email,
     isAdmin: user.isAdmin,
-    avatarColor: extra?.avatarColor ?? 'primary',
-    profileImagePath: extra?.profileImagePath ?? '',
-    profileChangedAt: extra?.profileChangedAt ?? new Date().toISOString(),
+    avatarColor: extra?.avatarColor ?? user.avatarColor ?? 'primary',
+    profileImagePath: extra?.profileImagePath ?? user.profileImagePath ?? '',
+    profileChangedAt: extra?.profileChangedAt ?? user.profileChangedAt ?? new Date().toISOString(),
   }) ?? {
     id: user.id,
     name: user.name,
     email: user.email,
     isAdmin: user.isAdmin,
-    avatarColor: 'primary',
-    profileImagePath: '',
-    profileChangedAt: new Date().toISOString(),
+    avatarColor: user.avatarColor ?? 'primary',
+    profileImagePath: user.profileImagePath ?? '',
+    profileChangedAt: user.profileChangedAt ?? new Date().toISOString(),
   };
 
 const authHeaders = (accessToken?: string, cookieHeader?: string): Record<string, string> | null => {

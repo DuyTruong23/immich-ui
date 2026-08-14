@@ -1,0 +1,80 @@
+<script lang="ts">
+  import { SwipeNavigate } from '$lib/actions/swipe-navigate.svelte';
+  import { motionDuration } from '$lib/utils/mobile-performance.svelte';
+  import type { AssetResponseDto, SharedLinkResponseDto } from '@immich/sdk';
+  import { onDestroy, untrack, type Snippet } from 'svelte';
+  import type { SwipeCustomEvent } from 'svelte-gestures';
+  import PhotoSwipePeek from './PhotoSwipePeek.svelte';
+
+  interface Props {
+    currentId: string;
+    nextAsset?: AssetResponseDto;
+    previousAsset?: AssetResponseDto;
+    sharedLink?: SharedLinkResponseDto;
+    disabled?: boolean;
+    onSwipe?: (event: SwipeCustomEvent) => void;
+    children?: Snippet;
+  }
+
+  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, onSwipe, children }: Props = $props();
+
+  let width = $state(0);
+
+  const swipe = new SwipeNavigate({
+    getWidth: () => width,
+    canStart: () => !disabled,
+    hasNext: () => Boolean(nextAsset),
+    hasPrevious: () => Boolean(previousAsset),
+    onCommit: (direction) => {
+      onSwipe?.({
+        detail: { direction: direction === 'next' ? 'left' : 'right' },
+      } as SwipeCustomEvent);
+    },
+  });
+
+  $effect.pre(() => {
+    currentId;
+    untrack(() => swipe.reset());
+  });
+
+  $effect(() => {
+    if (disabled) {
+      swipe.reset();
+    }
+  });
+
+  onDestroy(() => swipe.destroy());
+
+  const settleMs = $derived(motionDuration(280));
+</script>
+
+<div
+  class="relative size-full overflow-hidden overscroll-x-contain"
+  bind:clientWidth={width}
+  onpointerdown={swipe.onPointerDown}
+  onpointermove={swipe.onPointerMove}
+  onpointerup={swipe.onPointerUp}
+  onpointercancel={swipe.onPointerCancel}
+>
+  <div
+    class="absolute inset-0 will-change-transform"
+    style:transform="translate3d({swipe.offset}px, 0, 0)"
+    style:transition={swipe.animating ? `transform ${settleMs}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none'}
+  >
+    {#if previousAsset}
+      <div class="absolute inset-0 -translate-x-full">
+        <PhotoSwipePeek asset={previousAsset} {sharedLink} />
+      </div>
+    {/if}
+
+    <div class="relative size-full">
+      {@render children?.()}
+    </div>
+
+    {#if nextAsset}
+      <div class="absolute inset-0 translate-x-full">
+        <PhotoSwipePeek asset={nextAsset} {sharedLink} />
+      </div>
+    {/if}
+  </div>
+</div>

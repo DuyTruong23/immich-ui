@@ -249,10 +249,25 @@ export const writePartnerFavorites = async (store: PartnerFavoriteStore): Promis
   }
 };
 
-export const upsertFavoriteUser = (store: PartnerFavoriteStore, user: PartnerFavoriteUser): PartnerFavoriteStore => ({
-  ...store,
-  users: { ...store.users, [user.id]: user },
-});
+export const upsertFavoriteUser = (store: PartnerFavoriteStore, user: PartnerFavoriteUser): PartnerFavoriteStore => {
+  const existing = store.users[user.id];
+  const merged: PartnerFavoriteUser = existing
+    ? {
+        ...existing,
+        ...user,
+        name: user.name || existing.name,
+        email: user.email || existing.email,
+        avatarColor: user.avatarColor || existing.avatarColor,
+        profileImagePath: user.profileImagePath || existing.profileImagePath,
+        profileChangedAt: user.profileChangedAt || existing.profileChangedAt,
+      }
+    : user;
+
+  return {
+    ...store,
+    users: { ...store.users, [user.id]: merged },
+  };
+};
 
 export const setUserFavorite = (
   store: PartnerFavoriteStore,

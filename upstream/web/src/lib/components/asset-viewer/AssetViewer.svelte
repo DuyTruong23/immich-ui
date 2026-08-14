@@ -53,6 +53,7 @@
   import PhotoViewer from './PhotoViewer.svelte';
   import SlideshowBar from './SlideshowBar.svelte';
   import SlideshowMetadataOverlay from './SlideshowMetadataOverlay.svelte';
+  import SwipeBackEdge from '$lib/components/shared-components/SwipeBackEdge.svelte';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
@@ -502,6 +503,10 @@
   use:focusTrap
   bind:this={assetViewerHtmlElement}
 >
+  <SwipeBackEdge
+    onBack={closeViewer}
+    enabled={$slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor && !assetViewerManager.isFaceEditMode}
+  />
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
     <div class="col-span-4 col-start-1 row-span-1 row-start-1 transition-transform">

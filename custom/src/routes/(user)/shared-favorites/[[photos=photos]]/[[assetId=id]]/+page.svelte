@@ -5,9 +5,12 @@
   import UserAvatar from '$lib/components/shared-components/UserAvatar.svelte';
   import Portal from '$lib/elements/Portal.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
+  import { authManager } from '$lib/managers/auth-manager.svelte';
   import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
   import type { PartnerFavoriteUser } from '$custom/api/partner-favorites';
+  import { handlePromiseError } from '$lib/utils';
   import { getNextAsset, getPreviousAsset } from '$lib/utils/asset-utils';
+  import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
   import { onMount } from 'svelte';
@@ -66,16 +69,50 @@
     { id: 'partner' as const, label: $t('shared_favorites_filter_partner') },
   ]);
 
-  const toAvatarUser = (user: PartnerFavoriteUser) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    profileImagePath: user.profileImagePath,
-    profileChangedAt: user.profileChangedAt,
-    avatarColor: (Object.values(UserAvatarColor) as string[]).includes(user.avatarColor)
-      ? (user.avatarColor as UserAvatarColor)
-      : UserAvatarColor.Primary,
-  });
+  const resolveFavoriteUser = (user: PartnerFavoriteUser): PartnerFavoriteUser => {
+    if (authManager.user?.id === user.id) {
+      return {
+        ...user,
+        name: authManager.user.name,
+        email: authManager.user.email,
+        profileImagePath: authManager.user.profileImagePath,
+        profileChangedAt: authManager.user.profileChangedAt,
+        avatarColor: authManager.user.avatarColor,
+      };
+    }
+
+    const known =
+      partnerFavoritesStore.me?.id === user.id
+        ? partnerFavoritesStore.me
+        : partnerFavoritesStore.partners.find((partner) => partner.id === user.id);
+
+    if (!known) {
+      return user;
+    }
+
+    return {
+      ...user,
+      name: known.name || user.name,
+      email: known.email || user.email,
+      profileImagePath: known.profileImagePath || user.profileImagePath,
+      profileChangedAt: known.profileChangedAt || user.profileChangedAt,
+      avatarColor: known.avatarColor || user.avatarColor,
+    };
+  };
+
+  const toAvatarUser = (user: PartnerFavoriteUser) => {
+    const resolved = resolveFavoriteUser(user);
+    return {
+      id: resolved.id,
+      name: resolved.name,
+      email: resolved.email,
+      profileImagePath: resolved.profileImagePath,
+      profileChangedAt: resolved.profileChangedAt,
+      avatarColor: (Object.values(UserAvatarColor) as string[]).includes(resolved.avatarColor)
+        ? (resolved.avatarColor as UserAvatarColor)
+        : UserAvatarColor.Primary,
+    };
+  };
 
   const loadAssets = async (assetIds: string[]) => {
     const unique = [...new Set(assetIds)];
@@ -111,8 +148,13 @@
     void refresh();
   });
 
-  const onViewAsset = (asset: AssetResponseDto) => {
-    assetViewerManager.setAsset(asset);
+  const onViewAsset = async (asset: AssetResponseDto) => {
+    await navigate({ targetRoute: 'current', assetId: asset.id });
+  };
+
+  const onCloseViewer = () => {
+    assetViewerManager.showAssetViewer(false);
+    handlePromiseError(navigate({ targetRoute: 'current', assetId: null }));
   };
 
   const assetCursor = $derived({
@@ -163,7 +205,7 @@
             <Thumbnail
               asset={toTimelineAsset({ ...asset, isFavorite: false })}
               readonly
-              onClick={() => onViewAsset(asset)}
+              onClick={() => handlePromiseError(onViewAsset(asset))}
             />
             <div class="pointer-events-none absolute inset-e-2 bottom-2 z-3 flex">
               {#each item.favoritedBy as user, index (user.id)}
@@ -186,7 +228,7 @@
 {#if assetViewerManager.isViewing}
   {#await import('$lib/components/asset-viewer/AssetViewer.svelte') then { default: AssetViewer }}
     <Portal target="body">
-      <AssetViewer cursor={assetCursor} onClose={() => assetViewerManager.showAssetViewer(false)} />
+      <AssetViewer cursor={assetCursor} onClose={onCloseViewer} />
     </Portal>
   {/await}
 {/if}
