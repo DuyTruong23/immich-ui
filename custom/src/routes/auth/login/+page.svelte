@@ -71,9 +71,7 @@
 
     if (user.isAdmin) {
       enableAdminSessionPersistence();
-      if (publicEnv.sessionOnlyAuth) {
-        await authManager.refresh();
-      }
+      await authManager.refresh();
     } else {
       markSessionExpiry();
       if (publicEnv.sessionOnlyAuth) {
