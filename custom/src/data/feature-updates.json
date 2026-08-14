@@ -1,5 +1,5 @@
 {
-  "version": "v1.0.7",
+  "version": "v1.0.8",
   "items": [
     {
       "title": "đồng bộ lịch sử releases với v1.0.6 sau merge",
@@ -7,6 +7,15 @@
     }
   ],
   "releases": [
+    {
+      "version": "v1.0.8",
+      "items": [
+        {
+          "title": "đồng bộ lịch sử releases với v1.0.6 sau merge",
+          "detail": "Co-authored-by: Cursor <cursoragent@cursor.com>"
+        }
+      ]
+    },
     {
       "version": "v1.0.7",
       "items": [
