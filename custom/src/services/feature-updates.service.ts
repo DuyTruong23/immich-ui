@@ -1,20 +1,22 @@
 import {
   DEFAULT_FEATURE_UPDATE_ITEMS,
+  DEFAULT_FEATURE_UPDATE_RELEASES,
   DEFAULT_FEATURE_UPDATE_VERSION,
   type FeatureUpdatesConfig,
 } from '$custom/constants/feature-updates';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
-import { FEATURE_UPDATES_MOCK } from '$custom/mocks/feature-updates';
+import { FEATURE_UPDATES_MOCK, FEATURE_UPDATES_MOCK_RELEASES } from '$custom/mocks/feature-updates';
 import {
   coerceFeatureUpdateItems,
   normalizeFeatureUpdatesConfig,
-  type FeatureUpdateItem,
+  withFeatureUpdateReleases,
 } from '$custom/utils/feature-update-items';
 
-const DEFAULT_CONFIG: FeatureUpdatesConfig = {
+const DEFAULT_CONFIG: FeatureUpdatesConfig = withFeatureUpdateReleases({
   version: DEFAULT_FEATURE_UPDATE_VERSION,
   items: [...DEFAULT_FEATURE_UPDATE_ITEMS],
-};
+  releases: DEFAULT_FEATURE_UPDATE_RELEASES,
+});
 
 let cachedConfig: FeatureUpdatesConfig | null = null;
 
@@ -22,19 +24,16 @@ export const invalidateFeatureUpdatesCache = (): void => {
   cachedConfig = null;
 };
 
-export const getDefaultFeatureUpdatesConfig = (): FeatureUpdatesConfig => ({
-  version: DEFAULT_FEATURE_UPDATE_VERSION,
-  items: isUiDevMode() ? [...FEATURE_UPDATES_MOCK] : [...DEFAULT_FEATURE_UPDATE_ITEMS],
-});
+export const getDefaultFeatureUpdatesConfig = (): FeatureUpdatesConfig =>
+  withFeatureUpdateReleases({
+    version: DEFAULT_FEATURE_UPDATE_VERSION,
+    items: isUiDevMode() ? [...FEATURE_UPDATES_MOCK] : [...DEFAULT_FEATURE_UPDATE_ITEMS],
+    releases: isUiDevMode() ? FEATURE_UPDATES_MOCK_RELEASES : DEFAULT_FEATURE_UPDATE_RELEASES,
+  });
 
 /** Config đã cache, hoặc mặc định — không chờ network (dùng khi mở modal). */
-export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig => {
-  const config = cachedConfig ?? getDefaultFeatureUpdatesConfig();
-  return {
-    version: config.version,
-    items: coerceFeatureUpdateItems(config.items),
-  };
-};
+export const peekFeatureUpdatesConfig = (): FeatureUpdatesConfig =>
+  withFeatureUpdateReleases(cachedConfig ?? getDefaultFeatureUpdatesConfig());
 
 const FETCH_TIMEOUT_MS = 2500;
 const SAVE_TIMEOUT_MS = 15000;
@@ -124,10 +123,13 @@ export const saveFeatureUpdatesConfig = async (
     throw new Error(mapSaveError(payload, response.status));
   }
 
-  cachedConfig = {
-    version: payload.version,
-    items: coerceFeatureUpdateItems(Array.isArray(payload.items) ? payload.items : []),
-  };
+  cachedConfig =
+    normalizeFeatureUpdatesConfig(payload) ??
+    withFeatureUpdateReleases({
+      version: payload.version,
+      items: coerceFeatureUpdateItems(Array.isArray(payload.items) ? payload.items : []),
+      releases: payload.releases,
+    });
 
   return cachedConfig;
 };

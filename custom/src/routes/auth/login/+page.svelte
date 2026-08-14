@@ -66,6 +66,7 @@
       .show(FeatureUpdateModal, {
         version: config.version,
         updates: config.items,
+        releases: config.releases,
         preview: isUiDevMode(),
       })
       .catch((error) => {

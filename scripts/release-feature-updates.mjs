@@ -96,6 +96,7 @@ const writeRelease = (release) => {
   const published = {
     version: release.version,
     items: release.items,
+    releases: release.releases,
   };
 
   writeFileSync(CURRENT_PATH, `${JSON.stringify(published, null, 2)}\n`, 'utf8');
@@ -198,7 +199,7 @@ if (dryRun) {
 writeRelease(release);
 clearPending(pendingFiles);
 
-const published = { version: release.version, items: release.items };
+const published = { version: release.version, items: release.items, releases: release.releases };
 
 try {
   await publishBlob(published);

@@ -60,6 +60,7 @@ export default async function handler(request: Request): Promise<Response> {
     const nextConfig = normalizeFeatureUpdatesConfig({
       version: body.version,
       items: body.items,
+      releases: previous.releases,
     });
 
     if (!nextConfig) {

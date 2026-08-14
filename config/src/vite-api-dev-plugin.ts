@@ -142,7 +142,7 @@ const handleDevApi = async (
     }
 
     if (pathname === '/api/feature-updates' && request.method === 'PUT') {
-      const [{ verifyAdminSession }, { normalizeFeatureUpdatesConfig }, { json }] = await Promise.all([
+      const [{ verifyAdminSession }, { normalizeFeatureUpdatesConfig, DEFAULT_FEATURE_UPDATES }, { json }] = await Promise.all([
         server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/immich-auth.ts')),
         server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/feature-updates-config.ts')),
         server.ssrLoadModule(path.resolve(rootDir, 'api/_lib/email.ts')),
@@ -168,9 +168,12 @@ const handleDevApi = async (
         return true;
       }
 
+      const previous =
+        normalizeFeatureUpdatesConfig(readLocalFeatureUpdatesConfig()) ?? DEFAULT_FEATURE_UPDATES;
       const nextConfig = normalizeFeatureUpdatesConfig({
         version: parsedBody.version,
         items: parsedBody.items,
+        releases: previous.releases,
       });
       if (!nextConfig) {
         await sendResponse(json({ error: 'Version and at least one feature item are required' }, 400), response);

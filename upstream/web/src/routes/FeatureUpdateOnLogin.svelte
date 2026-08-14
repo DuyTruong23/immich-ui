@@ -19,8 +19,6 @@
 
         await showFeatureUpdateModal({
           accessToken: user.accessToken,
-          version: config.version,
-          updates: config.items,
         });
       } catch (error) {
         console.error('[FeatureUpdateOnLogin]', error);

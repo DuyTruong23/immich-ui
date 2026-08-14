@@ -5,14 +5,15 @@ export type FeatureUpdateItem = {
   detail?: string;
 };
 
-export type FeatureUpdatesConfig = {
+export type FeatureUpdateRelease = {
   version: string;
   items: FeatureUpdateItem[];
 };
 
-export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = {
-  version: release.version,
-  items: release.items,
+export type FeatureUpdatesConfig = {
+  version: string;
+  items: FeatureUpdateItem[];
+  releases: FeatureUpdateRelease[];
 };
 
 /** So sánh semver modal (v1.0.3). Dương = a mới hơn b. */
@@ -37,31 +38,17 @@ export const compareFeatureUpdateVersion = (a: string, b: string): number => {
   return 0;
 };
 
-type RankedConfig = {
-  config: FeatureUpdatesConfig;
-  rank: number;
-};
+const sortReleasesNewestFirst = (releases: FeatureUpdateRelease[]): FeatureUpdateRelease[] =>
+  [...releases].sort((left, right) => compareFeatureUpdateVersion(right.version, left.version));
 
-/** Git defaults < env < blob khi cùng version; bản version cao hơn luôn thắng. */
-export const resolveFeatureUpdatesConfig = (
-  defaults: FeatureUpdatesConfig,
-  blob: FeatureUpdatesConfig | null,
-  env: FeatureUpdatesConfig | null,
-): FeatureUpdatesConfig => {
-  const candidates: RankedConfig[] = [
-    { config: defaults, rank: 0 },
-    ...(env ? [{ config: env, rank: 1 }] : []),
-    ...(blob ? [{ config: blob, rank: 2 }] : []),
-  ];
-
-  return candidates.reduce((best, current) => {
-    const compared = compareFeatureUpdateVersion(current.config.version, best.config.version);
-    if (compared > 0 || (compared === 0 && current.rank > best.rank)) {
-      return current;
-    }
-
-    return best;
-  }).config;
+export const upsertFeatureUpdateRelease = (
+  releases: readonly FeatureUpdateRelease[],
+  version: string,
+  items: FeatureUpdateItem[],
+): FeatureUpdateRelease[] => {
+  const nextVersion = version.trim();
+  const without = releases.filter((release) => release.version !== nextVersion);
+  return sortReleasesNewestFirst([{ version: nextVersion, items }, ...without]);
 };
 
 const normalizeFeatureUpdateItem = (value: unknown): FeatureUpdateItem | null => {
@@ -85,6 +72,26 @@ const normalizeFeatureUpdateItem = (value: unknown): FeatureUpdateItem | null =>
   return detail ? { title, detail } : { title };
 };
 
+const coerceItems = (items: unknown[]): FeatureUpdateItem[] =>
+  items
+    .map((item) => normalizeFeatureUpdateItem(item))
+    .filter((item): item is FeatureUpdateItem => item !== null);
+
+const normalizeFeatureUpdateRelease = (value: unknown): FeatureUpdateRelease | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const version = typeof record.version === 'string' ? record.version.trim() : '';
+  const items = coerceItems(Array.isArray(record.items) ? record.items : []);
+  if (!version || items.length === 0) {
+    return null;
+  }
+
+  return { version, items };
+};
+
 export const normalizeFeatureUpdatesConfig = (value: unknown): FeatureUpdatesConfig | null => {
   if (!value || typeof value !== 'object') {
     return null;
@@ -92,16 +99,64 @@ export const normalizeFeatureUpdatesConfig = (value: unknown): FeatureUpdatesCon
 
   const record = value as Record<string, unknown>;
   const version = typeof record.version === 'string' ? record.version.trim() : '';
-  const rawItems = Array.isArray(record.items) ? record.items : [];
-  const items = rawItems
-    .map((item) => normalizeFeatureUpdateItem(item))
-    .filter((item): item is FeatureUpdateItem => item !== null);
+  const items = coerceItems(Array.isArray(record.items) ? record.items : []);
+  const releases = Array.isArray(record.releases)
+    ? record.releases
+        .map((item) => normalizeFeatureUpdateRelease(item))
+        .filter((item): item is FeatureUpdateRelease => item !== null)
+    : [];
 
-  if (!version || items.length === 0) {
+  const merged =
+    version && items.length > 0 ? upsertFeatureUpdateRelease(releases, version, items) : sortReleasesNewestFirst(releases);
+
+  if (merged.length === 0) {
     return null;
   }
 
-  return { version, items };
+  return {
+    version: merged[0].version,
+    items: merged[0].items,
+    releases: merged,
+  };
+};
+
+export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = normalizeFeatureUpdatesConfig(release) ?? {
+  version: release.version,
+  items: release.items,
+  releases: [{ version: release.version, items: release.items }],
+};
+
+const toReleases = (config: FeatureUpdatesConfig): FeatureUpdateRelease[] =>
+  config.releases?.length > 0 ? config.releases : [{ version: config.version, items: config.items }];
+
+/** Git defaults < env < blob khi cùng version; gộp lịch sử mọi bản. */
+export const resolveFeatureUpdatesConfig = (
+  defaults: FeatureUpdatesConfig,
+  blob: FeatureUpdatesConfig | null,
+  env: FeatureUpdatesConfig | null,
+): FeatureUpdatesConfig => {
+  const ranked = [
+    { config: defaults, rank: 0 },
+    ...(env ? [{ config: env, rank: 1 }] : []),
+    ...(blob ? [{ config: blob, rank: 2 }] : []),
+  ];
+
+  const byVersion = new Map<string, { release: FeatureUpdateRelease; rank: number }>();
+  for (const { config, rank } of ranked) {
+    for (const item of toReleases(config)) {
+      const existing = byVersion.get(item.version);
+      if (!existing || rank > existing.rank) {
+        byVersion.set(item.version, { release: item, rank });
+      }
+    }
+  }
+
+  const releases = sortReleasesNewestFirst([...byVersion.values()].map(({ release }) => release));
+  return {
+    version: releases[0].version,
+    items: releases[0].items,
+    releases,
+  };
 };
 
 export const parseFeatureUpdatesConfig = (raw: string): FeatureUpdatesConfig | null => {
