@@ -23,7 +23,7 @@ const MERGE_RE = /^(merge\b|merged?\s+in\b)/i;
 
 /** Admin / nội bộ codebase — không hiện trên modal user. */
 const INTERNAL_OR_ADMIN_RE =
-  /\b(admin|quản trị|\/admin\b|codebase|upstream|prepare:custom|github actions?|workflow|changelog|generate changelog|merge develop|typecheck|eslint|prettier|typescript|tsconfig|vite|blob|vercel secret|đồng bộ bản copy|overlay upstream|script(s)?|ci\/cd)\b/i;
+  /\b(admin|quản trị|\/admin\b|codebase|upstream|prepare:custom|github actions?|workflow|generate changelog|lịch sử releases|đồng bộ lịch sử|sau merge|merge develop|typecheck|eslint|prettier|typescript|tsconfig|vite|blob|vercel secret|đồng bộ bản copy|overlay upstream|script(s)?|ci\/cd)\b/i;
 
 /**
  * @param {string} version
@@ -148,7 +148,7 @@ export const commitToItem = (subject, body = '') => {
 
   const detail = String(body ?? '')
     .split(/\n{2,}/)[0]
-    ?.replace(/^Signed-off-by:.*$/gim, '')
+    ?.replace(/^(Signed-off-by|Co-authored-by):.*$/gim, '')
     .trim();
 
   return detail ? { title, detail } : { title };
@@ -279,22 +279,32 @@ export const collectPendingItems = (files) => {
  */
 export const buildRelease = ({ current, pendingItems, commitItems, releasedAt }) => {
   const items = pendingItems.length > 0 ? pendingItems : commitItems;
-  const nextItems = items.length > 0 ? items : current.items;
-  const version = bumpPatch(current.version);
   const previousReleases =
     Array.isArray(current.releases) && current.releases.length > 0
       ? current.releases
       : [{ version: current.version, items: current.items }];
+
+  if (items.length === 0) {
+    return {
+      version: current.version,
+      items: current.items,
+      releases: previousReleases,
+      releasedAt,
+      source: 'unchanged',
+    };
+  }
+
+  const version = bumpPatch(current.version);
   const releases = [
-    { version, items: nextItems },
+    { version, items },
     ...previousReleases.filter((release) => release.version !== version),
   ];
 
   return {
     version,
-    items: nextItems,
+    items,
     releases,
     releasedAt,
-    source: pendingItems.length > 0 ? 'pending' : commitItems.length > 0 ? 'commits' : 'unchanged',
+    source: pendingItems.length > 0 ? 'pending' : 'commits',
   };
 };

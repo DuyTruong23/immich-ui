@@ -49,6 +49,8 @@ describe('commit filtering', () => {
     assert.equal(shouldIncludeCommit('feat: giao diện admin dễ đọc hơn trên mobile'), false);
     assert.equal(shouldIncludeCommit('fix: admin login không crash dashboard'), false);
     assert.equal(shouldIncludeCommit('feat: tự tăng version và generate changelog khi merge develop'), false);
+    assert.equal(shouldIncludeCommit('fix: đồng bộ lịch sử releases với v1.0.6 sau merge'), false);
+    assert.equal(shouldIncludeCommit('feat: đăng ký email nhận thông báo tính năng'), true);
     assert.equal(shouldIncludeCommit('feat(upstream): sync overlay prepare:custom'), false);
     assert.equal(shouldIncludeCommit('feat: Cho phép đổi avatar', 'Sửa trang /admin'), false);
   });
@@ -62,11 +64,15 @@ describe('commit filtering', () => {
     });
   });
 
-  it('maps commit body to detail', () => {
+  it('maps commit body to detail and strips git trailers', () => {
     assert.deepEqual(commitToItem('feat: Cho phép đổi avatar', 'Vào Cài đặt → Tài khoản.'), {
       title: 'Cho phép đổi avatar',
       detail: 'Vào Cài đặt → Tài khoản.',
     });
+    assert.deepEqual(
+      commitToItem('feat: Cho phép đổi avatar', 'Co-authored-by: Cursor <cursoragent@cursor.com>'),
+      { title: 'Cho phép đổi avatar' },
+    );
   });
 });
 
@@ -125,7 +131,7 @@ describe('buildRelease', () => {
     assert.equal(release.items[0].title, 'Cho phép đổi avatar');
   });
 
-  it('keeps previous items when nothing user-facing', () => {
+  it('does not bump version when nothing user-facing', () => {
     const release = buildRelease({
       current,
       pendingItems: [],
@@ -133,7 +139,7 @@ describe('buildRelease', () => {
       releasedAt: '2026-08-14T00:00:00.000Z',
     });
 
-    assert.equal(release.version, 'v1.0.4');
+    assert.equal(release.version, 'v1.0.3');
     assert.equal(release.source, 'unchanged');
     assert.deepEqual(release.items, current.items);
   });

@@ -196,6 +196,20 @@ if (dryRun) {
   process.exit(0);
 }
 
+if (release.source === 'unchanged') {
+  console.log('[release] no user-facing changelog — skip version bump');
+  try {
+    await publishBlob({
+      version: current.version,
+      items: current.items,
+      releases: current.releases ?? release.releases,
+    });
+  } catch (error) {
+    console.warn('[release] Blob publish failed:', error);
+  }
+  process.exit(0);
+}
+
 writeRelease(release);
 clearPending(pendingFiles);
 
