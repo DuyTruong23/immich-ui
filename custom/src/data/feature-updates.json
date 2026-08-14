@@ -14,15 +14,20 @@
       ]
     },
     {
+      "version": "v1.0.7",
+      "items": [
+        {
+          "title": "Khả năng thay đổi ảnh đại diện",
+          "detail": "Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái."
+        }
+      ]
+    },
+    {
       "version": "v1.0.6",
       "items": [
         {
           "title": "Cải thiện tốc độ xem video trên thiết bị di động",
           "detail": "Video trên điện thoại tải nhanh hơn, khả năng chờ khi loading."
-        },
-        {
-          "title": "Cho phép đổi avatar, tên",
-          "detail": "Vào Cài đặt → Tài khoản hoặc bấm vào avatar hoặc tên để chỉnh sửa. Bạn có thể tải ảnh đại diện mới thay vì chỉ chọn màu chữ cái."
         }
       ]
     }
