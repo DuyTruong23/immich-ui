@@ -17,7 +17,7 @@ git remote add origin git@github.com:your-org/photo-gallery-ui.git
 ```
 develop              Code hàng ngày
         ↓ merge + push
-main                 Production — CI tăng 0.0.1 + generate modal
+main                 Production — Vercel deploy
 ```
 
 Nhánh `upstream-sync` vẫn dùng để kéo Immich, rồi merge vào `develop`. Không commit trực tiếp lên `main`.
@@ -26,7 +26,7 @@ Nhánh `upstream-sync` vẫn dùng để kéo Immich, rồi merge vào `develop`
 
 1. **Code trên `develop`.** Không tạo nhánh feature riêng.
 2. **Không commit trực tiếp lên `main`.**
-3. Merge `develop` → `main` rồi push: GitHub Actions tăng version (`v1.0.3` → `v1.0.4`) và generate changelog từ commit `feat` / `fix` / `improve` / `perf`.
+3. Changelog modal: sửa tay [`custom/src/data/feature-updates.json`](../custom/src/data/feature-updates.json), rồi merge `develop` → `main`. Vercel không deploy `develop`.
 4. Upstream sync chỉ trên `upstream-sync`, rồi merge vào `develop`.
 
 ## Hàng ngày trên develop
@@ -49,35 +49,15 @@ git checkout main
 git pull origin main
 git merge develop
 git push origin main
-# CI: v1.0.3 → v1.0.4, generate items từ commit, tag, commit chore(release)
 ```
 
-Vercel deploy `main`. User chưa xem version mới sẽ thấy modal sau login.
+Vercel deploy `main`. User chưa xem version mới nhất trong `feature-updates.json` sẽ thấy modal sau login.
 
-## Release tự động trên `main`
+## Changelog modal (thủ công)
 
-Workflow: [`.github/workflows/release-on-main.yml`](../.github/workflows/release-on-main.yml)
+Không có CI tự tăng version. Sửa file JSON rồi merge `develop` → `main`.
 
-| Bước | Việc |
-|---|---|
-| 1 | Đọc `custom/src/data/feature-updates.json` (hiện `v1.0.3`) |
-| 2 | Tăng patch `+0.0.1` → `v1.0.4` |
-| 3 | Lấy commit `feat` / `fix` / `improve` / `perf` trong lần push `develop` → `main` |
-| 4 | Ghi file JSON |
-| 5 | Commit `chore(release): v1.0.4` + tag `v1.0.4` |
-| 6 | Nếu có secret `BLOB_READ_WRITE_TOKEN` → publish lên Vercel Blob |
-
-Commit `chore(release)` không chạy lại workflow (tránh vòng lặp).
-
-**GitHub:** Settings → Secrets → `BLOB_READ_WRITE_TOKEN` (cùng token Vercel, tùy chọn). Nếu `main` bật branch protection, cho phép GitHub Actions push hoặc bỏ required review với `github-actions[bot]`.
-
-Xem trước local:
-
-```bash
-pnpm release:notes
-```
-
-Chi tiết: [feature-updates/README.md](../feature-updates/README.md).
+Checklist: [feature-updates/FEAT-READ.md](../feature-updates/FEAT-READ.md). Format: [feature-updates/README.md](../feature-updates/README.md).
 
 ## Commit message convention
 
@@ -87,12 +67,11 @@ fix(scope): mô tả ngắn tiếng Việt
 improve(scope): mô tả ngắn tiếng Việt
 chore(upstream): sync immich vX.Y.Z
 docs(scope): cập nhật tài liệu
-chore(release): v1.0.4          # chỉ do CI
 ```
 
 Scope gợi ý: `branding`, `custom`, `override`, `patch`, `upstream`, `config`
 
-Chỉ `feat` / `fix` / `improve` / `perf` **về UI/UX của user** mới vào modal. Bỏ commit admin, quản trị, codebase, script, CI. Body commit (nếu có) thành phần chi tiết khi user bấm mở rộng.
+Changelog modal **không** lấy từ commit. Thêm tay vào `custom/src/data/feature-updates.json`.
 
 ## Upstream sync workflow
 

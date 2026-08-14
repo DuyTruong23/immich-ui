@@ -67,7 +67,7 @@ custom/
 
 | Tính năng | File chính | Tài liệu |
 |---|---|---|
-| Modal tính năng sau login | `custom/src/data/feature-updates.json` (CI generate từ commit trên `develop`) | [UserMessaging.md](./UserMessaging.md), [GitWorkflow.md](./GitWorkflow.md) |
+| Modal tính năng sau login | `custom/src/data/feature-updates.json` (sửa tay) | [FEAT-READ](../feature-updates/FEAT-READ.md), [UserMessaging.md](./UserMessaging.md) |
 | Trang bảo trì / lỗi kết nối | `custom/src/utils/server-connection-error.ts` | [UserMessaging.md](./UserMessaging.md) |
 
 Route đăng ký qua SvelteKit route group wrapper — không sửa route upstream.

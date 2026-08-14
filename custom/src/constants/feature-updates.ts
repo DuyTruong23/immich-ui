@@ -1,22 +1,24 @@
-import release from '$custom/data/feature-updates.json';
+import changelog from '$custom/data/feature-updates.json';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { FEATURE_UPDATES_MOCK } from '$custom/mocks/feature-updates';
 import { fetchFeatureUpdatesConfig, getDefaultFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
-import type {
-  FeatureUpdateItem,
-  FeatureUpdateRelease,
-  FeatureUpdatesConfig,
+import {
+  normalizeFeatureUpdatesConfig,
+  type FeatureUpdateItem,
+  type FeatureUpdateRelease,
+  type FeatureUpdatesConfig,
 } from '$custom/utils/feature-update-items';
 
 export type { FeatureUpdateItem, FeatureUpdateRelease, FeatureUpdatesConfig };
 
-/** Phiên bản mặc định trên modal "Tính năng được cập nhật" — nguồn: custom/src/data/feature-updates.json */
-export const DEFAULT_FEATURE_UPDATE_VERSION = release.version;
+const FILE_CONFIG = normalizeFeatureUpdatesConfig(changelog);
 
-export const DEFAULT_FEATURE_UPDATE_ITEMS: FeatureUpdateItem[] = release.items;
+/** Phiên bản mới nhất — nguồn: custom/src/data/feature-updates.json */
+export const DEFAULT_FEATURE_UPDATE_VERSION = FILE_CONFIG?.version ?? 'v0.0.0';
 
-export const DEFAULT_FEATURE_UPDATE_RELEASES: FeatureUpdateRelease[] =
-  release.releases?.length > 0 ? release.releases : [{ version: release.version, items: release.items }];
+export const DEFAULT_FEATURE_UPDATE_ITEMS: FeatureUpdateItem[] = FILE_CONFIG?.items ?? [];
+
+export const DEFAULT_FEATURE_UPDATE_RELEASES: FeatureUpdateRelease[] = FILE_CONFIG?.releases ?? [];
 
 /** @deprecated Dùng fetchFeatureUpdatesConfig() */
 export const FEATURE_UPDATE_VERSION = DEFAULT_FEATURE_UPDATE_VERSION;

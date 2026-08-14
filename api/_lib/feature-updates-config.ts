@@ -121,9 +121,9 @@ export const normalizeFeatureUpdatesConfig = (value: unknown): FeatureUpdatesCon
 };
 
 export const DEFAULT_FEATURE_UPDATES: FeatureUpdatesConfig = normalizeFeatureUpdatesConfig(release) ?? {
-  version: release.version,
-  items: release.items,
-  releases: [{ version: release.version, items: release.items }],
+  version: 'v0.0.0',
+  items: [],
+  releases: [],
 };
 
 const toReleases = (config: FeatureUpdatesConfig): FeatureUpdateRelease[] =>

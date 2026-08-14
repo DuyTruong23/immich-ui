@@ -37,7 +37,6 @@ Frontend: http://localhost:5283 — cần Immich Server tại http://localhost:2
 | `pnpm docker:down` | Stop Immich Docker stack |
 | `pnpm build` | Production build |
 | `pnpm prepare:custom` | Sync routes + branding assets |
-| `pnpm release:notes` | Xem trước version + changelog khi merge main |
 | `pnpm sync:upstream` | Đồng bộ Immich upstream |
 
 ## Git Remotes
@@ -53,7 +52,7 @@ git remote add origin <your-fork-url>
 develop → main
 ```
 
-Code trên `develop`. Push `main` tự tăng version modal (`v1.0.3` → `v1.0.4`) và generate changelog từ commit. Chi tiết: [GitWorkflow.md](docs/GitWorkflow.md).
+Code trên `develop`. Push `main` để Vercel deploy. Changelog modal sửa tay trong `custom/src/data/feature-updates.json`. Checklist: [FEAT-READ](feature-updates/FEAT-READ.md).
 
 ## Tài liệu
 
@@ -69,6 +68,7 @@ Code trên `develop`. Push `main` tự tăng version modal (`v1.0.3` → `v1.0.4
 | [UserMessaging](docs/UserMessaging.md) | Modal tính năng & trang "Hệ thống đang cập nhật dữ liệu." |
 | [Upgrade](docs/Upgrade.md) | Nâng cấp Immich |
 | [GitWorkflow](docs/GitWorkflow.md) | Branch strategy |
+| [FEAT-READ](feature-updates/FEAT-READ.md) | Checklist tự cập nhật changelog / i18n / env |
 
 ## License
 

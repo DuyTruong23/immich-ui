@@ -114,16 +114,11 @@ Luồng: Vercel deploy xong/lỗi → POST webhook → xác minh chữ ký → g
 
 Hiển thị modal **"Tính năng được cập nhật"** sau khi đăng nhập thành công (và qua nút **Tính năng mới** trên navbar).
 
-**Nguồn mặc định:** `custom/src/data/feature-updates.json` — CI tăng `0.0.1` và generate items mỗi lần push `main`.
+**Nguồn:** `custom/src/data/feature-updates.json` — bạn sửa tay; modal đọc file lúc build. Không tự tăng version.
 
-**Admin UI:** `/admin/feature-updates` — ghi đè tạm trên Blob. Blob chỉ thắng khi version ≥ bản git; release git mới hơn sẽ thay blob cũ.
+**Admin UI:** `/admin/feature-updates` — xem file + xem thử modal (không lưu Blob).
 
-| Biến | Bắt buộc | Mô tả |
-|---|---|---|
-| `BLOB_READ_WRITE_TOKEN` | Có (để lưu override / publish từ CI) | Token Vercel Blob. Thêm cùng secret trên GitHub để CI publish ngay khi release |
-| `FEATURE_UPDATES_CONFIG` | Không | JSON fallback. Ví dụ: `{"version":"v1.0.4","items":["Mục 1"]}` |
-
-Chi tiết luồng, preview dev: [UserMessaging.md](./UserMessaging.md).
+Checklist: [feature-updates/FEAT-READ.md](../feature-updates/FEAT-READ.md). Chi tiết: [UserMessaging.md](./UserMessaging.md).
 
 ### Gửi góp ý qua email (Vercel)
 
@@ -150,15 +145,15 @@ User nhập **Email nhận thông báo** trên modal. Danh sách lưu private tr
 | `RESEND_API_KEY` | Có | Gửi changelog |
 | `LOGIN_NOTIFY_FROM` | Có | Địa chỉ gửi |
 | `PUBLIC_APP_URL` | Không | Link "Mở Gallery" / hủy đăng ký trong email. Fallback `VERCEL_PROJECT_PRODUCTION_URL` |
-| `FEATURE_UPDATE_NOTIFY_URL` | Có (GitHub secret) | `https://<domain>/api/feature-update-notify` — CI gọi sau release |
-| `FEATURE_UPDATE_NOTIFY_SECRET` | Có (Vercel + GitHub) | Bearer secret để CI kích hoạt gửi mail |
+| `FEATURE_UPDATE_NOTIFY_URL` | Không | `https://<domain>/api/feature-update-notify` — gọi tay nếu muốn gửi mail changelog |
+| `FEATURE_UPDATE_NOTIFY_SECRET` | Có nếu dùng notify | Bearer secret để kích hoạt gửi mail |
 
 ```env
 FEATURE_UPDATE_NOTIFY_URL=https://<domain>/api/feature-update-notify
 FEATURE_UPDATE_NOTIFY_SECRET=replace-me
 ```
 
-Luồng: user nhập email → POST `/api/feature-update-subscribe` → merge `develop` → `main` (hoặc admin tăng version) → Resend gửi changelog.
+Luồng: user nhập email → POST `/api/feature-update-subscribe`. Mail changelog không tự gửi khi merge; gọi `/api/feature-update-notify` nếu cần.
 
 > Resend free/`onboarding@resend.dev` chỉ gửi được tới email đã đăng ký Resend. Để gửi tới mọi user cần verify domain và dùng `LOGIN_NOTIFY_FROM` thuộc domain đó.
 

@@ -1,43 +1,50 @@
-# Feature updates — changelog cho modal "Tính năng được cập nhật"
+# Changelog — modal "Tính năng được cập nhật"
 
-Code trên `develop`. Mỗi lần merge `develop` → `main`, GitHub Actions tăng patch `0.0.1` (ví dụ `v1.0.3` → `v1.0.4`) và generate danh sách mục từ commit.
+Sửa **một file**, modal đọc file đó và hiện theo từng phiên bản (mới nhất trước).
 
-## Luồng
+**File:** [`custom/src/data/feature-updates.json`](../custom/src/data/feature-updates.json)
 
-```
-develop  →  main (push)
-              │
-              └─ bump version + changelog từ feat/fix/improve/perf
-```
+Checklist khi ship tính năng: [FEAT-READ.md](./FEAT-READ.md).
 
-1. Commit trên `develop` với prefix `feat:` / `fix:` / `improve:` / `perf:`
-2. Merge `develop` vào `main` và push
-3. CI tăng version và publish modal
+Không tự tăng version, không generate từ commit.
 
-## Commit nào vào modal?
+## Thêm bản mới
 
-Chỉ thay đổi **UI/UX mà user thường thấy** (timeline, login, avatar, video, navbar, …).
+Mở file, **thêm object vào đầu** mảng `releases`:
 
-| Commit | Vào modal |
-|---|---|
-| `feat` / `fix` / `improve` / `perf` về giao diện user | Có |
-| Scope hoặc nội dung `admin`, quản trị, `/admin` | Không |
-| Codebase, upstream, script, CI, changelog, prepare:custom | Không |
-| `chore:`, `docs:`, `ci:`, `test:`, `style:`, `refactor:` | Không |
-| Merge commit | Không |
-
-Tiêu đề lấy phần mô tả sau prefix; body commit (nếu có) thành `detail`.
-
-```
-feat(custom): Cho phép đổi avatar, tên
-
-Vào Cài đặt → Tài khoản để chỉnh sửa.
+```json
+{
+  "releases": [
+    {
+      "version": "v1.0.9",
+      "items": [
+        {
+          "title": "Tiêu đề ngắn tiếng Việt",
+          "detail": "Hướng dẫn khi user bấm mở rộng. Có thể bỏ field này."
+        }
+      ]
+    }
+  ]
+}
 ```
 
-Xem trước: `pnpm release:notes`
+| Field | Bắt buộc | Ý nghĩa |
+|---|---|---|
+| `releases` | Có | Danh sách phiên bản, **mới nhất đứng đầu** |
+| `version` | Có | Nhãn hiện trên modal, ví dụ `v1.0.9` |
+| `items` | Có | Các mục của phiên bản đó (ít nhất 1) |
+| `title` | Có | Dòng in đậm |
+| `detail` | Không | Mô tả khi user bấm mở rộng |
 
-## Nguồn sự thật sau release
+Giữ các bản cũ bên dưới. User chưa xem `version` đầu tiên sẽ thấy modal sau login.
 
-`custom/src/data/feature-updates.json` — app và API đọc file này làm mặc định.
+## Đưa lên production
 
-Admin `/admin/feature-updates` vẫn sửa được (Vercel Blob). Blob chỉ thắng khi version **≥** bản trong git; release mới hơn sẽ thay blob cũ.
+```bash
+git add custom/src/data/feature-updates.json
+git commit -m "chore: changelog v1.0.9"
+git push origin develop
+# merge develop → main → Vercel deploy
+```
+
+Xem thử: `/admin/feature-updates` → Xem thử modal, hoặc login dev mode.

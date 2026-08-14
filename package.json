@@ -25,9 +25,6 @@
     "docker:down": "bash scripts/docker-down.sh",
     "sync:upstream": "bash scripts/sync-upstream.sh",
     "branch": "bash scripts/create-branch.sh",
-    "release:notes": "node scripts/release-feature-updates.mjs --dry-run",
-    "release:feature-updates": "node scripts/release-feature-updates.mjs",
-    "test:release": "node --test scripts/lib/feature-updates-release.test.mjs",
     "check:range": "bash scripts/check-video-range.sh",
     "postinstall": "pnpm --filter @immich/sdk build"
   }

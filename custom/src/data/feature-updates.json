@@ -1,15 +1,4 @@
 {
-  "version": "v1.0.8",
-  "items": [
-    {
-      "title": "Đăng ký email nhận thông báo tính năng",
-      "detail": "Nhập email trên modal để nhận thông báo khi Gallery có phiên bản mới, kèm các thay đổi."
-    },
-    {
-      "title": "Hiện danh sách cập nhật theo từng phiên bản",
-      "detail": "Modal Tính năng được cập nhật nhóm thay đổi theo version, bản mới nhất trước."
-    }
-  ],
   "releases": [
     {
       "version": "v1.0.8",

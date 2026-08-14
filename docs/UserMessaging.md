@@ -16,24 +16,26 @@ User login → AuthLogin event → FeatureUpdateOnLogin.svelte → FeatureUpdate
 
 | Môi trường | Hành vi |
 |---|---|
-| Production / `pnpm dev` | Danh sách từ `custom/src/data/feature-updates.json` (hoặc API/Blob) |
-| `pnpm dev:local` (`PUBLIC_UI_DEV_MODE=true`) | Danh sách mock từ `FEATURE_UPDATES_MOCK` |
+| Production / `pnpm dev` | `custom/src/data/feature-updates.json` |
+| `pnpm dev:local` (`PUBLIC_UI_DEV_MODE=true`) | Mock `FEATURE_UPDATES_MOCK` |
 
 ### Cách cập nhật danh sách tính năng
 
-Nội dung production **không sửa tay trên `main`**. Code trên `develop`, CI generate khi merge sang `main`.
+Sửa tay file JSON trên `develop`, merge sang `main`. **Không** generate từ commit.
+
+Checklist: [feature-updates/FEAT-READ.md](../feature-updates/FEAT-READ.md).
 
 **Quy trình:**
 
-1. Commit trên `develop` với `feat:` / `fix:` / `improve:` / `perf:` về UI/UX user (tiếng Việt). Không dùng cho admin hay việc nội bộ repo.
-2. Merge `develop` → `main` và push → CI tăng `v1.0.3` → `v1.0.4` và publish modal
-3. User chưa xem version mới sẽ thấy modal sau login
+1. Thêm version mới vào đầu `releases` trong `custom/src/data/feature-updates.json`
+2. Merge `develop` → `main` và push — Vercel deploy (không deploy `develop`)
+3. User chưa xem version mới nhất sẽ thấy modal sau login
 
 **Nguồn sự thật:** `custom/src/data/feature-updates.json`
 
 **Mock cho dev:** `custom/src/mocks/feature-updates.ts` — chỉ dùng khi preview local, không ảnh hưởng production.
 
-Chi tiết git: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](../feature-updates/README.md).
+Chi tiết: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](../feature-updates/README.md).
 
 ### Hành vi modal
 
@@ -42,14 +44,14 @@ Chi tiết git: [GitWorkflow.md](./GitWorkflow.md), [feature-updates/README.md](
 | Tiêu đề | `Tính năng được cập nhật` |
 | Auto-close | **5 giây** — timer dừng khi user focus/ gõ vào ô góp ý |
 | Góp ý | Textarea + nút **Gửi góp ý** → POST `/api/feedback` (cần `FEEDBACK_ENABLED=true` trên Vercel) |
-| Email nhận thông báo | Input **Email nhận thông báo** → POST `/api/feature-update-subscribe`. Khi CI/admin publish version mới, Resend gửi changelog tới các email đã đăng ký |
+| Email nhận thông báo | Input **Email nhận thông báo** → POST `/api/feature-update-subscribe`. Mail changelog **không** tự gửi khi merge; cần gọi `/api/feature-update-notify` nếu muốn. |
 | Preview local | Trang login dev mode → nút **Xem modal "Tính năng được cập nhật"** |
 
 ### File liên quan
 
 | File | Vai trò |
 |---|---|
-| `custom/src/data/feature-updates.json` | **Bản release** — CI ghi khi push `main` |
+| `custom/src/data/feature-updates.json` | **Nguồn sự thật** — bạn sửa tay, modal đọc file này |
 | `custom/src/constants/feature-updates.ts` | Import JSON + mock helper |
 | `custom/src/mocks/feature-updates.ts` | Mock cho `dev:local` |
 | `custom/src/routes/FeatureUpdateModal.svelte` | UI modal |
