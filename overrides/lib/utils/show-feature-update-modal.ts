@@ -9,6 +9,7 @@ import {
   type FeatureUpdateRelease,
 } from '$custom/utils/feature-update-items';
 import FeatureUpdateModal from '../../routes/FeatureUpdateModal.svelte';
+import { authManager } from '$lib/managers/auth-manager.svelte';
 import { modalManager } from '@immich/ui';
 
 type ShowFeatureUpdateModalOptions = {
@@ -17,6 +18,20 @@ type ShowFeatureUpdateModalOptions = {
   updates?: readonly FeatureUpdateItem[];
   releases?: readonly FeatureUpdateRelease[];
   originElement?: HTMLElement | null;
+  userId?: string;
+  accountEmail?: string;
+};
+
+const getAuthIdentity = (): { userId?: string; accountEmail?: string } => {
+  try {
+    if (!authManager.authenticated) {
+      return {};
+    }
+
+    return { userId: authManager.user.id, accountEmail: authManager.user.email };
+  } catch {
+    return {};
+  }
 };
 
 export const showFeatureUpdateModal = async ({
@@ -25,9 +40,12 @@ export const showFeatureUpdateModal = async ({
   updates,
   releases,
   originElement = null,
+  userId,
+  accountEmail,
 }: ShowFeatureUpdateModalOptions = {}) => {
   const preview = isUiDevMode();
   const peeked = peekFeatureUpdatesConfig();
+  const identity = getAuthIdentity();
   const config = releases?.length
     ? withFeatureUpdateReleases({
         version: releases[0].version,
@@ -56,5 +74,7 @@ export const showFeatureUpdateModal = async ({
     releases: config.releases,
     preview,
     originElement,
+    userId: userId?.trim() || identity.userId,
+    accountEmail: accountEmail?.trim() || identity.accountEmail,
   });
 };

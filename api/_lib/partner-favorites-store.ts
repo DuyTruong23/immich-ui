@@ -257,6 +257,7 @@ export const upsertFavoriteUser = (store: PartnerFavoriteStore, user: PartnerFav
         ...user,
         name: user.name || existing.name,
         email: user.email || existing.email,
+        isAdmin: Boolean(user.isAdmin || existing.isAdmin),
         avatarColor: user.avatarColor || existing.avatarColor,
         profileImagePath: user.profileImagePath || existing.profileImagePath,
         profileChangedAt: user.profileChangedAt || existing.profileChangedAt,
@@ -374,19 +375,44 @@ export const setShareWithEveryone = (
 export const isShareWithEveryone = (store: PartnerFavoriteStore, userId: string): boolean =>
   store.shareWithEveryone[userId] === true;
 
+export const listUserFavoriteAssetIds = (store: PartnerFavoriteStore, userId: string): string[] => {
+  const ids: string[] = [];
+  for (const [assetId, marks] of Object.entries(store.favorites)) {
+    if (marks[userId]) {
+      ids.push(assetId);
+    }
+  }
+  return ids;
+};
+
+const isSharedFavoriteVisible = (
+  store: PartnerFavoriteStore,
+  favoritedByUserId: string,
+  viewer?: { id?: string; isAdmin: boolean },
+): boolean => {
+  if (viewer?.isAdmin) {
+    return true;
+  }
+  if (store.users[favoritedByUserId]?.isAdmin) {
+    return true;
+  }
+  return isShareWithEveryone(store, favoritedByUserId);
+};
+
 export const buildFavoriteItems = (
   store: PartnerFavoriteStore,
   allowedUserIds: string[],
-  viewer?: { isAdmin: boolean },
+  viewer?: { id?: string; isAdmin: boolean },
 ): PartnerFavoriteItem[] => {
   const allowed = new Set(allowedUserIds);
   const items: PartnerFavoriteItem[] = [];
-  const viewerIsAdmin = Boolean(viewer?.isAdmin);
 
   for (const [assetId, marks] of Object.entries(store.favorites)) {
     const favoritedBy = Object.entries(marks)
-      .filter(([userId]) => allowed.has(userId))
-      .filter(([userId]) => viewerIsAdmin || isShareWithEveryone(store, userId))
+      .filter(
+        ([userId]) =>
+          Boolean(viewer?.isAdmin) || (allowed.has(userId) && isSharedFavoriteVisible(store, userId, viewer)),
+      )
       .map(([userId, mark]) => ({ user: store.users[userId], favoritedAt: mark.favoritedAt }))
       .filter((entry): entry is { user: PartnerFavoriteUser; favoritedAt: string } => Boolean(entry.user));
 

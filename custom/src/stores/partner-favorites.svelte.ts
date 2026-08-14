@@ -66,16 +66,19 @@ class PartnerFavoritesStore {
   me = $state<PartnerFavoriteUser | null>(null);
   partners = $state<PartnerFavoriteUser[]>([]);
   items = $state<PartnerFavoriteItem[]>([]);
+  mineAssetIds = $state<string[]>([]);
   shareWithEveryone = $state(false);
 
   #loadPromise: Promise<void> | null = null;
 
   byAssetId = $derived(new Map(this.items.map((item) => [item.assetId, item])));
+  mineIdSet = $derived(new Set(this.mineAssetIds));
 
   apply(payload: PartnerFavoritesResponse) {
     this.me = payload.me;
     this.partners = payload.partners;
     this.items = payload.items;
+    this.mineAssetIds = payload.mineAssetIds ?? [];
     this.shareWithEveryone = payload.shareWithEveryone === true;
     this.loaded = true;
   }
@@ -85,11 +88,7 @@ class PartnerFavoritesStore {
   }
 
   hasMine(assetId: string): boolean {
-    const myId = this.me?.id;
-    if (!myId) {
-      return false;
-    }
-    return this.favoritedBy(assetId).some((user) => user.id === myId);
+    return this.mineIdSet.has(assetId);
   }
 
   async load(): Promise<void> {

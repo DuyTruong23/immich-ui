@@ -47,19 +47,7 @@
     return all;
   });
 
-  const displayItems = $derived.by(() => {
-    if (partnerFavoritesStore.items.length > 0) {
-      return items;
-    }
-    if (filter === 'partner' || filter === 'both') {
-      return [];
-    }
-    return [...assetsById.keys()].map((assetId) => ({
-      assetId,
-      favoritedAt: '',
-      favoritedBy: [] as PartnerFavoriteUser[],
-    }));
-  });
+  const displayItems = $derived(items);
 
   const visibleAssets = $derived(
     displayItems.map((item) => assetsById.get(item.assetId)).filter((asset): asset is TimelineAsset => Boolean(asset)),
