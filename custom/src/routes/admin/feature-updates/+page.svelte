@@ -31,17 +31,17 @@
   };
 
   const skipMessage = (reason?: string): string => {
-    const $t = get(t);
+    const translate = get(t);
     if (reason === 'no_subscribers') {
-      return $t('admin.feature_updates_send_email_skipped_none');
+      return translate('admin.feature_updates_send_email_skipped_none');
     }
     if (reason === 'already_notified') {
-      return $t('admin.feature_updates_send_email_skipped_already');
+      return translate('admin.feature_updates_send_email_skipped_already');
     }
     if (reason === 'email_not_configured') {
-      return $t('admin.feature_updates_send_email_skipped_not_configured');
+      return translate('admin.feature_updates_send_email_skipped_not_configured');
     }
-    return $t('admin.feature_updates_send_email_failed');
+    return translate('admin.feature_updates_send_email_failed');
   };
 
   const sendChangelogEmail = async () => {
