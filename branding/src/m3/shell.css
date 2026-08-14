@@ -14,6 +14,7 @@
   }
 
   #sidebar {
+    z-index: 20;
     background-color: var(--md-sys-color-surface-container-low) !important;
     border-color: var(--md-sys-color-outline-variant) !important;
   }
