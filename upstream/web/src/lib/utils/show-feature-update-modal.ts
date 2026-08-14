@@ -1,3 +1,4 @@
+import { getStoredAccessToken } from '$custom/hooks/access-token';
 import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import {
@@ -49,7 +50,7 @@ export const showFeatureUpdateModal = async ({
   });
 
   return modalManager.show(FeatureUpdateModal, {
-    accessToken: preview ? undefined : accessToken,
+    accessToken: preview ? undefined : accessToken?.trim() || getStoredAccessToken(),
     version: config.version,
     updates: coerceFeatureUpdateItems(config.items),
     releases: config.releases,

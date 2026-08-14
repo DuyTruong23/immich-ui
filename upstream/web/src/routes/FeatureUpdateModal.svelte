@@ -5,7 +5,8 @@
   } from '$custom/constants/feature-updates';
   import { markFeatureUpdateSeen } from '$custom/hooks/feature-update-seen';
   import {
-    hasStoredNotifyEmail,
+    getStoredNotifyEmail,
+    hasConfirmedNotifyEmail,
     isValidNotifyEmail,
     subscribeFeatureUpdateEmail,
   } from '$custom/hooks/feature-update-subscribe';
@@ -47,9 +48,9 @@
   const MODAL_CLASS = 'pg-feature-update-modal';
 
   let feedback = $state('');
-  let notifyEmail = $state('');
+  let notifyEmail = $state(getStoredNotifyEmail());
   let sentFeedback = $state(false);
-  let showNotifyEmail = $state(!hasStoredNotifyEmail());
+  let showNotifyEmail = $state(!hasConfirmedNotifyEmail());
   let savedNotifyEmail = $state(false);
   let isClosing = $state(false);
   let expandedItems = $state<ReadonlySet<string>>(new Set());
