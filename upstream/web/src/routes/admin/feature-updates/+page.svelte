@@ -24,7 +24,7 @@
   let loadingSubscribers = $state(false);
   let subscriberEmails = $state<string[]>([]);
   let lastNotifiedVersion = $state<string | null>(null);
-  let subscriberStorage = $state<'blob' | 'local' | 'none' | ''>('');
+  let subscriberStorage = $state<'resend' | 'blob' | 'local' | 'none' | ''>('');
   let subscribersError = $state('');
 
   const previewModal = () => {

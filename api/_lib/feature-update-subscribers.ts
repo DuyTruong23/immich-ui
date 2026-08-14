@@ -1,4 +1,9 @@
 import { getEnv } from './email.js';
+import {
+  addResendChangelogEmail,
+  listResendChangelogEmails,
+  removeResendChangelogEmail,
+} from './resend-contacts.js';
 
 const BLOB_PATHNAME = 'feature-updates/subscribers.json';
 const BLOB_API_URL = 'https://vercel.com/api/blob';
@@ -139,7 +144,11 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
   }
 };
 
-export const getSubscriberStorage = (): 'blob' | 'local' | 'none' => {
+export const getSubscriberStorage = (): 'resend' | 'blob' | 'local' | 'none' => {
+  if (getEnv('RESEND_API_KEY')) {
+    return 'resend';
+  }
+
   if (getEnv('BLOB_READ_WRITE_TOKEN')) {
     return 'blob';
   }
@@ -153,7 +162,7 @@ export const getSubscriberStorage = (): 'blob' | 'local' | 'none' => {
 
 export const hasSubscriberPersistence = (): boolean => getSubscriberStorage() !== 'none';
 
-export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
+const readFallbackStore = async (): Promise<FeatureUpdateSubscriberStore> => {
   if (memoryStore) {
     return memoryStore;
   }
@@ -162,21 +171,28 @@ export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubsc
   if (token) {
     const stored = await readBlobStore();
     if (stored) {
-      memoryStore = stored;
-      return memoryStore;
-    }
-
-    if (isVercelRuntime()) {
-      throw new Error('Could not read subscriber list from Blob');
+      return stored;
     }
   }
 
   if (!isVercelRuntime() && localAdapter) {
-    memoryStore = normalizeStore(await localAdapter.read());
-    return memoryStore;
+    return normalizeStore(await localAdapter.read());
   }
 
   return { ...EMPTY_STORE };
+};
+
+export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubscriberStore> => {
+  const fallback = await readFallbackStore();
+  const resendEmails = await listResendChangelogEmails().catch((error) => {
+    console.error('[feature-update-subscribers] resend list failed', error);
+    return [] as string[];
+  });
+
+  const emails = [...new Set([...resendEmails, ...fallback.emails])].filter((email) => isValidNotifyEmail(email));
+  const next = fallback.lastNotifiedVersion ? { emails, lastNotifiedVersion: fallback.lastNotifiedVersion } : { emails };
+  memoryStore = next;
+  return next;
 };
 
 export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
@@ -222,7 +238,7 @@ export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscrib
     return;
   }
 
-  throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
+  memoryStore = next;
 };
 
 export const addFeatureUpdateSubscriber = async (
@@ -234,17 +250,6 @@ export const addFeatureUpdateSubscriber = async (
     throw new Error('Invalid email');
   }
 
-  if (!hasSubscriberPersistence()) {
-    return {
-      added: true,
-      persisted: false,
-      store: {
-        emails: [normalized],
-        lastNotifiedVersion: currentVersion?.trim() || undefined,
-      },
-    };
-  }
-
   const store = await readFeatureUpdateSubscribers();
   const exists = store.emails.includes(normalized);
   const next: FeatureUpdateSubscriberStore = {
@@ -252,11 +257,19 @@ export const addFeatureUpdateSubscriber = async (
     lastNotifiedVersion: store.lastNotifiedVersion ?? currentVersion?.trim() ?? undefined,
   };
 
+  const savedToResend = await addResendChangelogEmail(normalized).catch((error) => {
+    console.error('[feature-update-subscribers] resend add failed', error);
+    return false;
+  });
+
   if (!exists || next.lastNotifiedVersion !== store.lastNotifiedVersion) {
-    await writeFeatureUpdateSubscribers(next);
+    await writeFeatureUpdateSubscribers(next).catch((error) => {
+      console.warn('[feature-update-subscribers] fallback write failed', error);
+    });
   }
 
-  return { added: !exists, persisted: true, store: next };
+  memoryStore = next;
+  return { added: !exists, persisted: savedToResend || hasSubscriberPersistence(), store: next };
 };
 
 export const removeFeatureUpdateSubscriber = async (email: string): Promise<boolean> => {
@@ -266,9 +279,14 @@ export const removeFeatureUpdateSubscriber = async (email: string): Promise<bool
     return false;
   }
 
+  await removeResendChangelogEmail(normalized).catch((error) => {
+    console.warn('[feature-update-subscribers] resend remove failed', error);
+  });
   await writeFeatureUpdateSubscribers({
     ...store,
     emails: store.emails.filter((item) => item !== normalized),
+  }).catch((error) => {
+    console.warn('[feature-update-subscribers] fallback write failed', error);
   });
   return true;
 };

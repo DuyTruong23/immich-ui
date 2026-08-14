@@ -6,7 +6,23 @@ export const json = (body: unknown, status = 200) =>
 
 export const getEnv = (key: string): string | undefined => {
   const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-  return env?.[key]?.trim() || undefined;
+  const dynamic = env?.[key]?.trim();
+  if (dynamic) {
+    return dynamic;
+  }
+
+  // Vercel Edge/bundler chỉ inline process.env.NAME khi tên là literal.
+  const literals: Record<string, string | undefined> = {
+    RESEND_API_KEY: env?.RESEND_API_KEY,
+    BLOB_READ_WRITE_TOKEN: env?.BLOB_READ_WRITE_TOKEN,
+    ADMIN_NOTIFY_EMAIL: env?.ADMIN_NOTIFY_EMAIL,
+    LOGIN_NOTIFY_FROM: env?.LOGIN_NOTIFY_FROM,
+    FEEDBACK_NOTIFY_FROM: env?.FEEDBACK_NOTIFY_FROM,
+    PUBLIC_APP_NAME: env?.PUBLIC_APP_NAME,
+    VERCEL: env?.VERCEL,
+  };
+
+  return literals[key]?.trim() || undefined;
 };
 
 export class ResendSendError extends Error {

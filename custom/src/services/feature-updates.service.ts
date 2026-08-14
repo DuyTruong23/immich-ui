@@ -41,7 +41,7 @@ export type FeatureUpdateSubscriberList = {
   emails: string[];
   count: number;
   lastNotifiedVersion?: string | null;
-  storage?: 'blob' | 'local' | 'none';
+  storage?: 'resend' | 'blob' | 'local' | 'none';
   error?: string;
   detail?: string;
 };
