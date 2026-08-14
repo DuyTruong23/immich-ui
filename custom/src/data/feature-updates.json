@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "v1.0.9",
+      "items": [
+        {
+          "title": "Thư mục yêu thích chung",
+          "detail": "Người dùng có thể đánh dấu thư mục yêu thích, và các thành viên khác trong nhóm cũng có thể thấy thư mục này."
+        }
+      ]
+    },
+    {
       "version": "v1.0.8",
       "items": [
         {

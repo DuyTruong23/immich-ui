@@ -48,6 +48,7 @@ export const DEV_API_ROUTES = [
   '/api/feature-update-subscribe',
   '/api/feature-update-notify',
   '/api/notify-login',
+  '/api/partner-favorites',
 ] as const;
 
 const DEV_API_HANDLERS: Record<string, string> = {
@@ -55,6 +56,7 @@ const DEV_API_HANDLERS: Record<string, string> = {
   '/api/feature-update-subscribe': path.resolve(rootDir, 'api/feature-update-subscribe.ts'),
   '/api/feature-update-notify': path.resolve(rootDir, 'api/feature-update-notify.ts'),
   '/api/notify-login': path.resolve(rootDir, 'api/notify-login.ts'),
+  '/api/partner-favorites': path.resolve(rootDir, 'api/partner-favorites.ts'),
 };
 
 export const isDevApiRoute = (url?: string): boolean => {
@@ -64,7 +66,7 @@ export const isDevApiRoute = (url?: string): boolean => {
 
 /** Proxy context: match /api/* except local dev serverless routes. */
 export const immichApiProxyPattern =
-  '^/api/(?!feature-updates(?:[/?]|$)|feature-update-subscribe(?:[/?]|$)|feature-update-notify(?:[/?]|$)|notify-login(?:[/?]|$)|notify-deploy(?:[/?]|$)|feedback(?:[/?]|$))';
+  '^/api/(?!feature-updates(?:[/?]|$)|feature-update-subscribe(?:[/?]|$)|feature-update-notify(?:[/?]|$)|notify-login(?:[/?]|$)|notify-deploy(?:[/?]|$)|feedback(?:[/?]|$)|partner-favorites(?:[/?]|$))';
 
 const readRequestBody = (request: IncomingMessage): Promise<Uint8Array | undefined> =>
   new Promise((resolve, reject) => {

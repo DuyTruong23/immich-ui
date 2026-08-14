@@ -17,6 +17,8 @@
     mdiArchiveArrowDownOutline,
     mdiFolderOutline,
     mdiHeart,
+    mdiHeartMultiple,
+    mdiHeartMultipleOutline,
     mdiHeartOutline,
     mdiImageAlbum,
     mdiImageMultiple,
@@ -37,8 +39,16 @@
   } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import { fly } from 'svelte/transition';
+  import { onMount } from 'svelte';
+  import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
 
   const { features } = getAppConfig();
+
+  onMount(() => {
+    if (features.sharedFavorites && authManager.authenticated) {
+      void partnerFavoritesStore.load();
+    }
+  });
 </script>
 
 <Sidebar ariaLabel={$t('primary')}>
@@ -76,6 +86,15 @@
   <NavbarGroup title={$t('library')} size="tiny" />
 
   <NavbarItem title={$t('favorites')} href={Route.favorites()} icon={mdiHeartOutline} activeIcon={mdiHeart} />
+
+  {#if features.sharedFavorites}
+    <NavbarItem
+      title={$t('shared_favorites')}
+      href="/shared-favorites"
+      icon={mdiHeartMultipleOutline}
+      activeIcon={mdiHeartMultiple}
+    />
+  {/if}
 
   <NavbarItem
     title={$t('albums')}

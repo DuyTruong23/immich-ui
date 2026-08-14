@@ -5,6 +5,9 @@ const LOCAL_API_PATHS = new Set([
   '/api/notify-deploy',
   '/api/feedback',
   '/api/feature-updates',
+  '/api/feature-update-subscribe',
+  '/api/feature-update-notify',
+  '/api/partner-favorites',
 ]);
 
 const getUpstreamBase = (): string => {

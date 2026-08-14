@@ -16,7 +16,8 @@ export type FeatureKey =
   | 'folders'
   | 'tags'
   | 'archive'
-  | 'dashboard';
+  | 'dashboard'
+  | 'sharedFavorites';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
@@ -46,6 +47,7 @@ export const createFeatureFlags = (env: Record<string, string | undefined>, publ
   tags: readFlag(env, 'PUBLIC_ENABLE_TAGS', true),
   archive: readFlag(env, 'PUBLIC_ENABLE_ARCHIVE', true),
   dashboard: readFlag(env, 'PUBLIC_ENABLE_DASHBOARD', true),
+  sharedFavorites: readFlag(env, 'PUBLIC_ENABLE_SHARED_FAVORITES', true),
 });
 
 /** Route patterns bị vô hiệu hóa khi feature flag = false */
@@ -66,6 +68,7 @@ export const disabledRoutePatterns: Record<FeatureKey, RegExp[]> = {
   tags: [/^\/tags(\/|$)/],
   archive: [/^\/archive(\/|$)/],
   dashboard: [/^\/dashboard(\/|$)/],
+  sharedFavorites: [/^\/shared-favorites(\/|$)/],
 };
 
 export const isRouteEnabled = (pathname: string, flags: FeatureFlags): boolean => {
