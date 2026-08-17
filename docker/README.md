@@ -32,7 +32,7 @@ pnpm dev:full       # Cả hai (blocking)
 | | `immich-ui/docker/` (dev) | `immich-docker/` (production / PC B) |
 |---|---|---|
 | Mục đích | Frontend dev + Immich local test | Chạy 24/7 trên HDD |
-| External library | **Không** mount | `../../Photo_Gallery:/external-library:ro` |
+| External library | **Không** mount | `../../Photo_Gallery:/external-library` |
 | Path config | Không cần | Relative — xem [PORTABLE-EXTERNAL-LIBRARY.md](../../docs/PORTABLE-EXTERNAL-LIBRARY.md) |
 
 ### Lệnh thủ công

@@ -74,7 +74,7 @@ Trong `immich-docker/docker-compose.yml`:
 ```yaml
 volumes:
   - ${UPLOAD_LOCATION:-./library}:/data
-  - ../../Photo_Gallery:/external-library:ro
+  - ../../Photo_Gallery:/external-library
 ```
 
 **Không cần** `EXTERNAL_LIBRARY_PATH` trong `.env` — Docker Compose tự resolve `../../Photo_Gallery` từ thư mục `immich-docker`.
@@ -201,7 +201,7 @@ External library **không** liên quan poga-v2 hay Vercel. Chỉ cấu hình tr�
 <HDD>/Immich-Gallery/
 ├── immich-gallery/immich-docker/   ← chạy docker compose ở đây
 └── Photo_Gallery/                  ← ../../Photo_Gallery (relative)
-         ↓ docker bind (read-only)
+         ↓ docker bind (writable)
     /external-library trong container
          ↓ Immich UI scan
     Ảnh hiện trên gallery (local hoặc Vercel — cùng API)
@@ -209,7 +209,7 @@ External library **không** liên quan poga-v2 hay Vercel. Chỉ cấu hình tr�
 
 | Thành phần | Giá trị |
 |---|---|
-| `docker-compose.yml` mount | `../../Photo_Gallery:/external-library:ro` |
+| `docker-compose.yml` mount | `../../Photo_Gallery:/external-library` |
 | `.env` | **Không cần** path external — đã cấu hình trong compose |
 | Immich UI add folder | Luôn là **`/external-library`** |
 | Đổi máy / drive letter | **Không sửa** compose — giữ cấu trúc thư mục HDD |

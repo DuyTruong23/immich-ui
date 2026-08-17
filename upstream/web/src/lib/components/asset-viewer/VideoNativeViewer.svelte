@@ -117,9 +117,7 @@
     const url = new URL(resolvedFileUrl, location.href);
     return getBaseUrl() + url.pathname + url.search;
   });
-  const wantsHlsPlayback = $derived(
-    featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice,
-  );
+  const wantsHlsPlayback = $derived(featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice);
   let hlsRuntimeReady = $state(false);
   const useHlsPlayback = $derived(wantsHlsPlayback && hlsRuntimeReady);
   const aspectRatio = $derived(asset.width && asset.height ? `${asset.width} / ${asset.height}` : undefined);
@@ -128,6 +126,7 @@
   let activeSession: { assetId: string; id: string } | undefined;
   let loadedSourceKey: string | undefined;
   let rebuildCount = 0;
+  let autoplayAttempted = false;
 
   const MAX_REBUILDS = 1;
   const SESSION_ID_REGEX = /\/video\/stream\/([0-9a-f-]{36})\//;
@@ -267,6 +266,7 @@
     loadedSourceKey = sourceKey;
     hasFocused = false;
     rebuildCount = 0;
+    autoplayAttempted = false;
     isLoading = true;
 
     if (isHlsElement(videoPlayer) && hlsConfig) {
@@ -321,18 +321,29 @@
   };
 
   const handleCanPlay = async (video: HTMLVideoElement) => {
+    if (!$autoPlayVideo) {
+      isLoading = false;
+      return;
+    }
+
+    if (autoplayAttempted) {
+      isLoading = false;
+      return;
+    }
+
+    autoplayAttempted = true;
+
     try {
-      if (!video.paused) {
-        await video.play();
-        onVideoStarted();
+      if (isMobileDevice && !video.muted) {
+        video.muted = true;
       }
+      await video.play();
+      onVideoStarted();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'NotAllowedError') {
         await tryForceMutedPlay(video);
         return;
       }
-
-      // auto-play failed
     } finally {
       isLoading = false;
     }
@@ -345,9 +356,10 @@
 
     try {
       video.muted = true;
-      await handleCanPlay(video);
+      await video.play();
+      onVideoStarted();
     } catch {
-      // muted auto-play failed
+      // muted auto-play rejected — keep native play button
     }
   };
 
@@ -443,152 +455,152 @@
       canStart={canStartVideoSwipe}
       onSwipe={handleSwipe}
     >
-    <PhotoBlurBackdrop {asset} />
-    {#if castManager.isCasting}
-      <div class="h-full place-content-center place-items-center">
-        <VideoRemoteViewer
-          poster={getAssetMediaUrl({ id: assetId, size: AssetMediaSize.Preview, cacheKey })}
-          {onVideoStarted}
-          {onVideoEnded}
-          {assetFileUrl}
-        />
-      </div>
-    {:else}
-      <!-- dir=ltr based on https://github.com/videojs/video.js/issues/949 -->
-      <media-controller
-        dir="ltr"
-        lang={$lang}
-        nohotkeys
-        class="dark mx-auto h-full max-w-full"
-        style:aspect-ratio={aspectRatio}
-        defaultduration={asset.duration! / 1000}
-      >
-        {#if useHlsPlayback}
-          <hls-video
-            bind:this={videoPlayer}
-            slot="media"
-            loop={$loopVideoPreference && loopVideo}
-            autoplay={$autoPlayVideo}
-            preload={videoPreload}
-            disablePictureInPicture
-            playsinline
-            class="h-full object-contain"
-            onloadedmetadata={handleLoadedMetadata}
-            onloadeddata={handleLoadedData}
-            onerror={handleVideoError}
-            oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
-            onended={onVideoEnded}
-            onseeking={onSeeking}
-            onseeked={onSeeked}
-            onplaying={(e: Event) => {
-              if (hasFocused) {
-                return;
-              }
+      <PhotoBlurBackdrop {asset} />
+      {#if castManager.isCasting}
+        <div class="h-full place-content-center place-items-center">
+          <VideoRemoteViewer
+            poster={getAssetMediaUrl({ id: assetId, size: AssetMediaSize.Preview, cacheKey })}
+            {onVideoStarted}
+            {onVideoEnded}
+            {assetFileUrl}
+          />
+        </div>
+      {:else}
+        <!-- dir=ltr based on https://github.com/videojs/video.js/issues/949 -->
+        <media-controller
+          dir="ltr"
+          lang={$lang}
+          nohotkeys
+          class="dark mx-auto h-full max-w-full"
+          style:aspect-ratio={aspectRatio}
+          defaultduration={asset.duration! / 1000}
+        >
+          {#if useHlsPlayback}
+            <hls-video
+              bind:this={videoPlayer}
+              slot="media"
+              loop={$loopVideoPreference && loopVideo}
+              autoplay={$autoPlayVideo}
+              muted={isMobileDevice}
+              preload={videoPreload}
+              disablePictureInPicture
+              playsinline
+              class="h-full object-contain"
+              onloadedmetadata={handleLoadedMetadata}
+              onloadeddata={handleLoadedData}
+              onerror={handleVideoError}
+              oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
+              onended={onVideoEnded}
+              onseeking={onSeeking}
+              onseeked={onSeeked}
+              onplaying={(e: Event) => {
+                if (hasFocused) {
+                  return;
+                }
 
-              (e.currentTarget as HTMLElement).focus();
-              hasFocused = true;
-            }}
-            onclose={onClose}
-            poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
-          ></hls-video>
-        {:else}
-          <video
-            bind:this={videoPlayer}
-            slot="media"
-            loop={$loopVideoPreference && loopVideo}
-            autoplay={$autoPlayVideo}
-            preload={videoPreload}
-            disablePictureInPicture
-            playsinline
-            class="h-full object-contain"
-            onloadedmetadata={handleLoadedMetadata}
-            onloadeddata={handleLoadedData}
-            onerror={handleVideoError}
-            oncanplay={(e) => handleCanPlay(e.currentTarget)}
-            onended={onVideoEnded}
-            onseeking={onSeeking}
-            onseeked={onSeeked}
-            onplaying={(e) => {
-              if (hasFocused) {
-                return;
-              }
+                (e.currentTarget as HTMLElement).focus();
+                hasFocused = true;
+              }}
+              onclose={onClose}
+              poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
+            ></hls-video>
+          {:else}
+            <video
+              bind:this={videoPlayer}
+              slot="media"
+              loop={$loopVideoPreference && loopVideo}
+              autoplay={$autoPlayVideo}
+              muted={isMobileDevice}
+              preload={videoPreload}
+              disablePictureInPicture
+              playsinline
+              class="h-full object-contain"
+              onloadedmetadata={handleLoadedMetadata}
+              onloadeddata={handleLoadedData}
+              onerror={handleVideoError}
+              oncanplay={(e) => handleCanPlay(e.currentTarget)}
+              onended={onVideoEnded}
+              onseeking={onSeeking}
+              onseeked={onSeeked}
+              onplaying={(e) => {
+                if (hasFocused) {
+                  return;
+                }
 
-              e.currentTarget.focus();
-              hasFocused = true;
-            }}
-            onclose={onClose}
-            poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
-          ></video>
-        {/if}
+                e.currentTarget.focus();
+                hasFocused = true;
+              }}
+              onclose={onClose}
+              poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
+            ></video>
+          {/if}
 
-        {#if extendedControls}
-          <media-settings-menu hidden anchor="auto" class="min-w-3xs rounded-xl border border-light-300 shadow-sm">
-            <Icon slot="checked-indicator" icon={mdiCheck} class="m-2" />
-            <media-settings-menu-item class="mx-1 rounded-lg p-1 ps-2">
-              {$t('media_chrome.playback_rate')}
-              <Icon slot="suffix" icon={mdiChevronRight} class="m-2" />
-              <media-playback-rate-menu slot="submenu" hidden rates="0.5 1 1.5 2">
-                <Icon slot="back-icon" icon={mdiChevronLeft} class="m-2" />
-                <span slot="title">{$t('media_chrome.playback_rate')}</span>
-              </media-playback-rate-menu>
-            </media-settings-menu-item>
-            {#if useHlsPlayback}
+          {#if extendedControls}
+            <media-settings-menu hidden anchor="auto" class="min-w-3xs rounded-xl border border-light-300 shadow-sm">
+              <Icon slot="checked-indicator" icon={mdiCheck} class="m-2" />
               <media-settings-menu-item class="mx-1 rounded-lg p-1 ps-2">
-                {$t('video_quality')}
+                {$t('media_chrome.playback_rate')}
                 <Icon slot="suffix" icon={mdiChevronRight} class="m-2" />
-                <media-rendition-menu slot="submenu" hidden>
+                <media-playback-rate-menu slot="submenu" hidden rates="0.5 1 1.5 2">
                   <Icon slot="back-icon" icon={mdiChevronLeft} class="m-2" />
-                  <span slot="title">{$t('video_quality')}</span>
-                </media-rendition-menu>
+                  <span slot="title">{$t('media_chrome.playback_rate')}</span>
+                </media-playback-rate-menu>
               </media-settings-menu-item>
-            {/if}
-          </media-settings-menu>
+              {#if useHlsPlayback}
+                <media-settings-menu-item class="mx-1 rounded-lg p-1 ps-2">
+                  {$t('video_quality')}
+                  <Icon slot="suffix" icon={mdiChevronRight} class="m-2" />
+                  <media-rendition-menu slot="submenu" hidden>
+                    <Icon slot="back-icon" icon={mdiChevronLeft} class="m-2" />
+                    <span slot="title">{$t('video_quality')}</span>
+                  </media-rendition-menu>
+                </media-settings-menu-item>
+              {/if}
+            </media-settings-menu>
+          {/if}
+
+          <div class="flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4">
+            <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
+              <media-play-button class="shrink-0 rounded-full p-2 outline-none">
+                <Icon slot="play" icon={mdiPlay} />
+                <Icon slot="pause" icon={mdiPause} />
+              </media-play-button>
+              <media-time-display showduration class="rounded-lg p-2 outline-none"></media-time-display>
+
+              <span class="grow"></span>
+
+              <div class="volume-wrapper shrink-0 rounded-full bg-transparent transition-colors duration-400">
+                <media-volume-range class="h-full bg-none outline-none"></media-volume-range>
+                <media-mute-button class="bg-none p-2 outline-none">
+                  <Icon slot="off" icon={mdiVolumeMute} />
+                  <Icon slot="low" icon={mdiVolumeLow} />
+                  <Icon slot="medium" icon={mdiVolumeMedium} />
+                  <Icon slot="high" icon={mdiVolumeHigh} />
+                </media-mute-button>
+              </div>
+
+              {#if extendedControls}
+                <media-fullscreen-button class="shrink-0 rounded-full p-2 outline-none">
+                  <Icon slot="enter" icon={mdiFullscreen} />
+                  <Icon slot="exit" icon={mdiFullscreenExit} />
+                </media-fullscreen-button>
+                <media-settings-menu-button class="shrink-0 rounded-full p-2 outline-none"></media-settings-menu-button>
+              {/if}
+            </media-control-bar>
+            <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
+          </div>
+        </media-controller>
+
+        {#if isLoading}
+          <div class="absolute flex place-content-center place-items-center">
+            <LoadingSpinner />
+          </div>
         {/if}
 
-        <div class="flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4">
-          <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
-            <media-play-button class="shrink-0 rounded-full p-2 outline-none">
-              <Icon slot="play" icon={mdiPlay} />
-              <Icon slot="pause" icon={mdiPause} />
-            </media-play-button>
-            <media-time-display showduration class="rounded-lg p-2 outline-none"></media-time-display>
-
-            <span class="grow"></span>
-
-            <div
-              class="volume-wrapper shrink-0 rounded-full bg-transparent transition-colors duration-400"
-            >
-              <media-volume-range class="h-full bg-none outline-none"></media-volume-range>
-              <media-mute-button class="bg-none p-2 outline-none">
-                <Icon slot="off" icon={mdiVolumeMute} />
-                <Icon slot="low" icon={mdiVolumeLow} />
-                <Icon slot="medium" icon={mdiVolumeMedium} />
-                <Icon slot="high" icon={mdiVolumeHigh} />
-              </media-mute-button>
-            </div>
-
-            {#if extendedControls}
-              <media-fullscreen-button class="shrink-0 rounded-full p-2 outline-none">
-                <Icon slot="enter" icon={mdiFullscreen} />
-                <Icon slot="exit" icon={mdiFullscreenExit} />
-              </media-fullscreen-button>
-              <media-settings-menu-button class="shrink-0 rounded-full p-2 outline-none"></media-settings-menu-button>
-            {/if}
-          </media-control-bar>
-          <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
-        </div>
-      </media-controller>
-
-      {#if isLoading}
-        <div class="absolute flex place-content-center place-items-center">
-          <LoadingSpinner />
-        </div>
+        {#if assetViewerManager.isFaceEditMode && videoPlayer}
+          <FaceEditor htmlElement={videoPlayer} {containerWidth} {containerHeight} {assetId} />
+        {/if}
       {/if}
-
-      {#if assetViewerManager.isFaceEditMode && videoPlayer}
-        <FaceEditor htmlElement={videoPlayer} {containerWidth} {containerHeight} {assetId} />
-      {/if}
-    {/if}
     </PhotoSwipeTrack>
   </div>
 {/if}

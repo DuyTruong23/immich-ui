@@ -19,8 +19,19 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar; banner gợi ý thumbnail lỗi trên mobile |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
-| `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; `touch-action: pan-y pinch-zoom` khi zoom=1 |
-| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile preload, HLS; PhotoSwipeTrack có guard control/seek/zoom |
+| `lib/components/asset-viewer/AssetViewer.svelte` | Ẩn mũi tên prev/next trên mobile; preview strip 5 thumbnail |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip 5 asset (±2) dùng thumbnail |
+| `lib/components/timeline/TimelineAssetViewer.svelte` | Load ±2 asset cho preview strip |
+| `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor ±2 cho preview strip |
+| `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
+| `lib/modals/AssetChangeDateModal.svelte` | Báo lỗi writeback file gốc |
+| `lib/modals/AssetSelectionChangeDateModal.svelte` | Báo lỗi writeback file gốc |
+| `lib/components/asset-viewer/DetailPanelDescription.svelte` | Báo lỗi writeback file gốc |
+| `lib/components/asset-viewer/DetailPanelLocation.svelte` | Báo lỗi writeback file gốc |
+| `lib/components/timeline/actions/ChangeDescriptionAction.svelte` | Báo lỗi writeback file gốc |
+| `lib/components/timeline/actions/ChangeLocationAction.svelte` | Báo lỗi writeback file gốc |
+| `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; double-tap zoom; `touch-action` theo zoom |
+| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile muted autoplay khi ready; preload; HLS; swipe guard |
 | `lib/components/asset-viewer/VideoWrapperViewer.svelte` | Truyền next/prev + onSwipe xuống video viewer |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |

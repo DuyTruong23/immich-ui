@@ -619,7 +619,10 @@ def main() -> None:
     else:
         patch_auth_manager_media_session(web / 'src/lib/managers/auth-manager.svelte.ts')
 
-    patch_gallery_viewer(web / 'src/lib/components/shared-components/gallery-viewer/GalleryViewer.svelte')
+    if override_exists(root, 'components/shared-components/gallery-viewer/GalleryViewer.svelte'):
+        print('==> Skip GalleryViewer patch (override present)')
+    else:
+        patch_gallery_viewer(web / 'src/lib/components/shared-components/gallery-viewer/GalleryViewer.svelte')
     if override_exists(root, 'managers/timeline-manager/timeline-day.svelte.ts'):
         print('==> Skip timeline-day patch (override present)')
     else:
@@ -628,7 +631,10 @@ def main() -> None:
     patch_force_compressed_media(web)
     patch_app_html(web / 'src/app.html')
     patch_layout_head(web / 'src/routes/+layout.svelte')
-    patch_asset_viewer_swipe_back(web / 'src/lib/components/asset-viewer/AssetViewer.svelte')
+    if override_exists(root, 'components/asset-viewer/AssetViewer.svelte'):
+        print('==> Skip AssetViewer swipe-back patch (override present)')
+    else:
+        patch_asset_viewer_swipe_back(web / 'src/lib/components/asset-viewer/AssetViewer.svelte')
     patch_user_layout_back_guard(web / 'src/routes/(user)/+layout.svelte')
     patch_viewport_dvh(web / 'src/routes/(user)/memory/[[photos=photos]]/[[assetId=id]]/MemoryViewer.svelte')
     patch_viewport_dvh(web / 'src/lib/components/asset-viewer/editor/transform-tool/CropArea.svelte')

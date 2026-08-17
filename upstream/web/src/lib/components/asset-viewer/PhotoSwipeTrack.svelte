@@ -17,7 +17,16 @@
     children?: Snippet;
   }
 
-  let { currentId, nextAsset, previousAsset, sharedLink, disabled = false, canStart, onSwipe, children }: Props = $props();
+  let {
+    currentId,
+    nextAsset,
+    previousAsset,
+    sharedLink,
+    disabled = false,
+    canStart,
+    onSwipe,
+    children,
+  }: Props = $props();
 
   let width = $state(0);
   let height = $state(0);
@@ -58,12 +67,18 @@
 
 <div
   class="relative size-full overflow-hidden overscroll-x-contain"
+  role="presentation"
   bind:clientWidth={width}
   bind:clientHeight={height}
   onpointerdown={swipe.onPointerDown}
   onpointermove={swipe.onPointerMove}
   onpointerup={swipe.onPointerUp}
   onpointercancel={swipe.onPointerCancel}
+  ontouchstart={(event) => {
+    if (event.touches.length > 1) {
+      swipe.reset();
+    }
+  }}
 >
   <div
     class="absolute inset-0 will-change-transform"

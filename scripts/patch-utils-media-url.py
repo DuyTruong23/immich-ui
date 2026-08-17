@@ -35,6 +35,28 @@ def patch_utils(utils_path: pathlib.Path) -> None:
     elif new_profile not in text:
         raise SystemExit(f'Cannot find getProfileImageUrl in {utils_path}')
 
+    old_upload_opts = '  data: FormData;\n  onUploadProgress?: (event: ProgressEvent<XMLHttpRequestEventTarget>) => void;\n'
+    new_upload_opts = (
+        '  data: FormData;\n'
+        '  headers?: Record<string, string>;\n'
+        '  onUploadProgress?: (event: ProgressEvent<XMLHttpRequestEventTarget>) => void;\n'
+    )
+    if old_upload_opts in text:
+        text = text.replace(old_upload_opts, new_upload_opts, 1)
+
+    old_upload_open = '    xhr.open(options.method || \'POST\', url);\n    xhr.responseType = \'json\';\n    xhr.send(data);'
+    new_upload_open = (
+        '    xhr.open(options.method || \'POST\', url);\n'
+        '    xhr.responseType = \'json\';\n'
+        '    for (const [key, value] of Object.entries(headers ?? {})) {\n'
+        '      xhr.setRequestHeader(key, value);\n'
+        '    }\n'
+        '    xhr.send(data);'
+    )
+    if old_upload_open in text:
+        text = text.replace('  const { onUploadProgress: onProgress, data, url } = options;', '  const { onUploadProgress: onProgress, data, url, headers } = options;', 1)
+        text = text.replace(old_upload_open, new_upload_open, 1)
+
     utils_path.write_text(text, encoding='utf-8')
 
 

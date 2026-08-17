@@ -24,13 +24,13 @@ import { init, register, t } from 'svelte-i18n';
 import { derived, get } from 'svelte/store';
 import { defaultLang, locales } from '$lib/constants';
 import { authManager } from '$lib/managers/auth-manager.svelte';
-import { getMediaBaseUrl } from '$lib/utils/media-base-url';
 import { downloadManager } from '$lib/managers/download-manager.svelte';
 import { alwaysLoadOriginalFile, lang } from '$lib/stores/preferences.store';
-import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
 import { isWebCompatibleImage } from '$lib/utils/asset-utils';
 import { handleError } from '$lib/utils/handle-error';
 import { convertBCP47, langs } from '$lib/utils/i18n';
+import { getMediaBaseUrl } from '$lib/utils/media-base-url';
+import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
 
 interface DownloadRequestOptions<T = unknown> {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -59,6 +59,7 @@ interface UploadRequestOptions {
   url: string;
   method?: 'POST' | 'PUT';
   data: FormData;
+  headers?: Record<string, string>;
   onUploadProgress?: (event: ProgressEvent<XMLHttpRequestEventTarget>) => void;
 }
 
@@ -100,7 +101,7 @@ export const cancelUploadRequests = () => {
 };
 
 export const uploadRequest = async <T>(options: UploadRequestOptions): Promise<{ data: T; status: number }> => {
-  const { onUploadProgress: onProgress, data, url } = options;
+  const { onUploadProgress: onProgress, data, url, headers } = options;
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const unsubscribe = trackUpload(() => xhr.abort());
@@ -125,6 +126,9 @@ export const uploadRequest = async <T>(options: UploadRequestOptions): Promise<{
 
     xhr.open(options.method || 'POST', url);
     xhr.responseType = 'json';
+    for (const [key, value] of Object.entries(headers ?? {})) {
+      xhr.setRequestHeader(key, value);
+    }
     xhr.send(data);
   });
 };

@@ -122,6 +122,43 @@
     assetViewerManager.animatedZoom(targetZoom);
   };
 
+  let lastTapAt = 0;
+  let lastTapX = 0;
+  let lastTapY = 0;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+
+  const onPointerDown = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch' || !event.isPrimary) {
+      return;
+    }
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
+  };
+
+  const onPointerUp = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch' || !event.isPrimary) {
+      return;
+    }
+    if (assetViewerManager.isFaceEditMode || assetViewerManager.isShowEditor || ocrManager.showOverlay) {
+      return;
+    }
+    if (Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) > 12) {
+      return;
+    }
+
+    const now = performance.now();
+    const isDoubleTap = now - lastTapAt < 320 && Math.hypot(event.clientX - lastTapX, event.clientY - lastTapY) < 28;
+    lastTapAt = now;
+    lastTapX = event.clientX;
+    lastTapY = event.clientY;
+
+    if (isDoubleTap) {
+      lastTapAt = 0;
+      onZoom();
+    }
+  };
+
   const onFaceEditModeChange = (isFaceEditMode: boolean) => {
     if (isFaceEditMode && assetViewerManager.zoom > 1) {
       onZoom();
@@ -231,6 +268,8 @@
   bind:clientHeight={containerHeight}
   role="presentation"
   ondblclick={onZoom}
+  onpointerdown={onPointerDown}
+  onpointerup={onPointerUp}
   use:zoomImageAction={{ zoomTarget: adaptiveImage }}
 >
   <PhotoSwipeTrack
@@ -245,7 +284,9 @@
       {asset}
       {sharedLink}
       {container}
-      objectFit={$slideshowState !== SlideshowState.None && $slideshowLook === SlideshowLook.Cover ? 'cover' : 'contain'}
+      objectFit={$slideshowState !== SlideshowState.None && $slideshowLook === SlideshowLook.Cover
+        ? 'cover'
+        : 'contain'}
       {onUrlChange}
       onImageReady={() => {
         visibleImageReady = true;
