@@ -6,9 +6,11 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate, type ZoneOption } from '$lib/modals/timezone-utils';
   import { getOwnedAssetsWithWarning } from '$lib/utils/asset-utils';
+  import { locale } from '$lib/stores/preferences.store';
+  import { formatDateTimeParts } from '$lib/utils/date-format';
   import { handleError } from '$lib/utils/handle-error';
   import { updateAssets } from '@immich/sdk';
-  import { Field, FormModal, Label, Switch } from '@immich/ui';
+  import { Field, FormModal, Label, Switch, Text } from '@immich/ui';
   import { mdiCalendarEdit } from '@mdi/js';
   import { DateTime } from 'luxon';
   import { t } from 'svelte-i18n';
@@ -61,6 +63,21 @@
 
   // when changing the time zone, assume the configured date/time is meant for that time zone (instead of updating it)
   const date = $derived(DateTime.fromISO(selectedDate, { zone: selectedOption?.value, setZone: true }));
+  const formattedDate = $derived(
+    date.isValid
+      ? formatDateTimeParts(
+          {
+            year: date.year,
+            month: date.month,
+            day: date.day,
+            hour: date.hour,
+            minute: date.minute,
+            second: date.second,
+          },
+          $locale,
+        )
+      : '',
+  );
 </script>
 
 <FormModal
@@ -81,6 +98,9 @@
   {:else}
     <Label for="datetime" class="mb-1 block">{$t('date_and_time')}</Label>
     <DateInput class="mb-2 immich-form-input w-full" id="datetime" type="datetime-local" bind:value={selectedDate} />
+    {#if formattedDate}
+      <Text size="small" class="mb-2 font-mono text-(--md-sys-color-on-surface-variant)">{formattedDate}</Text>
+    {/if}
   {/if}
   <div class="w-full">
     <Combobox

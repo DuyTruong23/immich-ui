@@ -20,4 +20,9 @@ describe('Vietnamese system date formats', () => {
   it('formats month year as Tháng năm', () => {
     expect(formatMonthYear(sample, 'vi-VN')).toBe('Tháng 8 năm 2026');
   });
+
+  it('keeps ngày/tháng/năm when locale tag is vi regardless of default', () => {
+    expect(formatDate(sample, 'vi')).toBe('17/08/2026');
+    expect(formatDateTime(sample, 'vi')).toBe('17/08/2026 16:38:05');
+  });
 });

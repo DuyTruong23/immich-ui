@@ -2,7 +2,7 @@ import { AssetOrder, AssetOrderBy } from '@immich/sdk';
 import { SvelteSet } from 'svelte/reactivity';
 import type { CommonLayoutOptions, CommonPosition } from '$lib/utils/layout-utils';
 import { getJustifiedLayoutFromAssets } from '$lib/utils/layout-utils';
-import { getOrderingDate, plainDateTimeCompare } from '$lib/utils/timeline-util';
+import { formatGroupTitle, fromTimelinePlainDate, getOrderingDate, plainDateTimeCompare } from '$lib/utils/timeline-util';
 import { getTimelineIntersectionExpand } from '$lib/utils/mobile-performance.svelte';
 import type { TimelineMonth } from './timeline-month.svelte';
 import type { Direction, MoveAsset, TimelineAsset } from './types';
@@ -25,7 +25,6 @@ function lowerBound(assets: ViewerAsset[], target: number, key: (pos: CommonPosi
 export class TimelineDay {
   readonly timelineMonth: TimelineMonth;
   readonly index: number;
-  readonly groupTitle: string;
   readonly day: number;
   readonly orderBy: AssetOrderBy;
   viewerAssets: ViewerAsset[] = $state([]);
@@ -43,12 +42,21 @@ export class TimelineDay {
   #col = $state(0);
   #deferredLayout = false;
 
-  constructor(timelineMonth: TimelineMonth, index: number, day: number, groupTitle: string, orderBy: AssetOrderBy) {
+  constructor(timelineMonth: TimelineMonth, index: number, day: number, _groupTitle: string, orderBy: AssetOrderBy) {
     this.index = index;
     this.timelineMonth = timelineMonth;
     this.day = day;
-    this.groupTitle = groupTitle;
     this.orderBy = orderBy;
+  }
+
+  get groupTitle(): string {
+    return formatGroupTitle(
+      fromTimelinePlainDate({
+        year: this.timelineMonth.yearMonth.year,
+        month: this.timelineMonth.yearMonth.month,
+        day: this.day,
+      }),
+    );
   }
 
   get top() {
