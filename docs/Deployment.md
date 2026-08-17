@@ -34,7 +34,7 @@ https://immich.example.com   → Immich API
 
 ```env
 PUBLIC_IMMICH_SERVER_URL=https://immich.example.com
-PUBLIC_APP_NAME=Photo Gallery
+PUBLIC_APP_NAME=WeGallery
 ```
 
 SDK được cấu hình qua `configureApiClient()` trong `custom/src/providers/api-client.ts`.
@@ -65,7 +65,7 @@ SDK được cấu hình qua `configureApiClient()` trong `custom/src/providers/
 **Tối thiểu (Option A — same origin proxy):**
 
 ```env
-PUBLIC_APP_NAME=Photo Gallery
+PUBLIC_APP_NAME=WeGallery
 PUBLIC_COMPANY_NAME=My Company
 ```
 
@@ -73,7 +73,7 @@ PUBLIC_COMPANY_NAME=My Company
 
 ```env
 PUBLIC_IMMICH_SERVER_URL=https://immich.yourdomain.com
-PUBLIC_APP_NAME=Photo Gallery
+PUBLIC_APP_NAME=WeGallery
 ```
 
 **Feature flags (tùy chọn):**

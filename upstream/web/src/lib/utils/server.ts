@@ -6,10 +6,13 @@ import { authManager } from '$lib/managers/auth-manager.svelte';
 import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
 import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
 import { initLanguage } from '$lib/utils';
+import { applyDefaultThemePreference } from '$lib/utils/system-defaults';
 
 type Fetch = typeof fetch;
 
 async function _init(fetch: Fetch) {
+  applyDefaultThemePreference();
+
   if (isUiDevMode()) {
     defaults.fetch = createUiDevFetch(fetch);
     await initLanguage();

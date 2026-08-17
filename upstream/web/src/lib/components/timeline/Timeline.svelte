@@ -5,6 +5,7 @@
   import Month from '$lib/components/timeline/Month.svelte';
   import Scrubber from '$lib/components/timeline/Scrubber.svelte';
   import TimelineAssetViewer from '$lib/components/timeline/TimelineAssetViewer.svelte';
+  import UploadListRefresh from '$lib/components/timeline/UploadListRefresh.svelte';
   import TimelineKeyboardActions from '$lib/components/timeline/actions/TimelineKeyboardActions.svelte';
   import { focusAsset } from '$lib/components/timeline/actions/focus-actions';
   import { AssetAction } from '$lib/constants';
@@ -554,6 +555,8 @@
     }
   }}
 />
+
+<UploadListRefresh {timelineManager} />
 
 <TimelineKeyboardActions
   scrollToAsset={(asset) => scrollToAsset(asset) ?? false}

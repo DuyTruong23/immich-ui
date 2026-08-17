@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="dark">
+<html>
   <head>
     <!-- (used for SSR) -->
     <!-- metadata:tags -->
@@ -21,14 +21,30 @@
 
     <script>
       try {
-        const preference = JSON.parse(localStorage.getItem('immich-ui-theme'));
+        const rawTheme = localStorage.getItem('immich-ui-theme');
+        let preference = null;
+        if (rawTheme) {
+          preference = JSON.parse(rawTheme);
+          if (preference && typeof preference === 'object') {
+            preference = preference.system ? 'system' : preference.value;
+          }
+        }
         const prefersDark = globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (preference === 'light' || (preference !== 'dark' && !prefersDark)) {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
+        const useDark =
+          preference === 'dark' || ((preference === 'system' || preference == null) && prefersDark);
+        document.documentElement.classList.add(useDark ? 'dark' : 'light');
+        const lang = localStorage.getItem('lang');
+        if (lang) {
+          document.documentElement.lang = String(lang).split('_').join('-');
         }
       } catch {
-        // noop
+        try {
+          document.documentElement.classList.add(
+            globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+          );
+        } catch {
+          document.documentElement.classList.add('dark');
+        }
       }
     </script>
 

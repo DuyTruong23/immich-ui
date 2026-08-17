@@ -117,17 +117,19 @@
             color="secondary"
             >{$t('upload')}
           </Button>
-          <IconButton
-            color="secondary"
-            shape="round"
-            variant="ghost"
-            size="medium"
-            onclick={onUploadClick}
-            title={$t('upload')}
-            aria-label={$t('upload')}
-            icon={mdiTrayArrowUp}
-            class="lg:hidden"
-          />
+          {#if authManager.user.isAdmin}
+            <IconButton
+              color="secondary"
+              shape="round"
+              variant="ghost"
+              size="medium"
+              onclick={onUploadClick}
+              title={$t('upload')}
+              aria-label={$t('upload')}
+              icon={mdiTrayArrowUp}
+              class="lg:hidden"
+            />
+          {/if}
         {/if}
 
         <ThemeButton />

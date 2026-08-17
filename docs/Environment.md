@@ -19,9 +19,9 @@ SvelteKit inject `PUBLIC_*` vào bundle lúc build. Thay đổi trên Vercel yê
 | `PUBLIC_IMMICH_MEDIA_URL` | `""` | URL tunnel trực tiếp cho video/ảnh (bypass Vercel proxy). Ví dụ `https://api.gallery-app.pp.ua` |
 | `PUBLIC_APP_NAME` | `Photo Gallery` | Tên app (title, dashboard) |
 | `PUBLIC_COMPANY_NAME` | `""` | Tên công ty |
-| `PUBLIC_THEME` | `system` | `light` \| `dark` \| `system` |
-| `PUBLIC_DEFAULT_THEME` | `dark` | Fallback theme |
-| `PUBLIC_DEFAULT_LANGUAGE` | `en` | Ngôn ngữ mặc định |
+| `PUBLIC_THEME` | `system` | Lần đầu vào app: `light` \| `dark` \| `system`. `system` theo theme máy (iOS / Android / laptop, `prefers-color-scheme`). Không ghi đè nếu user đã chọn trong Settings. |
+| `PUBLIC_DEFAULT_THEME` | `dark` | Fallback khi trình duyệt không báo được theme hệ thống |
+| `PUBLIC_DEFAULT_LANGUAGE` | `vi` | Fallback khi ngôn ngữ hệ thống (`navigator.languages`) không có trong app. Lần đầu vào app dùng ngôn ngữ máy (ví dụ `vi-VN` → `vi`, `en-US` → `en`). |
 | `PUBLIC_ENABLE_ANALYTICS` | `false` | Analytics |
 | `PUBLIC_ENABLE_ADMIN` | `true` | Route `/admin/*` |
 | `PUBLIC_ENABLE_EXPERIMENTAL` | `false` | Tính năng thử nghiệm |
@@ -268,7 +268,7 @@ PUBLIC_IMMICH_SERVER_URL=
 PUBLIC_IMMICH_WS_URL=https://immich.gallery-app.pp.ua
 PUBLIC_IMMICH_MEDIA_URL=https://api.gallery-app.pp.ua
 IMMICH_SERVER_URL=https://immich.gallery-app.pp.ua
-PUBLIC_APP_NAME=Photo Gallery
+PUBLIC_APP_NAME=WeGallery
 ```
 
 Tối ưu mobile / ép tắt video-ảnh gốc **không thêm biến mới**. Video trên điện thoại phụ thuộc `PUBLIC_IMMICH_MEDIA_URL` (đã có trên Vercel).

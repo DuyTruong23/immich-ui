@@ -3,6 +3,7 @@
   import Image from '$lib/components/Image.svelte';
   import { Icon } from '@immich/ui';
   import { mdiEyeOffOutline } from '@mdi/js';
+  import { onDestroy } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
 
   interface Props {
@@ -46,14 +47,28 @@
   let loaded = $state(false);
   let errored = $state(false);
   let retryCount = $state(0);
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const MAX_RETRIES = 2;
+  // Thumbnail Immich tạo async sau upload — retry ngay lập tức vẫn 404.
+  const RETRY_DELAYS_MS = [800, 2000, 4000, 8000];
 
   $effect(() => {
     url;
     loaded = false;
     errored = false;
     retryCount = 0;
+    return () => {
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = undefined;
+      }
+    };
+  });
+
+  onDestroy(() => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+    }
   });
 
   const setLoaded = () => {
@@ -62,10 +77,14 @@
   };
 
   const setErrored = () => {
-    if (retryCount < MAX_RETRIES) {
-      retryCount += 1;
-      loaded = false;
-      errored = false;
+    if (retryCount < RETRY_DELAYS_MS.length) {
+      const delay = RETRY_DELAYS_MS[retryCount];
+      retryTimer = setTimeout(() => {
+        retryTimer = undefined;
+        retryCount += 1;
+        loaded = false;
+        errored = false;
+      }, delay);
       return;
     }
 
@@ -96,7 +115,7 @@
       src={url}
       onLoad={setLoaded}
       onError={setErrored}
-      class={['bg-gray-300 object-cover dark:bg-gray-700', sharedClasses, imageClass]}
+      class={['bg-gray-300 object-cover dark:bg-gray-700', !loaded && 'invisible', sharedClasses, imageClass]}
       {style}
       alt={loaded || errored ? altText : ''}
       draggable={false}

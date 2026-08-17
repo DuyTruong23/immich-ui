@@ -5,7 +5,9 @@ export interface PublicEnv {
   appName: string;
   companyName: string;
   theme: 'light' | 'dark' | 'system';
+  /** Fallback khi trình duyệt không báo prefers-color-scheme */
   defaultTheme: 'light' | 'dark';
+  /** Fallback khi ngôn ngữ hệ thống không có trong app */
   defaultLanguage: string;
   enableAnalytics: boolean;
   enableAdmin: boolean;
@@ -36,7 +38,7 @@ export const createPublicEnv = (env: Record<string, string | undefined>): Public
   companyName: env.PUBLIC_COMPANY_NAME ?? '',
   theme: readTheme(env.PUBLIC_THEME),
   defaultTheme: env.PUBLIC_DEFAULT_THEME === 'light' ? 'light' : 'dark',
-  defaultLanguage: env.PUBLIC_DEFAULT_LANGUAGE ?? 'en',
+  defaultLanguage: env.PUBLIC_DEFAULT_LANGUAGE?.trim() || 'en',
   enableAnalytics: readBool(env.PUBLIC_ENABLE_ANALYTICS, false),
   enableAdmin: readBool(env.PUBLIC_ENABLE_ADMIN, true),
   enableExperimental: readBool(env.PUBLIC_ENABLE_EXPERIMENTAL, false),
