@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { shouldHideFeatureUpdateModal } from '$custom/hooks/feature-update-seen';
   import { fetchFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import OnEvents from '$lib/components/OnEvents.svelte';
@@ -7,10 +6,6 @@
 
   const onAuthLogin = (user: LoginResponseDto) => {
     if (user.isAdmin) {
-      return;
-    }
-
-    if (shouldHideFeatureUpdateModal(user.userId)) {
       return;
     }
 

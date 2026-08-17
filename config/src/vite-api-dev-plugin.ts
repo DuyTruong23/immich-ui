@@ -31,22 +31,15 @@ const writeLocalFeatureUpdatesConfig = (config: unknown): void => {
   fs.writeFileSync(LOCAL_FEATURE_UPDATES_PATH, JSON.stringify(config, null, 2), 'utf8');
 };
 
-const readLocalSubscribers = (): { emails: string[]; lastNotifiedVersion?: string } => {
+const readLocalSubscribers = (): unknown => {
   try {
-    const raw = JSON.parse(fs.readFileSync(LOCAL_SUBSCRIBERS_PATH, 'utf8')) as {
-      emails?: unknown;
-      lastNotifiedVersion?: string;
-    };
-    const emails = Array.isArray(raw.emails)
-      ? raw.emails.filter((email): email is string => typeof email === 'string')
-      : [];
-    return raw.lastNotifiedVersion ? { emails, lastNotifiedVersion: raw.lastNotifiedVersion } : { emails };
+    return JSON.parse(fs.readFileSync(LOCAL_SUBSCRIBERS_PATH, 'utf8')) as unknown;
   } catch {
-    return { emails: [] };
+    return { subscribers: [] };
   }
 };
 
-const writeLocalSubscribers = (store: { emails: string[]; lastNotifiedVersion?: string }): void => {
+const writeLocalSubscribers = (store: unknown): void => {
   fs.mkdirSync(path.dirname(LOCAL_SUBSCRIBERS_PATH), { recursive: true });
   fs.writeFileSync(LOCAL_SUBSCRIBERS_PATH, JSON.stringify(store, null, 2), 'utf8');
 };
@@ -56,8 +49,8 @@ const attachLocalSubscriberAdapter = async (server: ViteDevServer): Promise<void
     path.resolve(rootDir, 'api/_lib/feature-update-subscribers.ts'),
   )) as {
     setLocalSubscriberStoreAdapter: (adapter: {
-      read: () => Promise<{ emails: string[]; lastNotifiedVersion?: string }>;
-      write: (store: { emails: string[]; lastNotifiedVersion?: string }) => Promise<void>;
+      read: () => Promise<unknown>;
+      write: (store: unknown) => Promise<void>;
     }) => void;
   };
 

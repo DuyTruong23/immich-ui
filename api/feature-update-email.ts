@@ -7,8 +7,10 @@ import {
 } from './_lib/immich-auth.js';
 import {
   addFeatureUpdateSubscriber,
+  getNotifyEmailForAccount,
   getSubscriberStorage,
   isValidNotifyEmail,
+  listNotifyEmails,
   readFeatureUpdateSubscribers,
   removeFeatureUpdateSubscriber,
 } from './_lib/feature-update-subscribers.js';
@@ -131,10 +133,12 @@ const listResponse = async (request: Request, accessToken?: string): Promise<Res
   const storage = getSubscriberStorage();
   try {
     const store = await readFeatureUpdateSubscribers();
+    const emails = listNotifyEmails(store);
     return json({
       ok: true,
-      emails: store.emails,
-      count: store.emails.length,
+      emails,
+      subscribers: store.subscribers,
+      count: emails.length,
       lastNotifiedVersion: store.lastNotifiedVersion ?? null,
       source: 'modal',
       storage,
@@ -152,6 +156,30 @@ const listResponse = async (request: Request, accessToken?: string): Promise<Res
   }
 };
 
+const mineResponse = async (request: Request, accessToken?: string): Promise<Response> => {
+  const cookie = request.headers.get('cookie') ?? undefined;
+  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const user = await verifySession(bearer || accessToken, cookie);
+  if (!user) {
+    return json({ error: 'Authentication required' }, 401);
+  }
+
+  try {
+    const store = await readFeatureUpdateSubscribers();
+    const email = getNotifyEmailForAccount(store, { accountEmail: user.email, userId: user.id }) || null;
+    return json({ ok: true, email });
+  } catch (error) {
+    console.error('[feature-update-email] mine failed', error);
+    return json(
+      {
+        error: 'Could not load notification email',
+        detail: error instanceof Error ? error.message : 'Unknown error',
+      },
+      502,
+    );
+  }
+};
+
 const unsubscribeResponse = async (
   email: string,
   options?: { accessToken?: string; cookie?: string },
@@ -161,9 +189,12 @@ const unsubscribeResponse = async (
   }
 
   try {
-    const removed = await removeFeatureUpdateSubscriber(email);
+    const user = await verifySession(options?.accessToken, options?.cookie);
+    const removed = await removeFeatureUpdateSubscriber(email, {
+      accountEmail: user?.email,
+      userId: user?.id,
+    });
     if (removed) {
-      const user = await verifySession(options?.accessToken, options?.cookie);
       queueAdminNotify({ action: 'removed', email, user });
     }
 
@@ -195,6 +226,10 @@ export default async function handler(request: Request): Promise<Response> {
       return listResponse(request, url.searchParams.get('accessToken') ?? undefined);
     }
 
+    if (url.searchParams.get('mine') === '1') {
+      return mineResponse(request, url.searchParams.get('accessToken') ?? undefined);
+    }
+
     return json({ error: 'Method not allowed' }, 405);
   }
 
@@ -221,20 +256,24 @@ export default async function handler(request: Request): Promise<Response> {
     return json({ error: 'Valid email is required' }, 400);
   }
 
-  const user = await verifySession(body.accessToken, cookie);
+  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const user = await verifySession(bearer || body.accessToken, cookie);
   if (!user) {
     return json({ error: 'Authentication required' }, 401);
   }
 
-  const previousEmail = body.previousEmail?.trim() ?? '';
-  const isChange = isValidNotifyEmail(previousEmail) && previousEmail.toLowerCase() !== email.trim().toLowerCase();
-
   try {
+    const store = await readFeatureUpdateSubscribers();
+    const identity = { accountEmail: user.email, userId: user.id };
+    const mappedEmail = getNotifyEmailForAccount(store, identity);
+    const previousEmail = body.previousEmail?.trim() || mappedEmail;
+    const isChange = isValidNotifyEmail(previousEmail) && previousEmail.toLowerCase() !== email.trim().toLowerCase();
+
     if (isChange) {
-      await removeFeatureUpdateSubscriber(previousEmail);
+      await removeFeatureUpdateSubscriber(previousEmail, identity);
     }
 
-    const result = await addFeatureUpdateSubscriber(email, body.version);
+    const result = await addFeatureUpdateSubscriber(email, body.version, identity);
     if (!result.persisted) {
       return json(
         {

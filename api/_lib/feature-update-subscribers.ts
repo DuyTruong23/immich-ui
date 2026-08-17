@@ -15,8 +15,19 @@ const isVercelRuntime = (): boolean => getEnv('VERCEL') === '1';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export type FeatureUpdateSubscriber = {
+  accountEmail: string;
+  notifyEmail: string;
+  userId?: string;
+};
+
+export type FeatureUpdateSubscriberIdentity = {
+  accountEmail?: string;
+  userId?: string;
+};
+
 export type FeatureUpdateSubscriberStore = {
-  emails: string[];
+  subscribers: FeatureUpdateSubscriber[];
   lastNotifiedVersion?: string;
 };
 
@@ -25,7 +36,7 @@ export type SubscriberStoreAdapter = {
   write: (store: FeatureUpdateSubscriberStore) => Promise<void>;
 };
 
-const EMPTY_STORE: FeatureUpdateSubscriberStore = { emails: [] };
+const emptyStore = (): FeatureUpdateSubscriberStore => ({ subscribers: [] });
 
 let memoryStore: FeatureUpdateSubscriberStore | null = null;
 let localAdapter: SubscriberStoreAdapter | null = null;
@@ -39,26 +50,139 @@ export const normalizeNotifyEmail = (value: string): string => value.trim().toLo
 
 export const isValidNotifyEmail = (value: string): boolean => EMAIL_RE.test(normalizeNotifyEmail(value));
 
-const normalizeStore = (value: unknown): FeatureUpdateSubscriberStore => {
+const normalizeSubscriber = (value: unknown): FeatureUpdateSubscriber | null => {
   if (!value || typeof value !== 'object') {
-    return { ...EMPTY_STORE };
+    return null;
   }
 
   const record = value as Record<string, unknown>;
-  const emails = Array.isArray(record.emails)
-    ? [
-        ...new Set(
-          record.emails
-            .map((email) => (typeof email === 'string' ? normalizeNotifyEmail(email) : ''))
-            .filter((email) => isValidNotifyEmail(email)),
-        ),
-      ]
+  const notifyEmail =
+    typeof record.notifyEmail === 'string'
+      ? normalizeNotifyEmail(record.notifyEmail)
+      : typeof record.email === 'string'
+        ? normalizeNotifyEmail(record.email)
+        : '';
+  const accountEmail = typeof record.accountEmail === 'string' ? normalizeNotifyEmail(record.accountEmail) : '';
+  const userId = typeof record.userId === 'string' ? record.userId.trim() : '';
+
+  if (!isValidNotifyEmail(notifyEmail) || (!accountEmail && !userId)) {
+    return null;
+  }
+
+  return {
+    accountEmail,
+    notifyEmail,
+    ...(userId ? { userId } : {}),
+  };
+};
+
+const subscribersFromLegacy = (record: Record<string, unknown>): FeatureUpdateSubscriber[] => {
+  const subscribers: FeatureUpdateSubscriber[] = [];
+
+  if (record.byUser && typeof record.byUser === 'object' && !Array.isArray(record.byUser)) {
+    for (const [userId, email] of Object.entries(record.byUser as Record<string, unknown>)) {
+      const id = userId.trim();
+      const notifyEmail = typeof email === 'string' ? normalizeNotifyEmail(email) : '';
+      if (id && isValidNotifyEmail(notifyEmail)) {
+        subscribers.push({ accountEmail: '', notifyEmail, userId: id });
+      }
+    }
+  }
+
+  if (Array.isArray(record.emails)) {
+    for (const email of record.emails) {
+      const notifyEmail = typeof email === 'string' ? normalizeNotifyEmail(email) : '';
+      if (isValidNotifyEmail(notifyEmail)) {
+        subscribers.push({ accountEmail: '', notifyEmail, userId: `legacy:${notifyEmail}` });
+      }
+    }
+  }
+
+  return subscribers;
+};
+
+const mergeSubscribers = (items: FeatureUpdateSubscriber[]): FeatureUpdateSubscriber[] => {
+  const byAccount = new Map<string, FeatureUpdateSubscriber>();
+  const byUser = new Map<string, FeatureUpdateSubscriber>();
+  const result: FeatureUpdateSubscriber[] = [];
+
+  for (const item of items) {
+    if (item.accountEmail) {
+      const existing = byAccount.get(item.accountEmail);
+      if (existing) {
+        existing.notifyEmail = item.notifyEmail;
+        if (item.userId) {
+          existing.userId = item.userId;
+        }
+        continue;
+      }
+      byAccount.set(item.accountEmail, item);
+      if (item.userId) {
+        byUser.set(item.userId, item);
+      }
+      result.push(item);
+      continue;
+    }
+
+    if (item.userId) {
+      const existing = byUser.get(item.userId);
+      if (existing) {
+        existing.notifyEmail = item.notifyEmail;
+        continue;
+      }
+      byUser.set(item.userId, item);
+      result.push(item);
+    }
+  }
+
+  return result;
+};
+
+const normalizeStore = (value: unknown): FeatureUpdateSubscriberStore => {
+  if (!value || typeof value !== 'object') {
+    return emptyStore();
+  }
+
+  const record = value as Record<string, unknown>;
+  const fromArray = Array.isArray(record.subscribers)
+    ? record.subscribers.map(normalizeSubscriber).filter((item): item is FeatureUpdateSubscriber => item !== null)
     : [];
+  const subscribers = mergeSubscribers([...fromArray, ...subscribersFromLegacy(record)]);
   const lastNotifiedVersion =
     typeof record.lastNotifiedVersion === 'string' ? record.lastNotifiedVersion.trim() : undefined;
 
-  return lastNotifiedVersion ? { emails, lastNotifiedVersion } : { emails };
+  return lastNotifiedVersion ? { subscribers, lastNotifiedVersion } : { subscribers };
 };
+
+export const listNotifyEmails = (store: FeatureUpdateSubscriberStore): string[] => [
+  ...new Set(store.subscribers.map((item) => item.notifyEmail).filter((email) => isValidNotifyEmail(email))),
+];
+
+export const findSubscriber = (
+  store: FeatureUpdateSubscriberStore,
+  identity: FeatureUpdateSubscriberIdentity,
+): FeatureUpdateSubscriber | undefined => {
+  const accountEmail = identity.accountEmail ? normalizeNotifyEmail(identity.accountEmail) : '';
+  const userId = identity.userId?.trim() ?? '';
+
+  if (accountEmail) {
+    const byAccount = store.subscribers.find((item) => item.accountEmail === accountEmail);
+    if (byAccount) {
+      return byAccount;
+    }
+  }
+
+  if (userId) {
+    return store.subscribers.find((item) => item.userId === userId);
+  }
+
+  return undefined;
+};
+
+export const getNotifyEmailForAccount = (
+  store: FeatureUpdateSubscriberStore,
+  identity: FeatureUpdateSubscriberIdentity,
+): string => findSubscriber(store, identity)?.notifyEmail ?? '';
 
 const readStoredJson = async (
   url: string,
@@ -66,7 +190,7 @@ const readStoredJson = async (
 ): Promise<FeatureUpdateSubscriberStore | null> => {
   const result = await readBlobJson<unknown>(url, token, { timeoutMs: BLOB_READ_TIMEOUT_MS });
   if (!result.ok) {
-    return result.status === 404 ? { ...EMPTY_STORE } : null;
+    return result.status === 404 ? emptyStore() : null;
   }
 
   return normalizeStore(result.value);
@@ -96,10 +220,10 @@ const readBlobStore = async (): Promise<FeatureUpdateSubscriberStore | null> => 
       ),
     );
     if (!blob?.url) {
-      return { ...EMPTY_STORE };
+      return emptyStore();
     }
 
-    return (await readStoredJson(blob.url, token)) ?? { ...EMPTY_STORE };
+    return (await readStoredJson(blob.url, token)) ?? emptyStore();
   } catch {
     return null;
   }
@@ -145,7 +269,7 @@ export const readFeatureUpdateSubscribers = async (): Promise<FeatureUpdateSubsc
     return memoryStore;
   }
 
-  return { ...EMPTY_STORE };
+  return emptyStore();
 };
 
 export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscriberStore): Promise<void> => {
@@ -180,37 +304,69 @@ export const writeFeatureUpdateSubscribers = async (store: FeatureUpdateSubscrib
 export const addFeatureUpdateSubscriber = async (
   email: string,
   currentVersion?: string,
+  identity?: FeatureUpdateSubscriberIdentity,
 ): Promise<{ added: boolean; persisted: boolean; store: FeatureUpdateSubscriberStore }> => {
-  const normalized = normalizeNotifyEmail(email);
-  if (!isValidNotifyEmail(normalized)) {
+  const notifyEmail = normalizeNotifyEmail(email);
+  if (!isValidNotifyEmail(notifyEmail)) {
     throw new Error('Invalid email');
   }
 
+  const accountEmail = identity?.accountEmail ? normalizeNotifyEmail(identity.accountEmail) : '';
+  const userId = identity?.userId?.trim() ?? '';
+  if (!accountEmail && !userId) {
+    throw new Error('Account email is required');
+  }
+
   const store = await readFeatureUpdateSubscribers();
-  const exists = store.emails.includes(normalized);
+  const existing = findSubscriber(store, { accountEmail, userId });
+  const nextSubscriber: FeatureUpdateSubscriber = {
+    accountEmail: accountEmail || existing?.accountEmail || '',
+    notifyEmail,
+    ...(userId || existing?.userId ? { userId: userId || existing?.userId } : {}),
+  };
+
+  const subscribers = existing
+    ? store.subscribers.map((item) => (item === existing ? nextSubscriber : item))
+    : [...store.subscribers, nextSubscriber];
+
   const next: FeatureUpdateSubscriberStore = {
-    emails: exists ? store.emails : [...store.emails, normalized],
+    subscribers,
     lastNotifiedVersion: store.lastNotifiedVersion ?? currentVersion?.trim() ?? undefined,
   };
 
-  if (!exists || next.lastNotifiedVersion !== store.lastNotifiedVersion) {
+  const unchanged =
+    Boolean(existing) &&
+    existing.notifyEmail === notifyEmail &&
+    existing.accountEmail === nextSubscriber.accountEmail &&
+    existing.userId === nextSubscriber.userId &&
+    next.lastNotifiedVersion === store.lastNotifiedVersion;
+
+  if (!unchanged) {
     await writeFeatureUpdateSubscribers(next);
   }
 
   memoryStore = next;
-  return { added: !exists, persisted: hasSubscriberPersistence(), store: next };
+  return { added: !existing, persisted: hasSubscriberPersistence(), store: next };
 };
 
-export const removeFeatureUpdateSubscriber = async (email: string): Promise<boolean> => {
-  const normalized = normalizeNotifyEmail(email);
+export const removeFeatureUpdateSubscriber = async (
+  email: string,
+  identity?: FeatureUpdateSubscriberIdentity,
+): Promise<boolean> => {
+  const notifyEmail = normalizeNotifyEmail(email);
   const store = await readFeatureUpdateSubscribers();
-  if (!store.emails.includes(normalized)) {
+  const matched = findSubscriber(store, identity ?? {});
+  const subscribers = matched
+    ? store.subscribers.filter((item) => item !== matched)
+    : store.subscribers.filter((item) => item.notifyEmail !== notifyEmail);
+
+  if (subscribers.length === store.subscribers.length) {
     return false;
   }
 
   await writeFeatureUpdateSubscribers({
     ...store,
-    emails: store.emails.filter((item) => item !== normalized),
+    subscribers,
   });
   return true;
 };
