@@ -28,7 +28,7 @@ const buildEmailHtml = (user: { name: string; email: string; isAdmin: boolean },
 
   return `
     <div style="line-height: 1.6; color: #111;">
-      <h2 style="margin-bottom: 0.5rem;">Có người dùng vừa đăng nhập</h2>
+      <h2 style="margin-bottom: 0.5rem;">${escapeHtml(user.name)} vừa đăng nhập</h2>
       <p style="color: #555; margin-top: 0;">Thông báo từ <strong>${escapeHtml(appName)}</strong></p>
       <table style="border-collapse: collapse; margin: 1rem 0;">
         <tr><td style="padding: 0.25rem 1rem 0.25rem 0; color: #666;">Tên</td><td><strong>${escapeHtml(user.name)}</strong></td></tr>
@@ -88,7 +88,7 @@ export default async function handler(request: Request): Promise<Response> {
     const sent = await sendViaResend({
       to: adminEmail,
       from: fromEmail,
-      subject: `[${appName}] Đăng nhập: ${user.name} (${user.email})`,
+      subject: `[${appName}] ${user.name} đã đăng nhập`,
       html: buildEmailHtml(user, body.userAgent, appName),
     });
 
