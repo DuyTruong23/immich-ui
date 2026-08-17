@@ -38,10 +38,13 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
 | `lib/managers/auth-manager.svelte.ts` | `sessionKey` cho media cross-subdomain; timeout 4s không chặn thumbnail |
+| `lib/managers/language-manager.svelte.ts` | Gán `html lang` / `dir` theo locale hệ thống |
+| `lib/utils/system-defaults.ts` | Ngôn ngữ mặc định theo máy; theme mặc định `system` |
 | `lib/managers/timeline-manager/internal/intersection-support.svelte.ts` | Buffer viewport lớn hơn khi đang scrub/scroll |
 | `lib/managers/timeline-manager/timeline-day.svelte.ts` | Giữ asset đích trong DOM khi jump-to-date |
 | `lib/stores/websocket.ts` | WS trực tiếp tunnel; resume sau bfcache không reload |
 | `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
+| `lib/utils/server.ts` | Gọi `applyDefaultThemePreference` trước khi init i18n |
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
 | `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
 | `lib/utils/mobile-back-navigation.ts` | Intercept popstate/willUnload, đóng viewer SPA |
@@ -57,6 +60,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `custom/src/routes/(user)/explore/[[photos=photos]]/[[assetId=id]]/` | Explore URL-sync viewer (`/explore/photos/:id`), back đóng viewer |
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |
+| `custom/src/routes/auth/onboarding/OnboardingTheme.svelte` | Thêm lựa chọn theme hệ thống (mặc định) |
 | `custom/src/routes/admin/feature-updates/` | Admin tùy chỉnh modal tính năng mới |
 | `custom/src/routes/UploadPanel.svelte` | Panel upload full-width trên mobile; emit reload list khi xong |
 | `custom/src/components/FeatureUpdatePin.svelte` | Chip What's new + nút `+` upload cho user |

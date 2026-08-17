@@ -27,13 +27,15 @@ PUBLIC_IMMICH_WS_URL=https://immich.gallery-app.pp.ua
 # Server-side — Edge Function proxy (không PUBLIC)
 IMMICH_SERVER_URL=https://immich.gallery-app.pp.ua
 
-PUBLIC_APP_NAME=Photo Gallery
-PUBLIC_DEFAULT_LANGUAGE=vi
+PUBLIC_APP_NAME=WeGallery
 PUBLIC_THEME=system
 PUBLIC_DEFAULT_THEME=dark
+PUBLIC_DEFAULT_LANGUAGE=vi
 ```
 
-Tối ưu mobile **không cần biến mới**. Giữ đúng 4 biến trên; `PUBLIC_*` chỉ có hiệu lực sau **Redeploy**.
+Lần đầu vào app: ngôn ngữ theo máy (`navigator.languages`), theme theo trình duyệt (`prefers-color-scheme`). `PUBLIC_DEFAULT_LANGUAGE` / `PUBLIC_DEFAULT_THEME` chỉ là fallback. User đã chọn trong Settings thì giữ nguyên.
+
+Tối ưu mobile **không cần biến mới**. Giữ đúng các biến trên; `PUBLIC_*` chỉ có hiệu lực sau **Redeploy**.
 
 > **Quan trọng:** Xóa hoặc để trống `PUBLIC_IMMICH_SERVER_URL`, thêm `IMMICH_SERVER_URL`, rồi **Redeploy**.
 
