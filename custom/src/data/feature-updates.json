@@ -1,6 +1,31 @@
 {
   "releases": [
     {
+      "version": "v1.0.11",
+      "items": [
+        {
+          "title": "Dải ảnh xem trước trên điện thoại",
+          "detail": "Khi xem ảnh hoặc video, dải ảnh bên dưới là ô vuông bo góc. Kéo ngang để xem nhiều ảnh kề, không còn giới hạn 5 ô."
+        },
+        {
+          "title": "Vuốt xuống để đóng video",
+          "detail": "Đang xem video, vuốt xuống từ giữa màn hình để đóng giống khi xem ảnh. Vuốt ngang vẫn chuyển ảnh hoặc video kế bên; thanh tua và âm lượng không bị cướp cử chỉ."
+        },
+        {
+          "title": "Ngày giờ theo tiếng Việt",
+          "detail": "Khi ngôn ngữ là Tiếng Việt, ngày hiện dạng 17/08/2026, giờ 16:38:05, tiêu đề tháng trên dòng thời gian dạng Tháng 8 năm 2026."
+        },
+        {
+          "title": "Ngôn ngữ và giao diện theo máy",
+          "detail": "Lần đầu vào app, ngôn ngữ và chế độ sáng/tối theo cài đặt điện thoại hoặc máy tính. Bạn vẫn đổi được trong Cài đặt."
+        },
+        {
+          "title": "Tải ảnh và video lên",
+          "detail": "Mọi tài khoản có thể tải ảnh, video lên từ điện thoại hoặc máy tính. Trên điện thoại có nút + cạnh What's new."
+        }
+      ]
+    },
+    {
       "version": "v1.0.10",
       "items": [
         {
