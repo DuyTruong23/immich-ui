@@ -1180,6 +1180,7 @@
   "feature_updates_notify_email_saved": "Đã lưu email nhận thông báo",
   "feature_updates_notify_email_saving": "Đang lưu...",
   "feature_updates_hide_next_login": "Không hiện modal cho lần đăng nhập sau",
+  "feature_updates_donate_hint": "Xem chùa mà không like share subscribe và DONATE là thấy không ưng rồi đó",
   "feature_updates_intro": "WeGallery vừa được cập nhật với các thay đổi sau:",
   "feature_updates_items_aria": "Các mục tính năng",
   "feature_updates_preview_banner": "Chế độ preview — dữ liệu mock cho local dev",
