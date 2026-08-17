@@ -9,33 +9,67 @@ const isVietnameseTag = (code: string) => {
   return normalized === 'vi' || normalized.startsWith('vi-');
 };
 
-/** Locale dùng để format ngày/giờ: setting tường minh, hoặc ngôn ngữ UI / trình duyệt. */
-export const resolveFormatLocale = (stored?: string | null): string => {
-  if (stored && stored !== 'default') {
-    return isVietnameseTag(stored) ? 'vi-VN' : stored.replaceAll('_', '-');
-  }
-
+const readUiLanguage = (): string => {
   try {
-    const uiLang = get(lang);
-    if (uiLang && isVietnameseTag(uiLang)) {
-      return 'vi-VN';
+    const uiLang = get(lang)?.trim();
+    if (uiLang && uiLang !== 'default' && uiLang !== 'dev') {
+      return uiLang;
     }
   } catch {
     // store chưa sẵn
   }
 
   if (browser) {
-    const nav = navigator.languages?.find(Boolean) || navigator.language;
-    if (nav) {
-      return isVietnameseTag(nav) ? 'vi-VN' : nav;
+    const docLang = document.documentElement.lang?.trim();
+    if (docLang) {
+      return docLang;
     }
+  }
+
+  return '';
+};
+
+const firstNavigatorLanguage = (): string => {
+  if (!browser) {
+    return '';
+  }
+
+  const codes = [...(navigator.languages ?? []), navigator.language].filter(Boolean);
+  const vietnamese = codes.find((code) => isVietnameseTag(code));
+  return vietnamese || codes[0] || '';
+};
+
+/** Locale dùng để format ngày/giờ: setting tường minh, ngôn ngữ UI, rồi trình duyệt. */
+export const resolveFormatLocale = (stored?: string | null): string => {
+  if (stored && stored !== 'default') {
+    return isVietnameseTag(stored) ? 'vi-VN' : stored.replaceAll('_', '-');
+  }
+
+  const uiLang = readUiLanguage();
+  if (uiLang) {
+    return isVietnameseTag(uiLang) ? 'vi-VN' : uiLang.replaceAll('_', '-');
+  }
+
+  const nav = firstNavigatorLanguage();
+  if (nav) {
+    return isVietnameseTag(nav) ? 'vi-VN' : nav;
   }
 
   return 'en-US';
 };
 
-export const isVietnameseLocale = (stored?: string | null): boolean =>
-  isVietnameseTag(resolveFormatLocale(stored));
+export const isVietnameseLocale = (stored?: string | null): boolean => {
+  if (stored && stored !== 'default' && isVietnameseTag(stored)) {
+    return true;
+  }
+
+  const uiLang = readUiLanguage();
+  if (uiLang && isVietnameseTag(uiLang)) {
+    return true;
+  }
+
+  return isVietnameseTag(resolveFormatLocale(stored));
+};
 
 type DateParts = { year: number; month: number; day: number };
 type TimeParts = { hour: number; minute: number; second: number };

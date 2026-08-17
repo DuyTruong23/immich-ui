@@ -3,9 +3,11 @@
   import DateInput from '$lib/elements/DateInput.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate } from '$lib/modals/timezone-utils';
+  import { locale } from '$lib/stores/preferences.store';
+  import { formatDateTimeParts } from '$lib/utils/date-format';
   import { handleError } from '$lib/utils/handle-error';
   import { updateAsset } from '@immich/sdk';
-  import { FormModal, Label } from '@immich/ui';
+  import { FormModal, Label, Text } from '@immich/ui';
   import { mdiCalendarEdit } from '@mdi/js';
   import { DateTime } from 'luxon';
   import { t } from 'svelte-i18n';
@@ -50,6 +52,21 @@
 
   // when changing the time zone, assume the configured date/time is meant for that time zone (instead of updating it)
   const date = $derived(DateTime.fromISO(selectedDate, { zone: selectedOption?.value, setZone: true }));
+  const formattedDate = $derived(
+    date.isValid
+      ? formatDateTimeParts(
+          {
+            year: date.year,
+            month: date.month,
+            day: date.day,
+            hour: date.hour,
+            minute: date.minute,
+            second: date.second,
+          },
+          $locale,
+        )
+      : '',
+  );
 </script>
 
 <FormModal
@@ -68,6 +85,9 @@
     type="datetime-local"
     bind:value={() => selectedDate, updateSelectedDate}
   />
+  {#if formattedDate}
+    <Text size="small" class="mb-2 font-mono text-(--md-sys-color-on-surface-variant)">{formattedDate}</Text>
+  {/if}
   {#if timezoneInput}
     <div class="w-full">
       <Combobox bind:selectedOption label={$t('timezone')} options={timezones} placeholder={$t('search_timezone')} />
