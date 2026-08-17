@@ -3,9 +3,9 @@
     DEFAULT_FEATURE_UPDATE_ITEMS,
     DEFAULT_FEATURE_UPDATE_VERSION,
   } from '$custom/constants/feature-updates';
-  import { setHideFeatureUpdateModal, shouldHideFeatureUpdateModal } from '$custom/hooks/feature-update-seen';
   import {
     clearStoredNotifyEmail,
+    fetchMyNotifyEmail,
     getDefaultNotifyEmail,
     getStoredNotifyEmail,
     hasConfirmedNotifyEmail,
@@ -22,7 +22,7 @@
     type FeatureUpdateItem,
     type FeatureUpdateRelease,
   } from '$custom/utils/feature-update-items';
-  import { Field, Button, HStack, Icon, IconButton, Input, Modal, ModalBody, ModalFooter, Switch, Text, Textarea, toastManager } from '@immich/ui';
+  import { Field, Button, HStack, Icon, IconButton, Input, Modal, ModalBody, ModalFooter, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiCheckCircleOutline, mdiChevronDown, mdiClose } from '@mdi/js';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
@@ -49,18 +49,20 @@
     preview = false,
     originElement = null,
     userId,
+    accountEmail,
   }: Props = $props();
 
   const CLOSE_MS = 200;
   const MODAL_CLASS = 'pg-feature-update-modal';
+  const notifyIdentity = { accountEmail, userId };
 
   let feedback = $state('');
-  const initialNotifyEmail = getDefaultNotifyEmail();
+  const initialNotifyEmail = getDefaultNotifyEmail(notifyIdentity);
   let notifyEmail = $state(initialNotifyEmail);
-  let lastPersistedEmail = $state(hasConfirmedNotifyEmail() ? getStoredNotifyEmail() : '');
+  let lastPersistedEmail = $state(hasConfirmedNotifyEmail(notifyIdentity) ? getStoredNotifyEmail(notifyIdentity) : '');
+  let editingNotifyEmail = $state(!hasConfirmedNotifyEmail(notifyIdentity));
   let sentFeedback = $state(false);
   let savingNotifyEmail = $state(false);
-  let hideOnNextLogin = $state(shouldHideFeatureUpdateModal(userId));
   let isClosing = $state(false);
   let expandedItems = $state<ReadonlySet<string>>(new Set());
 
@@ -74,17 +76,15 @@
   );
 
   const hasFeedback = $derived(feedback.trim().length > 0);
+  const hasSavedNotifyEmail = $derived(isValidNotifyEmail(lastPersistedEmail));
   const hasValidNotifyEmail = $derived(isValidNotifyEmail(notifyEmail));
-  const notifyEmailChanged = $derived(
-    notifyEmail.trim().toLowerCase() !== initialNotifyEmail.trim().toLowerCase(),
-  );
   const emailNeedsSave = $derived(
-    notifyEmailChanged &&
+    editingNotifyEmail &&
       hasValidNotifyEmail &&
       notifyEmail.trim().toLowerCase() !== lastPersistedEmail.trim().toLowerCase(),
   );
   const emailNeedsUnsubscribe = $derived(
-    notifyEmailChanged && lastPersistedEmail.trim().length > 0 && notifyEmail.trim().length === 0,
+    editingNotifyEmail && lastPersistedEmail.trim().length > 0 && notifyEmail.trim().length === 0,
   );
   const emailDirty = $derived(emailNeedsSave || emailNeedsUnsubscribe);
   const canSubmit = $derived(hasFeedback || emailDirty);
@@ -132,6 +132,23 @@
       requestAnimationFrame(setTransformOrigin);
     });
 
+    void (async () => {
+      if (preview) {
+        return;
+      }
+
+      try {
+        const remote = await fetchMyNotifyEmail(accessToken, notifyIdentity);
+        if (isValidNotifyEmail(remote)) {
+          lastPersistedEmail = remote;
+          notifyEmail = remote;
+          editingNotifyEmail = false;
+        }
+      } catch (error) {
+        console.warn('[feature-update-modal] load notify email failed', error);
+      }
+    })();
+
     return () => {
       delete document.documentElement.dataset.featureUpdateModal;
     };
@@ -148,8 +165,9 @@
 
     savingNotifyEmail = true;
     try {
-      await subscribeFeatureUpdateEmail(notifyEmail, accessToken, version, lastPersistedEmail);
+      await subscribeFeatureUpdateEmail(notifyEmail, accessToken, version, lastPersistedEmail, notifyIdentity);
       lastPersistedEmail = notifyEmail.trim();
+      editingNotifyEmail = false;
       toastManager.primary(get(t)('feature_updates_notify_email_saved'));
       return true;
     } catch (error) {
@@ -168,7 +186,7 @@
     if (preview || !emailToRemove) {
       lastPersistedEmail = '';
       if (!preview) {
-        clearStoredNotifyEmail();
+        clearStoredNotifyEmail(notifyIdentity);
       }
       return true;
     }
@@ -179,8 +197,9 @@
 
     savingNotifyEmail = true;
     try {
-      await unsubscribeFeatureUpdateEmail(emailToRemove, accessToken);
+      await unsubscribeFeatureUpdateEmail(emailToRemove, accessToken, notifyIdentity);
       lastPersistedEmail = '';
+      editingNotifyEmail = true;
       toastManager.primary(get(t)('feature_updates_notify_email_cleared'));
       return true;
     } catch (error) {
@@ -202,20 +221,20 @@
     notifyEmail = '';
   };
 
-  const persistHidePreference = () => {
-    if (preview) {
-      return;
-    }
+  const startChangeNotifyEmail = () => {
+    notifyEmail = lastPersistedEmail;
+    editingNotifyEmail = true;
+  };
 
-    setHideFeatureUpdateModal(hideOnNextLogin, userId);
+  const cancelChangeNotifyEmail = () => {
+    notifyEmail = lastPersistedEmail;
+    editingNotifyEmail = false;
   };
 
   const closeModal = () => {
     if (isClosing) {
       return;
     }
-
-    persistHidePreference();
 
     isClosing = true;
     document.documentElement.dataset.featureUpdateModal = 'closing';
@@ -365,38 +384,61 @@
           class="feature-update-feedback__input"
         />
       </Field>
-      <Field label={$t('feature_updates_notify_email_label')} class="mt-3">
-        <Input
-          type="email"
-          inputmode="email"
-          autocomplete="email"
-          bind:value={notifyEmail}
-          placeholder={$t('feature_updates_notify_email_placeholder')}
-          disabled={savingNotifyEmail}
-        >
-          {#snippet trailingIcon()}
-            {#if notifyEmail}
-              <IconButton
-                icon={mdiClose}
-                size="small"
-                variant="ghost"
-                shape="round"
-                color="secondary"
-                class="me-1"
-                disabled={savingNotifyEmail}
-                onclick={handleClearNotifyEmail}
-                aria-label={$t('clear')}
-              />
-            {/if}
-          {/snippet}
-        </Input>
-      </Field>
-      <Text size="tiny" class="mt-1 text-(--md-sys-color-on-surface-variant)">
-        {$t('feature_updates_notify_email_hint')}
-      </Text>
-      <Field label={$t('feature_updates_hide_next_login')} class="mt-3">
-        <Switch bind:checked={hideOnNextLogin} />
-      </Field>
+      {#if hasSavedNotifyEmail && !editingNotifyEmail}
+        <div class="feature-update-notify-saved">
+          <Text size="tiny" class="text-(--md-sys-color-on-surface-variant)">
+            {$t('feature_updates_notify_email_saved_as', { values: { email: lastPersistedEmail } })}
+          </Text>
+          <button
+            type="button"
+            class="feature-update-notify-change"
+            disabled={savingNotifyEmail}
+            onclick={startChangeNotifyEmail}
+          >
+            {$t('feature_updates_notify_email_change')}
+          </button>
+        </div>
+      {:else}
+        <Field label={$t('feature_updates_notify_email_label')} class="mt-3">
+          <Input
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            bind:value={notifyEmail}
+            placeholder={$t('feature_updates_notify_email_placeholder')}
+            disabled={savingNotifyEmail}
+          >
+            {#snippet trailingIcon()}
+              {#if notifyEmail}
+                <IconButton
+                  icon={mdiClose}
+                  size="small"
+                  variant="ghost"
+                  shape="round"
+                  color="secondary"
+                  class="me-1"
+                  disabled={savingNotifyEmail}
+                  onclick={handleClearNotifyEmail}
+                  aria-label={$t('clear')}
+                />
+              {/if}
+            {/snippet}
+          </Input>
+        </Field>
+        <Text size="tiny" class="mt-1 text-(--md-sys-color-on-surface-variant)">
+          {$t('feature_updates_notify_email_hint')}
+        </Text>
+        {#if hasSavedNotifyEmail}
+          <button
+            type="button"
+            class="feature-update-notify-change"
+            disabled={savingNotifyEmail}
+            onclick={cancelChangeNotifyEmail}
+          >
+            {$t('cancel')}
+          </button>
+        {/if}
+      {/if}
     </div>
   </ModalBody>
 
@@ -510,6 +552,32 @@
     margin: 0;
     padding-top: 0.75rem;
     border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .feature-update-notify-saved {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+  }
+
+  .feature-update-notify-change {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--md-sys-color-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    cursor: pointer;
+  }
+
+  .feature-update-notify-change:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   :global(.feature-update-feedback__input textarea) {

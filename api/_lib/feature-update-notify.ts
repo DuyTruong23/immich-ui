@@ -1,6 +1,7 @@
 import { getEnv, sendViaResend } from './email.js';
 import { compareFeatureUpdateVersion, type FeatureUpdatesConfig } from './feature-updates-config.js';
 import {
+  listNotifyEmails,
   readFeatureUpdateSubscribers,
   writeFeatureUpdateSubscribers,
 } from './feature-update-subscribers.js';
@@ -81,7 +82,8 @@ export const notifyFeatureUpdateSubscribers = async (
   }
 
   const store = await readFeatureUpdateSubscribers();
-  if (store.emails.length === 0) {
+  const emails = listNotifyEmails(store);
+  if (emails.length === 0) {
     return { sent: 0, skipped: true, reason: 'no_subscribers' };
   }
 
@@ -94,7 +96,7 @@ export const notifyFeatureUpdateSubscribers = async (
   }
 
   let sent = 0;
-  for (const email of store.emails) {
+  for (const email of emails) {
     try {
       await sendViaResend({
         to: email,
@@ -116,7 +118,7 @@ export const notifyFeatureUpdateSubscribers = async (
 
   try {
     await writeFeatureUpdateSubscribers({
-      emails: store.emails,
+      ...store,
       lastNotifiedVersion: config.version,
     });
   } catch (error) {
