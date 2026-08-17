@@ -101,7 +101,7 @@
     if (!element) {
       return;
     }
-    element.style.touchAction = assetViewerManager.zoom <= 1 ? 'pan-y pinch-zoom' : 'none';
+    element.style.touchAction = assetViewerManager.zoom <= 1 ? 'pinch-zoom' : 'none';
   });
 
   const onCopy = async () => {

@@ -395,6 +395,8 @@
       onNextAsset();
     } else if (event.detail.direction === 'right') {
       onPreviousAsset();
+    } else if (event.detail.direction === 'bottom') {
+      onClose();
     }
   };
 
@@ -475,7 +477,7 @@
           dir="ltr"
           lang={$lang}
           nohotkeys
-          class="dark mx-auto h-full max-w-full"
+          class="dark mx-auto h-full max-w-full touch-pinch-zoom"
           style:aspect-ratio={aspectRatio}
           defaultduration={asset.duration! / 1000}
         >
@@ -490,7 +492,7 @@
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="h-full object-contain"
+              class="h-full object-contain touch-pinch-zoom"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}
@@ -520,7 +522,7 @@
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="h-full object-contain"
+              class="h-full object-contain touch-pinch-zoom"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}

@@ -2,50 +2,65 @@
   import ImageThumbnail from '$lib/components/assets/thumbnail/ImageThumbnail.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getAssetMediaUrl } from '$lib/utils';
-  import { AssetMediaSize, type AssetResponseDto } from '@immich/sdk';
+  import { AssetMediaSize } from '@immich/sdk';
 
-  type Props = {
-    previousAsset2?: AssetResponseDto;
-    previousAsset?: AssetResponseDto;
-    current: AssetResponseDto;
-    nextAsset?: AssetResponseDto;
-    nextAsset2?: AssetResponseDto;
-    onSelect: (asset: AssetResponseDto) => void;
+  export type PreviewStripAsset = {
+    id: string;
+    thumbhash: string | null;
+    originalFileName?: string;
   };
 
-  let { previousAsset2, previousAsset, current, nextAsset, nextAsset2, onSelect }: Props = $props();
+  type Props = {
+    assets: PreviewStripAsset[];
+    currentId: string;
+    onSelect: (asset: PreviewStripAsset) => void;
+  };
 
-  const slots = $derived([previousAsset2, previousAsset, current, nextAsset, nextAsset2] as const);
-  const thumbnailSize = 36;
-  const currentSize = 42;
+  let { assets, currentId, onSelect }: Props = $props();
 
-  const urlFor = (asset: AssetResponseDto) => {
+  const thumbnailSize = 52;
+  const currentSize = 60;
+  let scroller: HTMLElement | undefined = $state();
+
+  const urlFor = (asset: PreviewStripAsset) => {
     if (!authManager.mediaAuthReady) {
       return;
     }
 
     return getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Thumbnail, cacheKey: asset.thumbhash });
   };
+
+  $effect(() => {
+    currentId;
+    const el = scroller?.querySelector('[aria-current="true"]');
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    });
+  });
 </script>
 
 <nav
-  class="pointer-events-auto grid w-full grid-cols-5 items-end justify-items-center gap-1 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1"
+  bind:this={scroller}
+  class="pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   aria-label="Nearby assets"
 >
-  {#each slots as asset, index (asset?.id ?? `empty-${index}`)}
-    {@const isCurrent = asset?.id === current.id}
-    {@const size = isCurrent ? currentSize : thumbnailSize}
-    {#if asset}
+  <div class="flex w-max min-w-full items-end justify-center gap-2">
+    {#each assets as asset (asset.id)}
+      {@const isCurrent = asset.id === currentId}
+      {@const size = isCurrent ? currentSize : thumbnailSize}
       {@const url = urlFor(asset)}
       <button
         type="button"
-        class="relative overflow-hidden rounded-md {isCurrent
-          ? 'ring-2 ring-white ring-offset-1 ring-offset-black'
+        class="relative shrink-0 overflow-hidden rounded-xl bg-white/10 {isCurrent
+          ? 'ring-2 ring-white ring-offset-2 ring-offset-black'
           : 'opacity-80'}"
         style:width="{size}px"
         style:height="{size}px"
         aria-current={isCurrent ? 'true' : undefined}
-        aria-label={asset.originalFileName}
+        aria-label={asset.originalFileName ?? asset.id}
         onclick={() => {
           if (!isCurrent) {
             onSelect(asset);
@@ -58,13 +73,12 @@
             altText={asset.originalFileName}
             widthStyle="{size}px"
             heightStyle="{size}px"
-            class="size-full object-cover"
-            preload
+            curve
+            class="size-full rounded-xl object-cover"
+            preload={isCurrent}
           />
         {/if}
       </button>
-    {:else}
-      <div aria-hidden="true"></div>
-    {/if}
-  {/each}
+    {/each}
+  </div>
 </nav>

@@ -30,6 +30,7 @@ import { isWebCompatibleImage } from '$lib/utils/asset-utils';
 import { handleError } from '$lib/utils/handle-error';
 import { convertBCP47, langs } from '$lib/utils/i18n';
 import { getMediaBaseUrl } from '$lib/utils/media-base-url';
+import { formatDate, formatDateTime, formatTime } from '$lib/utils/date-format';
 import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
 
 interface DownloadRequestOptions<T = unknown> {
@@ -397,33 +398,9 @@ export const decodeBase64 = (data: string) => Uint8Array.from(atob(data), (c) =>
 
 export function createDateFormatter(localeCode: string | undefined): DateFormatter {
   return {
-    formatDate: (date: Date): string =>
-      date.toLocaleString(localeCode, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }),
-
-    formatTime: (date: Date): string =>
-      date.toLocaleString(localeCode, {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      }),
-
-    formatDateTime: (date: Date): string => {
-      const formattedDate = date.toLocaleString(localeCode, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
-      const formattedTime = date.toLocaleString(localeCode, {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-      return `${formattedDate} ${formattedTime}`;
-    },
+    formatDate: (date: Date): string => formatDate(date, localeCode),
+    formatTime: (date: Date): string => formatTime(date, localeCode),
+    formatDateTime: (date: Date): string => formatDateTime(date, localeCode),
   };
 }
 

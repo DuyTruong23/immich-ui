@@ -22,9 +22,9 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
 | `lib/components/asset-viewer/AssetViewer.svelte` | Ẩn mũi tên prev/next trên mobile; header compact; preview strip dưới media |
-| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip 5 poster (±2), thumbnail nhỏ, không video player |
-| `lib/components/timeline/TimelineAssetViewer.svelte` | Load ±2 asset cho preview strip |
-| `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor ±2 cho preview strip |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip vuông bo góc, cuộn ngang, không giới hạn 5 ảnh |
+| `lib/components/timeline/TimelineAssetViewer.svelte` | Load ảnh kề cho preview strip |
+| `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor + nearby assets cho preview strip |
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
 | `lib/modals/AssetChangeDateModal.svelte` | Báo lỗi writeback file gốc |
 | `lib/modals/AssetSelectionChangeDateModal.svelte` | Báo lỗi writeback file gốc |
@@ -32,14 +32,18 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/asset-viewer/DetailPanelLocation.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/timeline/actions/ChangeDescriptionAction.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/timeline/actions/ChangeLocationAction.svelte` | Báo lỗi writeback file gốc |
-| `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; double-tap zoom; `touch-action` theo zoom |
-| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Autoplay mobile; ẩn native controls; progress bar không đè preview strip |
+| `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + vuốt xuống đóng; blur backdrop; double-tap zoom |
+| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Cùng cử chỉ ảnh; autoplay mobile; progress bar không đè preview strip |
 | `lib/components/asset-viewer/VideoWrapperViewer.svelte` | Truyền next/prev + onSwipe xuống video viewer |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
 | `lib/managers/auth-manager.svelte.ts` | `sessionKey` cho media cross-subdomain; timeout 4s không chặn thumbnail |
 | `lib/managers/language-manager.svelte.ts` | Gán `html lang` / `dir` theo locale hệ thống |
 | `lib/utils/system-defaults.ts` | Ngôn ngữ mặc định theo máy; theme mặc định `system` |
+| `lib/utils/date-format.ts` | Format VN: ngày/tháng/năm, giờ:phút:giây, Tháng năm |
+| `lib/utils/timeline-util.ts` | Tiêu đề tháng/ngày timeline theo format VN |
+| `lib/utils/date-time.ts` | Khoảng ngày album theo format VN |
+| `lib/components/asset-viewer/DetailPanelDate.svelte` | Ngày/giờ chi tiết ảnh theo format VN |
 | `lib/managers/timeline-manager/internal/intersection-support.svelte.ts` | Buffer viewport lớn hơn khi đang scrub/scroll |
 | `lib/managers/timeline-manager/timeline-day.svelte.ts` | Giữ asset đích trong DOM khi jump-to-date |
 | `lib/stores/websocket.ts` | WS trực tiếp tunnel; resume sau bfcache không reload |
@@ -48,7 +52,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
 | `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
 | `lib/utils/mobile-back-navigation.ts` | Intercept popstate/willUnload, đóng viewer SPA |
-| `lib/actions/swipe-navigate.svelte.ts` | Vuốt ngang next/back + vuốt xuống đóng (lock h/v) |
+| `lib/actions/swipe-navigate.svelte.ts` | Vuốt ngang next/back + vuốt xuống đóng; chặn pan-y native trên video |
 | `lib/actions/swipe-back.ts` | Gesture vuốt từ mép (LTR/RTL) |
 | `lib/components/shared-components/MobileBackGuard.svelte` | Guard back hệ thống trên layout user |
 | `lib/components/shared-components/SwipeBackEdge.svelte` | Vùng vuốt back trong asset viewer |

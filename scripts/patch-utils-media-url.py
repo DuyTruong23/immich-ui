@@ -57,6 +57,56 @@ def patch_utils(utils_path: pathlib.Path) -> None:
         text = text.replace('  const { onUploadProgress: onProgress, data, url } = options;', '  const { onUploadProgress: onProgress, data, url, headers } = options;', 1)
         text = text.replace(old_upload_open, new_upload_open, 1)
 
+    date_import = "import { formatDate, formatDateTime, formatTime } from '$lib/utils/date-format';\n"
+    if date_import not in text:
+        media_import = "import { getMediaBaseUrl } from '$lib/utils/media-base-url';\n"
+        if media_import not in text:
+            raise SystemExit(f'Cannot find media-base-url import in {utils_path}')
+        text = text.replace(media_import, media_import + date_import, 1)
+
+    old_formatter = """export function createDateFormatter(localeCode: string | undefined): DateFormatter {
+  return {
+    formatDate: (date: Date): string =>
+      date.toLocaleString(localeCode, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }),
+
+    formatTime: (date: Date): string =>
+      date.toLocaleString(localeCode, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }),
+
+    formatDateTime: (date: Date): string => {
+      const formattedDate = date.toLocaleString(localeCode, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const formattedTime = date.toLocaleString(localeCode, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      return `${formattedDate} ${formattedTime}`;
+    },
+  };
+}"""
+    new_formatter = """export function createDateFormatter(localeCode: string | undefined): DateFormatter {
+  return {
+    formatDate: (date: Date): string => formatDate(date, localeCode),
+    formatTime: (date: Date): string => formatTime(date, localeCode),
+    formatDateTime: (date: Date): string => formatDateTime(date, localeCode),
+  };
+}"""
+    if old_formatter in text:
+        text = text.replace(old_formatter, new_formatter, 1)
+    elif new_formatter not in text:
+        raise SystemExit(f'Cannot find createDateFormatter in {utils_path}')
+
     utils_path.write_text(text, encoding='utf-8')
 
 

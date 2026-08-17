@@ -24,7 +24,8 @@ body {
 
 /* Chỉ vùng ảnh/video — không áp lên navbar, detail panel, stack strip */
 #immich-asset-viewer [data-viewer-content] {
-  touch-action: pan-y pinch-zoom;
+  touch-action: pinch-zoom;
+  overscroll-behavior: none;
 }
 
 .pg-brand-accent {

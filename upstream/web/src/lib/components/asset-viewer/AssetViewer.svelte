@@ -62,8 +62,7 @@
     current: AssetResponseDto;
     nextAsset?: AssetResponseDto;
     previousAsset?: AssetResponseDto;
-    nextAsset2?: AssetResponseDto;
-    previousAsset2?: AssetResponseDto;
+    nearbyAssets?: Array<{ id: string; thumbhash: string | null; originalFileName?: string }>;
   };
 
   interface Props {
@@ -683,13 +682,12 @@
   {#if showMobilePreviewStrip}
     <div class="absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack && withStacked ? 'mb-16' : ''}">
       <MobilePreviewStrip
-        previousAsset2={cursor.previousAsset2}
-        {previousAsset}
-        current={asset}
-        {nextAsset}
-        nextAsset2={cursor.nextAsset2}
+        assets={cursor.nearbyAssets?.length
+          ? cursor.nearbyAssets
+          : [previousAsset, asset, nextAsset].filter((item): item is typeof asset => Boolean(item))}
+        currentId={asset.id}
         onSelect={(selected) => {
-          void navigateToAsset(selected);
+          void navigate({ targetRoute: 'current', assetId: selected.id });
         }}
       />
     </div>
@@ -783,6 +781,6 @@
   }
 
   :global(.immich-asset-viewer--mobile) {
-    --mobile-preview-strip-offset: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+    --mobile-preview-strip-offset: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 </style>

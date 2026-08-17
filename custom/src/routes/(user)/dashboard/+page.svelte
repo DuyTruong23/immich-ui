@@ -14,7 +14,7 @@
     mdiVideoOutline,
   } from '@mdi/js';
   import { Icon } from '@immich/ui';
-  import { DateTime } from 'luxon';
+  import { formatDateTime } from '$lib/utils/date-format';
   import type { PageData } from './$types';
 
   interface Props {
@@ -40,8 +40,7 @@
 
   const activeDeviceGroups = $derived(data.userDeviceGroups.filter((group) => group.sessions.length > 0));
 
-  const formatSessionTime = (iso: string) =>
-    DateTime.fromISO(iso).setLocale('vi').toLocaleString(DateTime.DATETIME_MED);
+  const formatSessionTime = (iso: string) => formatDateTime(new Date(iso), 'vi-VN');
 </script>
 
 <UserPageLayout title={data.meta.title} description={publicEnv.companyName || 'Quản trị hệ thống'}>

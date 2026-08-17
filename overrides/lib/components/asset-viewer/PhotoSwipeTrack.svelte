@@ -63,13 +63,15 @@
   onDestroy(() => swipe.destroy());
 
   const settleMs = $derived(motionDuration(280));
+  const bindTouchGuard = (node: HTMLElement) => swipe.bindTouchGuard(node);
 </script>
 
 <div
-  class="relative size-full overflow-hidden overscroll-x-contain"
+  class="relative size-full overflow-hidden overscroll-none {disabled ? '' : 'touch-pinch-zoom'}"
   role="presentation"
   bind:clientWidth={width}
   bind:clientHeight={height}
+  use:bindTouchGuard
   onpointerdown={swipe.onPointerDown}
   onpointermove={swipe.onPointerMove}
   onpointerup={swipe.onPointerUp}
