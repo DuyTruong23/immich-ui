@@ -273,6 +273,101 @@ export class TimelineManager extends VirtualScrollManager {
     this.updateViewportGeometry(false);
   }
 
+  async refreshAfterUpload(assetIds: string[] = []) {
+    if (!this.isInitialized) {
+      return;
+    }
+
+    const scrollTop = this.scrollTop;
+    const keepTop = scrollTop < 80;
+    const anchor = this.viewportTopMonthIntersection;
+    const anchorKey = anchor?.month
+      ? `${anchor.month.yearMonth.year}-${anchor.month.yearMonth.month}`
+      : undefined;
+    const anchorRatio = anchor?.viewportTopRatioInMonth ?? 0;
+
+    this.suspendTransitions = true;
+    try {
+      await this.#syncMonthsFromBuckets();
+
+      if (assetIds.length > 0) {
+        const assets = (
+          await Promise.all(assetIds.map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)))
+        ).filter((asset): asset is AssetResponseDto => !!asset);
+        if (assets.length > 0) {
+          this.upsertAssets(assets.map((asset) => toTimelineAsset(asset)));
+          void this.#refreshUploadedThumbnails(assetIds);
+        }
+      }
+
+      for (const month of this.months) {
+        if (!month.isLoaded && month.getFirstAsset()) {
+          month.timelineDays = [];
+          await month.loader?.reset();
+        }
+      }
+
+      this.updateViewportGeometry(true);
+      this.#createScrubberMonths();
+
+      if (keepTop) {
+        this.scrollTo(0);
+        return;
+      }
+
+      const month = anchorKey
+        ? this.months.find((item) => `${item.yearMonth.year}-${item.yearMonth.month}` === anchorKey)
+        : undefined;
+      this.scrollTo(month ? month.top + anchorRatio * month.height : scrollTop);
+    } finally {
+      this.suspendTransitions = false;
+    }
+  }
+
+  async #syncMonthsFromBuckets() {
+    const timebuckets = await getTimeBuckets({
+      ...authManager.params,
+      ...this.#options,
+    });
+
+    const existingByKey = new Map(
+      this.months.map((month) => [`${month.yearMonth.year}-${month.yearMonth.month}`, month] as const),
+    );
+
+    this.months = timebuckets.map((timeBucket) => {
+      const date = new SvelteDate(timeBucket.timeBucket);
+      const yearMonth = { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
+      const key = `${yearMonth.year}-${yearMonth.month}`;
+      return (
+        existingByKey.get(key) ??
+        new TimelineMonth(this, yearMonth, timeBucket.count, false, this.#options.order, this.#options.orderBy)
+      );
+    });
+  }
+
+  async #refreshUploadedThumbnails(assetIds: string[]) {
+    const pending = new Set(assetIds);
+    for (const delay of [2500, 5000, 10_000]) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      if (pending.size === 0) {
+        return;
+      }
+
+      const assets = (
+        await Promise.all([...pending].map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)))
+      ).filter((asset): asset is AssetResponseDto => !!asset);
+      const ready = assets.filter((asset) => Boolean(asset.thumbhash));
+      if (ready.length === 0) {
+        continue;
+      }
+
+      this.upsertAssets(ready.map((asset) => toTimelineAsset(asset)));
+      for (const asset of ready) {
+        pending.delete(asset.id);
+      }
+    }
+  }
+
   async updateOptions(options: TimelineManagerOptions) {
     if (options.deferInit) {
       return;

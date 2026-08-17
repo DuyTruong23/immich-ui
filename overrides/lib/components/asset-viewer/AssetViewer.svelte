@@ -520,7 +520,10 @@
 
 <section
   id="immich-asset-viewer"
-  class="fixed inset-s-0 top-0 grid size-full grid-cols-4 grid-rows-[64px_1fr] overflow-hidden bg-black"
+  class="fixed inset-s-0 top-0 grid size-full grid-cols-4 overflow-hidden bg-black {isMobileViewer
+    ? 'grid-rows-[48px_1fr]'
+    : 'grid-rows-[64px_1fr]'}"
+  class:immich-asset-viewer--mobile={isMobileViewer}
   use:focusTrap
   bind:this={assetViewerHtmlElement}
 >
@@ -532,7 +535,11 @@
   />
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
-    <div class="col-span-4 col-start-1 row-span-1 row-start-1 transition-transform">
+    <div
+      class="col-span-4 col-start-1 row-span-1 row-start-1 transition-transform {isMobileViewer
+        ? 'asset-viewer-navbar--compact'
+        : ''}"
+    >
       <AssetViewerNavBar
         {asset}
         {album}
@@ -674,7 +681,7 @@
   {/if}
 
   {#if showMobilePreviewStrip}
-    <div class="absolute inset-x-0 bottom-0 z-10 col-span-4 col-start-1 {stack && withStacked ? 'mb-20' : ''}">
+    <div class="absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack && withStacked ? 'mb-16' : ''}">
       <MobilePreviewStrip
         previousAsset2={cursor.previousAsset2}
         {previousAsset}
@@ -768,5 +775,14 @@
   .horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #adcbfa;
     border-radius: 16px;
+  }
+
+  :global(.asset-viewer-navbar--compact > div) {
+    height: 3rem;
+    padding-inline: 0.5rem;
+  }
+
+  :global(.immich-asset-viewer--mobile) {
+    --mobile-preview-strip-offset: calc(3.25rem + env(safe-area-inset-bottom, 0px));
   }
 </style>

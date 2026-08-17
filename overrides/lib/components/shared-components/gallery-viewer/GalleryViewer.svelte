@@ -8,6 +8,7 @@
   import Portal from '$lib/elements/Portal.svelte';
   import type { AssetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
+  import { eventManager } from '$lib/managers/event-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import type { TimelineAsset, Viewport } from '$lib/managers/timeline-manager/types';
   import AssetDeleteConfirmModal from '$lib/modals/AssetDeleteConfirmModal.svelte';
@@ -27,6 +28,7 @@
   import { AssetVisibility, type AssetResponseDto } from '@immich/sdk';
   import { modalManager } from '@immich/ui';
   import { debounce } from 'lodash-es';
+  import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
   type Props = {
@@ -60,6 +62,22 @@
     arrowNavigation = true,
     allowDeletion = true,
   }: Props = $props();
+
+  onMount(() => {
+    return eventManager.on({
+      UploadsComplete: () => {
+        if (!onReload) {
+          return;
+        }
+
+        const scrollTop = document.scrollingElement?.scrollTop ?? 0;
+        onReload();
+        requestAnimationFrame(() => {
+          document.scrollingElement?.scrollTo({ top: scrollTop });
+        });
+      },
+    });
+  });
 
   const navigationAssets = $derived(viewerAssets ?? assets);
 

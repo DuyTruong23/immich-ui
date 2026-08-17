@@ -12,15 +12,17 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
 | `lib/components/Image.svelte` | Không abort request thumbnail khi unmount (tránh 204 khi scroll/scrub) |
 | `lib/components/assets/thumbnail/Thumbnail.svelte` | Chờ `sessionKey`; `preload={!lazy}` theo `shouldLazyLoadThumbnails()`; giữ thumbhash |
-| `lib/components/assets/thumbnail/ImageThumbnail.svelte` | Retry 2 lần trước khi hiện "Error loading image" |
+| `lib/components/assets/thumbnail/ImageThumbnail.svelte` | Retry thumbnail có delay (job Immich chưa xong); retry 2 lần trước khi hiện lỗi |
 | `lib/components/timeline/Month.svelte` | Tắt `content-visibility` trên mobile (Safari gãy ảnh khi scrub) |
+| `lib/components/timeline/UploadListRefresh.svelte` | Sau upload xong: reload timeline, giữ scroll, không đóng viewer |
+| `lib/managers/event-manager.svelte.ts` | Event `UploadsComplete` khi batch upload xong |
 | `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |
 | `lib/components/shared-components/UserAvatar.svelte` | URL avatar kèm `sessionKey` khi media cross-origin |
-| `lib/components/layouts/UserPageLayout.svelte` | Ẩn nút Upload trên navbar; banner gợi ý thumbnail lỗi trên mobile |
+| `lib/components/layouts/UserPageLayout.svelte` | Navbar upload admin-only; banner thumbnail lỗi trên mobile |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
-| `lib/components/asset-viewer/AssetViewer.svelte` | Ẩn mũi tên prev/next trên mobile; preview strip 5 thumbnail |
-| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip 5 asset (±2) dùng thumbnail |
+| `lib/components/asset-viewer/AssetViewer.svelte` | Ẩn mũi tên prev/next trên mobile; header compact; preview strip dưới media |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip 5 poster (±2), thumbnail nhỏ, không video player |
 | `lib/components/timeline/TimelineAssetViewer.svelte` | Load ±2 asset cho preview strip |
 | `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor ±2 cho preview strip |
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
@@ -31,7 +33,7 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/timeline/actions/ChangeDescriptionAction.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/timeline/actions/ChangeLocationAction.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + blur backdrop; double-tap zoom; `touch-action` theo zoom |
-| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Mobile muted autoplay khi ready; preload; HLS; swipe guard |
+| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Autoplay mobile; ẩn native controls; progress bar không đè preview strip |
 | `lib/components/asset-viewer/VideoWrapperViewer.svelte` | Truyền next/prev + onSwipe xuống video viewer |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
@@ -56,6 +58,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |
 | `custom/src/routes/admin/feature-updates/` | Admin tùy chỉnh modal tính năng mới |
+| `custom/src/routes/UploadPanel.svelte` | Panel upload full-width trên mobile; emit reload list khi xong |
+| `custom/src/components/FeatureUpdatePin.svelte` | Chip What's new + nút `+` upload cho user |
 | `custom/src/hooks.client.ts` | bfcache `pageshow`: refresh auth/WS chọn lọc, không reload |
 | `custom/src/service-worker/index.ts` | Cache thumbnail `ok` only, key theo `size`+`c` |
 | `lib/components/layouts/AdminPageLayout.svelte` | Thêm tab admin **Tính năng cập nhật** |

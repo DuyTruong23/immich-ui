@@ -48,11 +48,8 @@
 
   let scrollbarClass = $derived(scrollbar ? 'immich-scrollbar' : 'scrollbar-hidden');
   let hasTitleClass = $derived(title ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
-  let onUploadClick = $derived(
-    authManager.authenticated && authManager.user.isAdmin
-      ? () => openFileUploadDialog()
-      : undefined,
-  );
+  const canUpload = $derived(authManager.authenticated && !authManager.isSharedLink);
+  let onUploadClick = $derived(canUpload ? () => openFileUploadDialog() : undefined);
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden">

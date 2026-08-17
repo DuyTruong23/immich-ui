@@ -398,6 +398,10 @@
     }
   };
 
+  const hideChrome = $derived(
+    assetViewerManager.isShowDetailPanel || assetViewerManager.isShowEditor || assetViewerManager.isFaceEditMode,
+  );
+
   let containerWidth = $state(0);
   let containerHeight = $state(0);
 
@@ -485,6 +489,7 @@
               preload={videoPreload}
               disablePictureInPicture
               playsinline
+              controlslist="nodownload nofullscreen noremoteplayback"
               class="h-full object-contain"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
@@ -514,6 +519,7 @@
               preload={videoPreload}
               disablePictureInPicture
               playsinline
+              controlslist="nodownload nofullscreen noremoteplayback"
               class="h-full object-contain"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
@@ -559,7 +565,10 @@
             </media-settings-menu>
           {/if}
 
-          <div class="flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4">
+          {#if !hideChrome}
+            <div
+              class="flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4 mb-[var(--mobile-preview-strip-offset,0px)]"
+            >
             <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
               <media-play-button class="shrink-0 rounded-full p-2 outline-none">
                 <Icon slot="play" icon={mdiPlay} />
@@ -588,7 +597,8 @@
               {/if}
             </media-control-bar>
             <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
-          </div>
+            </div>
+          {/if}
         </media-controller>
 
         {#if isLoading}
@@ -709,5 +719,16 @@
     padding: 0 calc(var(--spacing) * 2);
     margin-left: calc(var(--spacing) * 2);
     width: 70px;
+  }
+
+  video::-webkit-media-controls,
+  video::-webkit-media-controls-panel,
+  video::-webkit-media-controls-timeline,
+  video::-webkit-media-controls-enclosure,
+  :global(hls-video)::-webkit-media-controls,
+  :global(hls-video)::-webkit-media-controls-panel,
+  :global(hls-video)::-webkit-media-controls-timeline {
+    display: none !important;
+    -webkit-appearance: none;
   }
 </style>
