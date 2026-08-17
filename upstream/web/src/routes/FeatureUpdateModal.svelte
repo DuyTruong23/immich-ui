@@ -444,7 +444,6 @@
 
   <ModalFooter class="feature-update-footer">
     <div class="feature-update-footer__inner">
-      <p class="feature-update-donate-hint">{$t('feature_updates_donate_hint')}</p>
       <HStack fullWidth gap={3}>
       <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={savingNotifyEmail}>
         {$t('close')}
@@ -515,14 +514,6 @@
     width: 100%;
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  .feature-update-donate-hint {
-    margin: 0;
-    text-align: center;
-    font-size: 0.75rem;
-    line-height: 1.4;
-    color: var(--md-sys-color-on-surface-variant);
   }
 
   :global(.pg-feature-update-modal .feature-update-body) {

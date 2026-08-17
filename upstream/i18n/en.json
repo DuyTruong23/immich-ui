@@ -1182,7 +1182,6 @@
   "feature_updates_notify_email_saved_as": "Notifications go to {email}",
   "feature_updates_notify_email_change": "Change notification email",
   "feature_updates_notify_email_saving": "Saving...",
-  "feature_updates_donate_hint": "Xem chùa mà không like share subscribe và DONATE là thấy không ưng rồi đó",
   "feature_updates_intro": "WeGallery was just updated with the following changes:",
   "feature_updates_items_aria": "Feature items",
   "feature_updates_preview_banner": "Preview mode — mock data for local dev",
