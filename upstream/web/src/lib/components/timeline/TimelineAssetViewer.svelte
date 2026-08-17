@@ -62,6 +62,29 @@
     return getAsset(laterTimelineAsset.id);
   };
 
+  const STRIP_RADIUS = 16;
+
+  const toStripItem = (asset: { id: string; thumbhash: string | null; originalFileName?: string }) => ({
+    id: asset.id,
+    thumbhash: asset.thumbhash,
+    originalFileName: asset.originalFileName,
+  });
+
+  const collectStripSide = async (currentId: string, direction: 'earlier' | 'later') => {
+    const items: Array<{ id: string; thumbhash: string | null }> = [];
+    const start = { id: currentId } as TimelineAsset;
+    for await (const asset of timelineManager.assetsIterator({ startAsset: start, direction })) {
+      if (asset.id === currentId) {
+        continue;
+      }
+      items.push({ id: asset.id, thumbhash: asset.thumbhash });
+      if (items.length >= STRIP_RADIUS) {
+        break;
+      }
+    }
+    return items;
+  };
+
   let assetCursor = $state<AssetCursor>({
     current: assetViewerManager.asset!,
     previousAsset: undefined,
@@ -69,18 +92,27 @@
   });
 
   const loadCloseAssets = async (currentAsset: AssetResponseDto) => {
-    const [nextAsset, previousAsset] = await Promise.all([getNextAsset(currentAsset), getPreviousAsset(currentAsset)]);
-    const [nextAsset2, previousAsset2] = await Promise.all([
-      nextAsset ? getNextAsset(nextAsset) : Promise.resolve(undefined),
-      previousAsset ? getPreviousAsset(previousAsset) : Promise.resolve(undefined),
+    const [nextAsset, previousAsset, laterItems, earlierItems] = await Promise.all([
+      getNextAsset(currentAsset),
+      getPreviousAsset(currentAsset),
+      collectStripSide(currentAsset.id, 'later'),
+      collectStripSide(currentAsset.id, 'earlier'),
     ]);
+
+    const nearbyAssets = [
+      ...laterItems.toReversed(),
+      toStripItem(currentAsset),
+      ...earlierItems,
+    ];
 
     assetCursor = {
       current: currentAsset,
       nextAsset,
       previousAsset,
-      nextAsset2,
-      previousAsset2,
+      nearbyAssets:
+        nearbyAssets.length > 1
+          ? nearbyAssets
+          : ([previousAsset, currentAsset, nextAsset].filter(Boolean) as typeof nearbyAssets),
     };
   };
 

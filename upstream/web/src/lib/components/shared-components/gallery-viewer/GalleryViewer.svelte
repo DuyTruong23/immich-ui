@@ -350,12 +350,18 @@
   const currentViewerIndex = $derived(
     currentViewerAsset ? navigationAssets.findIndex((asset) => asset.id === currentViewerAsset.id) : -1,
   );
+  const STRIP_RADIUS = 16;
   const assetCursor = $derived<AssetCursor>({
     current: assetViewerManager.asset!,
     nextAsset: getNextAsset(navigationAssets, assetViewerManager.asset),
     previousAsset: getPreviousAsset(navigationAssets, assetViewerManager.asset),
-    nextAsset2: currentViewerIndex >= 0 ? navigationAssets[currentViewerIndex + 2] : undefined,
-    previousAsset2: currentViewerIndex >= 0 ? navigationAssets[currentViewerIndex - 2] : undefined,
+    nearbyAssets:
+      currentViewerIndex >= 0
+        ? navigationAssets.slice(
+            Math.max(0, currentViewerIndex - STRIP_RADIUS),
+            currentViewerIndex + STRIP_RADIUS + 1,
+          )
+        : undefined,
   });
 </script>
 

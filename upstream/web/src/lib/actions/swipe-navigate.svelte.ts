@@ -32,6 +32,7 @@ export class SwipeNavigate {
   #startTime = 0;
   #lock: 'h' | 'v' | null = null;
   #commitTimer: ReturnType<typeof setTimeout> | undefined;
+  #touchGuard: HTMLElement | undefined;
 
   constructor(options: SwipeNavigateOptions) {
     this.#options = options;
@@ -43,7 +44,29 @@ export class SwipeNavigate {
 
   destroy() {
     this.#clearCommit();
+    this.#unbindTouchGuard();
   }
+
+  /** iOS: native video/photo pan-y is passive; lock cần preventDefault trên touchmove. */
+  bindTouchGuard = (node: HTMLElement) => {
+    this.#unbindTouchGuard();
+    this.#touchGuard = node;
+    node.addEventListener('touchmove', this.#onTouchMove, { passive: false });
+    return {
+      destroy: () => this.#unbindTouchGuard(),
+    };
+  };
+
+  #unbindTouchGuard() {
+    this.#touchGuard?.removeEventListener('touchmove', this.#onTouchMove);
+    this.#touchGuard = undefined;
+  }
+
+  #onTouchMove = (event: TouchEvent) => {
+    if (this.#lock) {
+      event.preventDefault();
+    }
+  };
 
   onPointerDown = (event: PointerEvent) => {
     if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) {
@@ -68,11 +91,6 @@ export class SwipeNavigate {
       if (!event.isPrimary && this.#pointerId !== null) {
         this.#cancel();
       }
-      return;
-    }
-
-    if (!this.#options.canStart(event)) {
-      this.#cancel();
       return;
     }
 
