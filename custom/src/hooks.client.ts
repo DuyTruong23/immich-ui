@@ -17,7 +17,9 @@ function reloadOnceForStaleChunk(): boolean {
     // sessionStorage unavailable — still try a one-shot reload
   }
 
-  location.reload();
+  const next = new URL(location.href);
+  next.searchParams.set('_pg', String(Date.now()));
+  location.replace(`${next.pathname}${next.search}${next.hash}`);
   return true;
 }
 
@@ -61,6 +63,12 @@ function lockBrowserPageZoom() {
 }
 
 if (typeof window !== 'undefined') {
+  const bootUrl = new URL(location.href);
+  if (bootUrl.searchParams.has('_pg')) {
+    bootUrl.searchParams.delete('_pg');
+    history.replaceState(history.state, '', `${bootUrl.pathname}${bootUrl.search}${bootUrl.hash}`);
+  }
+
   lockBrowserPageZoom();
 
   window.addEventListener('vite:preloadError', (event) => {
