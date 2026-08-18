@@ -55,7 +55,9 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/stores/websocket.ts` | WS trực tiếp tunnel; resume sau bfcache không reload |
 | `lib/utils/media-base-url.ts` | Media URL trực tiếp qua `PUBLIC_IMMICH_MEDIA_URL` |
 | `lib/utils/server.ts` | Gọi `applyDefaultThemePreference` trước khi init i18n |
-| `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout và buffer mobile (mở rộng khi scrolling) |
+| `lib/utils/mobile-performance.svelte.ts` | Network/save-data, layout mobile; rowHeight theo số cột pinch |
+| `lib/stores/grid-density.svelte.ts` | Số cột lưới mobile 3–6, nhớ localStorage |
+| `lib/actions/pinch-grid.svelte.ts` | Pinch 2 ngón: chum = nhiều ảnh, xoè = ít ảnh |
 | `lib/utils/navigation.ts` | Đóng/đổi ảnh dùng `replaceState` — vuốt back = mũi tên, không reload |
 | `lib/utils/mobile-back-navigation.ts` | Intercept popstate/willUnload, đóng viewer SPA |
 | `lib/actions/swipe-navigate.svelte.ts` | Vuốt ngang next/back + vuốt xuống đóng; chặn pan-y native trên video |

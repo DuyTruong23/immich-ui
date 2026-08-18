@@ -20,6 +20,17 @@
 html,
 body {
   overscroll-behavior-x: none;
+  /* Chặn pinch-zoom trang; viewer ảnh vẫn pinch được qua rule bên dưới */
+  touch-action: pan-x pan-y;
+}
+
+#asset-grid,
+.pg-photo-grid {
+  touch-action: pan-y;
+}
+
+.pg-grid-pinching {
+  overflow: hidden;
 }
 
 /* Chỉ vùng ảnh/video — không áp lên navbar, detail panel, stack strip */

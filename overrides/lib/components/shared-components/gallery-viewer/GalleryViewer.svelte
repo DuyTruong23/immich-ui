@@ -25,6 +25,8 @@
   import { getJustifiedLayoutFromAssets } from '$lib/utils/layout-utils';
   import { navigate } from '$lib/utils/navigation';
   import { isTimelineAsset, toTimelineAsset } from '$lib/utils/timeline-util';
+  import { pinchGrid } from '$lib/actions/pinch-grid.svelte';
+  import { gridDensityManager } from '$lib/stores/grid-density.svelte';
   import { getTimelineIntersectionExpand, getTimelineLayoutOptions } from '$lib/utils/mobile-performance.svelte';
   import { AssetVisibility, type AssetResponseDto } from '@immich/sdk';
   import { modalManager } from '@immich/ui';
@@ -82,14 +84,15 @@
 
   const navigationAssets = $derived(viewerAssets ?? assets);
 
-  const geometry = $derived(
-    getJustifiedLayoutFromAssets(assets, {
+  const geometry = $derived.by(() => {
+    gridDensityManager.columns;
+    return getJustifiedLayoutFromAssets(assets, {
       spacing: 2,
       heightTolerance: 0.5,
-      rowHeight: getTimelineLayoutOptions().rowHeight,
+      rowHeight: getTimelineLayoutOptions(viewport.width).rowHeight,
       rowWidth: Math.floor(viewport.width),
-    }),
-  );
+    });
+  });
 
   const getStyle = (index: number) => {
     return `top: ${geometry.getTop(index)}px; left: ${geometry.getLeft(index)}px; width: ${geometry.getWidth(index)}px; height: ${geometry.getHeight(index)}px;`;
@@ -375,9 +378,11 @@
 
 {#if assets.length > 0}
   <div
+    class="pg-photo-grid"
     style:position="relative"
     style:height={geometry.containerHeight + 'px'}
     style:width={geometry.containerWidth + 'px'}
+    use:pinchGrid
   >
     {#each assets as asset, index (asset.id + '-' + index)}
       {#if isInOrNearViewport(index)}

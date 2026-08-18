@@ -9,6 +9,9 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
   import type { PartnerFavoriteUser } from '$custom/api/partner-favorites';
+  import { pinchGrid } from '$lib/actions/pinch-grid.svelte';
+  import { gridDensityManager } from '$lib/stores/grid-density.svelte';
+  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { handlePromiseError } from '$lib/utils';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
@@ -30,6 +33,7 @@
   let loadingAssets = $state(true);
   let errorMessage = $state('');
   let thumbSize = $state(0);
+  const isMobileGrid = $derived(mediaQueryManager.pointerCoarse || mediaQueryManager.maxMd);
 
   const myId = $derived(partnerFavoritesStore.me?.id);
 
@@ -165,7 +169,9 @@
   const measureThumbCell = (node: HTMLElement) => {
     const update = () => {
       const styles = getComputedStyle(node);
-      const cols = styles.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      const cols = isMobileGrid
+        ? gridDensityManager.columns
+        : styles.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
       const gap = Number.parseFloat(styles.columnGap) || 0;
       thumbSize = Math.max(1, Math.floor((node.clientWidth - gap * Math.max(cols - 1, 0)) / cols));
     };
@@ -173,9 +179,18 @@
     const observer = new ResizeObserver(update);
     observer.observe(node);
     update();
+
+    const unsubscribe = $effect.root(() => {
+      $effect(() => {
+        gridDensityManager.columns;
+        update();
+      });
+    });
+
     return {
       destroy() {
         observer.disconnect();
+        unsubscribe();
       },
     };
   };
@@ -331,8 +346,12 @@
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div
-      class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}"
+      style:grid-template-columns={isMobileGrid
+        ? `repeat(${gridDensityManager.columns}, minmax(0, 1fr))`
+        : undefined}
       use:measureThumbCell
+      use:pinchGrid
     >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetsById.get(item.assetId)}

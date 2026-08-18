@@ -31,14 +31,36 @@ def remove_once(text: str, old: str) -> str:
 
 def patch_timeline(path: pathlib.Path) -> None:
     text = path.read_text(encoding='utf-8')
-    text = insert_after(
-        text,
-        "  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';\n",
-        "  import { getTimelineLayoutOptions, networkManager } from '$lib/utils/mobile-performance.svelte';\n",
-        'Timeline mediaQueryManager import',
-    )
-    text = replace_once(
-        text,
+    if "from '$lib/actions/pinch-grid.svelte'" not in text:
+        text = insert_after(
+            text,
+            "  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';\n",
+            "  import { pinchGrid } from '$lib/actions/pinch-grid.svelte';\n"
+            "  import { gridDensityManager } from '$lib/stores/grid-density.svelte';\n",
+            'Timeline pinch-grid import',
+        )
+    if "from '$lib/utils/mobile-performance.svelte'" not in text:
+        text = insert_after(
+            text,
+            "  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';\n",
+            "  import { getTimelineLayoutOptions, networkManager } from '$lib/utils/mobile-performance.svelte';\n",
+            'Timeline mediaQueryManager import',
+        )
+    density_effect = """  $effect(() => {
+    maxMd;
+    networkManager.quality;
+    gridDensityManager.columns;
+    timelineManager.viewportWidth;
+    timelineManager.setLayoutOptions(getTimelineLayoutOptions(timelineManager.viewportWidth));
+  });
+"""
+    for old in (
+        """  $effect(() => {
+    maxMd;
+    networkManager.quality;
+    timelineManager.setLayoutOptions(getTimelineLayoutOptions());
+  });
+""",
         """  $effect(() => {
     const layoutOptions = maxMd
       ? {
@@ -52,14 +74,21 @@ def patch_timeline(path: pathlib.Path) -> None:
     timelineManager.setLayoutOptions(layoutOptions);
   });
 """,
-        """  $effect(() => {
-    maxMd;
-    networkManager.quality;
-    timelineManager.setLayoutOptions(getTimelineLayoutOptions());
-  });
-""",
-        'Timeline layout options',
-    )
+    ):
+        if density_effect in text:
+            break
+        if old in text:
+            text = text.replace(old, density_effect, 1)
+            break
+    else:
+        if density_effect not in text:
+            raise SystemExit('Cannot find Timeline layout options')
+    if 'use:pinchGrid' not in text:
+        text = text.replace(
+            "  onscroll={() => (handleTimelineScroll(), timelineManager.updateSlidingWindow(), updateIsScrolling())}\n>",
+            "  onscroll={() => (handleTimelineScroll(), timelineManager.updateSlidingWindow(), updateIsScrolling())}\n  use:pinchGrid\n>",
+            1,
+        )
     text = insert_after(
         text,
         "  import TimelineAssetViewer from '$lib/components/timeline/TimelineAssetViewer.svelte';\n",
@@ -255,10 +284,22 @@ def patch_app_html(path: pathlib.Path) -> None:
     </script>""",
         'app.html system theme FOUC',
     )
+    locked_viewport = (
+        '<meta\n'
+        '      name="viewport"\n'
+        '      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"\n'
+        '    />'
+    )
+    if locked_viewport not in text:
+        text = text.replace(
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />',
+            locked_viewport,
+            1,
+        )
     text = replace_once(
         text,
         '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />',
-        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />\n'
+        locked_viewport + '\n'
         '    <meta name="mobile-web-app-capable" content="yes" />\n'
         '    <meta name="apple-mobile-web-app-capable" content="yes" />\n'
         '    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />',

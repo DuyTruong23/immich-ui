@@ -25,7 +25,44 @@ function isImmutableAssetUrl(url: string | undefined): boolean {
   return Boolean(url && url.includes('/_app/immutable/'));
 }
 
+function isAssetViewerOpen() {
+  return Boolean(document.getElementById('immich-asset-viewer'));
+}
+
+function lockBrowserPageZoom() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) {
+    meta.setAttribute(
+      'content',
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+    );
+  }
+
+  const blockBrowserZoom = (event: Event) => {
+    if (isAssetViewerOpen()) {
+      return;
+    }
+    event.preventDefault();
+  };
+
+  document.addEventListener('gesturestart', blockBrowserZoom, { passive: false });
+  document.addEventListener('gesturechange', blockBrowserZoom, { passive: false });
+  document.addEventListener('gestureend', blockBrowserZoom, { passive: false });
+
+  document.addEventListener(
+    'touchmove',
+    (event) => {
+      if (event.touches.length > 1 && !isAssetViewerOpen()) {
+        event.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+}
+
 if (typeof window !== 'undefined') {
+  lockBrowserPageZoom();
+
   window.addEventListener('vite:preloadError', (event) => {
     event.preventDefault();
     reloadOnceForStaleChunk();
