@@ -69,6 +69,7 @@ class PartnerFavoritesStore {
   adminItems = $state<PartnerFavoriteItem[]>([]);
   mineAssetIds = $state<string[]>([]);
   shareWithEveryone = $state(false);
+  clearedFavorites = $state<Record<string, string[]>>({});
 
   #loadPromise: Promise<void> | null = null;
 
@@ -79,14 +80,20 @@ class PartnerFavoritesStore {
         return;
       }
 
+      const blocked = new Set(this.clearedFavorites[item.assetId] ?? []);
+      const favoritedBy = item.favoritedBy.filter((user) => user?.id && !blocked.has(user.id));
+      if (favoritedBy.length === 0) {
+        return;
+      }
+
       const current = byId.get(item.assetId);
       if (!current) {
-        byId.set(item.assetId, { ...item, favoritedBy: [...item.favoritedBy] });
+        byId.set(item.assetId, { ...item, favoritedBy: [...favoritedBy] });
         return;
       }
 
       const known = new Set(current.favoritedBy.map((user) => user.id));
-      for (const user of item.favoritedBy) {
+      for (const user of favoritedBy) {
         if (user?.id && !known.has(user.id)) {
           current.favoritedBy.push(user);
           known.add(user.id);
@@ -126,6 +133,7 @@ class PartnerFavoritesStore {
     this.items = Array.isArray(payload.items) ? payload.items : [];
     this.mineAssetIds = payload.mineAssetIds ?? [];
     this.shareWithEveryone = payload.shareWithEveryone === true;
+    this.clearedFavorites = payload.clearedFavorites ?? {};
     this.loaded = true;
   }
 
@@ -246,6 +254,9 @@ class PartnerFavoritesStore {
       try {
         const assetIds = await this.loadFavoriteBuckets(onChunk, { userId: user.id });
         for (const assetId of assetIds) {
+          if (this.clearedFavorites[assetId]?.includes(user.id)) {
+            continue;
+          }
           discovered.push({
             assetId,
             favoritedAt: new Date().toISOString(),
@@ -277,8 +288,8 @@ class PartnerFavoritesStore {
     }
   }
 
-  async setFavorite(assetId: string | string[], favorite: boolean): Promise<PartnerFavoritesResponse> {
-    const payload = await setPartnerFavorite(assetId, favorite);
+  async setFavorite(assetId: string | string[], favorite: boolean, userIds?: string[]): Promise<PartnerFavoritesResponse> {
+    const payload = await setPartnerFavorite(assetId, favorite, userIds);
     this.apply(payload);
     return payload;
   }

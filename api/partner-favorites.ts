@@ -5,6 +5,7 @@ import {
   buildFavoriteItems,
   isAssetId,
   isShareWithEveryone,
+  listClearedFavoriteUserIds,
   listUserFavoriteAssetIds,
   normalizeFavoriteUser,
   readPartnerFavorites,
@@ -135,6 +136,7 @@ const jsonPayload = (
       : partners,
     shareWithEveryone: isShareWithEveryone(store, me.id),
     mineAssetIds: listUserFavoriteAssetIds(store, me.id),
+    clearedFavorites: listClearedFavoriteUserIds(store),
     items: buildFavoriteItems(
       store,
       me.isAdmin
@@ -191,6 +193,7 @@ export default async function handler(request: Request): Promise<Response> {
       favorite?: boolean;
       assetIds?: unknown;
       shareWithEveryone?: unknown;
+      userIds?: unknown;
     } = {};
     if (request.method !== 'GET') {
       try {
@@ -263,14 +266,26 @@ export default async function handler(request: Request): Promise<Response> {
     const addedIds: string[] = [];
     let added = false;
     let removed = false;
+    const requestedUserIds = Array.isArray(body.userIds)
+      ? body.userIds.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+      : [];
 
     for (const assetId of assetIds) {
-      const result = setUserFavorite(store, assetId, me.id, favorite, 'overlay');
-      store = result.store;
-      added = added || result.added;
-      removed = removed || result.removed;
-      if (result.added) {
-        addedIds.push(assetId);
+      const targetUserIds =
+        !favorite && me.isAdmin
+          ? requestedUserIds.length > 0
+            ? requestedUserIds
+            : Object.keys(store.favorites[assetId] ?? {})
+          : [me.id];
+
+      for (const userId of targetUserIds) {
+        const result = setUserFavorite(store, assetId, userId, favorite, 'overlay');
+        store = result.store;
+        added = added || result.added;
+        removed = removed || result.removed;
+        if (result.added && userId === me.id) {
+          addedIds.push(assetId);
+        }
       }
     }
 

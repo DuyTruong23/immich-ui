@@ -13,9 +13,12 @@
   import { gridDensityManager } from '$lib/stores/grid-density.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { handlePromiseError } from '$lib/utils';
+  import { handleError } from '$lib/utils/handle-error';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset, type TimelineDateTime } from '$lib/utils/timeline-util';
-  import { AssetTypeEnum, AssetVisibility, getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
+  import { AssetTypeEnum, AssetVisibility, getAssetInfo, updateAssets, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
+  import { Icon } from '@immich/ui';
+  import { mdiClose } from '@mdi/js';
   import { DateTime } from 'luxon';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -37,6 +40,8 @@
   const isMobileGrid = $derived(mediaQueryManager.pointerCoarse || mediaQueryManager.maxMd);
 
   const myId = $derived(partnerFavoritesStore.me?.id);
+  const isAdmin = $derived(partnerFavoritesStore.me?.isAdmin === true);
+  let removingIds = $state(new Set<string>());
 
   const items = $derived.by(() => {
     const all = partnerFavoritesStore.listedItems;
@@ -376,6 +381,41 @@
     handlePromiseError(navigate({ targetRoute: 'current', assetId: null }));
   };
 
+  const canRemoveItem = (item: { favoritedBy: PartnerFavoriteUser[] }) => {
+    if (isAdmin) {
+      return true;
+    }
+    return Boolean(myId && item.favoritedBy.some((user) => user.id === myId));
+  };
+
+  const handleRemoveFavorite = async (
+    event: MouseEvent,
+    item: { assetId: string; favoritedBy: PartnerFavoriteUser[] },
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (removingIds.has(item.assetId) || !canRemoveItem(item)) {
+      return;
+    }
+
+    removingIds = new Set(removingIds).add(item.assetId);
+    try {
+      const userIds = isAdmin ? item.favoritedBy.map((user) => user.id) : undefined;
+      await partnerFavoritesStore.setFavorite(item.assetId, false, userIds);
+
+      const asset = assetsById.get(item.assetId);
+      if (authManager.authenticated && asset && asset.ownerId === authManager.user.id) {
+        await updateAssets({ assetBulkUpdateDto: { ids: [item.assetId], isFavorite: false } });
+      }
+    } catch (error) {
+      handleError(error, $t('shared_favorites_remove_error'));
+    } finally {
+      const next = new Set(removingIds);
+      next.delete(item.assetId);
+      removingIds = next;
+    }
+  };
+
   const assetCursor = $derived({
     current: assetViewerManager.asset!,
     nextAsset: neighborAsset(1),
@@ -428,7 +468,7 @@
     >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetForItem(item)}
-        <div class="relative isolate aspect-square overflow-hidden rounded-xl">
+        <div class="relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
           <Thumbnail
             {asset}
             thumbnailSize={thumbSize || undefined}
@@ -436,6 +476,17 @@
             readonly
             onClick={() => handlePromiseError(onViewAsset(asset))}
           />
+          {#if canRemoveItem(item)}
+            <button
+              type="button"
+              class="absolute top-2 end-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
+              aria-label={isAdmin ? $t('shared_favorites_remove_admin') : $t('unfavorite')}
+              disabled={removingIds.has(item.assetId)}
+              onclick={(event) => handlePromiseError(handleRemoveFavorite(event, item))}
+            >
+              <Icon icon={mdiClose} size="18" />
+            </button>
+          {/if}
           <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
             {#each item.favoritedBy as user, index (user.id)}
               <div

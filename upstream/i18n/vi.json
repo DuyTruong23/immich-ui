@@ -2025,6 +2025,8 @@
   "shared_favorites_no_partner": "Chưa có Bạn bè. Thêm bạn bè trong Cài đặt → Bạn bè để xem ảnh yêu thích của nhau.",
   "shared_favorites_share_toggle": "Cho phép mọi người đều thấy",
   "shared_favorites_share_toggle_subtitle": "Bật: mọi người thấy yêu thích của bạn trên Yêu thích chung. Tắt: chỉ admin thấy ở đó; bạn vẫn thấy tại trang này.",
+  "shared_favorites_remove_admin": "Xóa yêu thích của thành viên",
+  "shared_favorites_remove_error": "Không xóa được yêu thích",
   "shared_from_partner": "Ảnh từ {partner}",
   "shared_intent_upload_button_progress_text": "{current} / {total} Đã tải lên",
   "shared_link_app_bar_title": "Những link đã chia sẻ",
