@@ -424,11 +424,7 @@
 </script>
 
 <UserPageLayout title={data.meta.title} hideNavbar={assetViewerManager.isViewing}>
-  <p class="mb-4 text-sm text-(--pg-text-muted)">
-    {$t('shared_favorites_description')}
-  </p>
-
-  {#if !partnerFavoritesStore.me?.isAdmin && partnerFavoritesStore.partners.length === 0 && partnerFavoritesStore.loaded}
+   {#if !partnerFavoritesStore.me?.isAdmin && partnerFavoritesStore.partners.length === 0 && partnerFavoritesStore.loaded}
     <p
       class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
     >

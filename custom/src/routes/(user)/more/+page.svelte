@@ -2,8 +2,9 @@
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
   import UserAvatar from '$lib/components/shared-components/UserAvatar.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
+  import AvatarEditModal from '$lib/modals/AvatarEditModal.svelte';
   import { Route } from '$lib/route';
-  import { Icon } from '@immich/ui';
+  import { Icon, modalManager } from '@immich/ui';
   import {
     mdiAccountMultipleOutline,
     mdiAccountOutline,
@@ -88,7 +89,14 @@
   <div class="pg-more-page">
     {#if authManager.authenticated}
       <div class="pg-more-account">
-        <UserAvatar user={authManager.user} size="lg" noTitle />
+        <button
+          type="button"
+          class="pg-more-account__avatar"
+          aria-label={$t('edit_avatar')}
+          onclick={() => modalManager.show(AvatarEditModal)}
+        >
+          <UserAvatar user={authManager.user} size="lg" noTitle interactive />
+        </button>
         <div class="pg-more-account__text">
           <p class="pg-more-account__name">{authManager.user.name}</p>
           <p class="pg-more-account__email">{authManager.user.email}</p>
