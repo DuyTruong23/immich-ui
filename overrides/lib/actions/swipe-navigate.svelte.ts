@@ -1,6 +1,6 @@
-import { motionDuration } from '$lib/utils/mobile-performance.svelte';
+import { motionDuration } from "$lib/utils/mobile-performance.svelte";
 
-export type SwipeNavigateDirection = 'next' | 'previous';
+export type SwipeNavigateDirection = "next" | "previous";
 
 type SwipeNavigateOptions = {
   getWidth: () => number;
@@ -17,8 +17,17 @@ const COMMIT_RATIO = 0.22;
 const COMMIT_VELOCITY = 0.5;
 const DISMISS_PX = 96;
 const DISMISS_VELOCITY = 0.45;
+const DISMISS_FADE_PX = 280;
+const DISMISS_SCALE_PX = 1800;
+const DISMISS_SCALE_MIN = 0.84;
 const RUBBER = 0.34;
 const SETTLE_MS = 280;
+
+export const swipeDismissProgress = (offsetY: number) =>
+  Math.min(1, Math.max(0, offsetY) / DISMISS_FADE_PX);
+
+export const swipeDismissScale = (offsetY: number) =>
+  offsetY > 0 ? Math.max(DISMISS_SCALE_MIN, 1 - offsetY / DISMISS_SCALE_PX) : 1;
 
 export class SwipeNavigate {
   offset = $state(0);
@@ -30,7 +39,7 @@ export class SwipeNavigate {
   #startX = 0;
   #startY = 0;
   #startTime = 0;
-  #lock: 'h' | 'v' | null = null;
+  #lock: "h" | "v" | null = null;
   #commitTimer: ReturnType<typeof setTimeout> | undefined;
   #touchGuard: HTMLElement | undefined;
 
@@ -39,7 +48,7 @@ export class SwipeNavigate {
   }
 
   get dragging() {
-    return this.#lock === 'h';
+    return this.#lock === "h";
   }
 
   destroy() {
@@ -51,14 +60,14 @@ export class SwipeNavigate {
   bindTouchGuard = (node: HTMLElement) => {
     this.#unbindTouchGuard();
     this.#touchGuard = node;
-    node.addEventListener('touchmove', this.#onTouchMove, { passive: false });
+    node.addEventListener("touchmove", this.#onTouchMove, { passive: false });
     return {
       destroy: () => this.#unbindTouchGuard(),
     };
   };
 
   #unbindTouchGuard() {
-    this.#touchGuard?.removeEventListener('touchmove', this.#onTouchMove);
+    this.#touchGuard?.removeEventListener("touchmove", this.#onTouchMove);
     this.#touchGuard = undefined;
   }
 
@@ -69,7 +78,10 @@ export class SwipeNavigate {
   };
 
   onPointerDown = (event: PointerEvent) => {
-    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) {
+    if (
+      !event.isPrimary ||
+      (event.pointerType === "mouse" && event.button !== 0)
+    ) {
       return;
     }
 
@@ -102,15 +114,16 @@ export class SwipeNavigate {
         return;
       }
 
-      this.#lock = Math.abs(dx) >= Math.abs(dy) * 1.1 ? 'h' : 'v';
-      if (this.#lock === 'v' && !this.#options.onDismiss) {
+      this.#lock = Math.abs(dx) >= Math.abs(dy) * 1.1 ? "h" : "v";
+      if (this.#lock === "v" && !this.#options.onDismiss) {
         return;
       }
 
-      event.currentTarget instanceof HTMLElement && event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget instanceof HTMLElement &&
+        event.currentTarget.setPointerCapture(event.pointerId);
     }
 
-    if (this.#lock === 'v') {
+    if (this.#lock === "v") {
       if (dy <= 0) {
         this.offsetY = 0;
         return;
@@ -121,7 +134,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (this.#lock !== 'h') {
+    if (this.#lock !== "h") {
       return;
     }
 
@@ -139,11 +152,12 @@ export class SwipeNavigate {
     this.#pointerId = null;
     this.#lock = null;
 
-    if (lock === 'v') {
+    if (lock === "v") {
       const elapsed = Math.max(performance.now() - this.#startTime, 1);
       const velocityY = (event.clientY - this.#startY) / elapsed;
       const shouldDismiss =
-        Boolean(this.#options.onDismiss) && (this.offsetY >= DISMISS_PX || velocityY >= DISMISS_VELOCITY);
+        Boolean(this.#options.onDismiss) &&
+        (this.offsetY >= DISMISS_PX || velocityY >= DISMISS_VELOCITY);
 
       this.animating = true;
       if (shouldDismiss) {
@@ -160,7 +174,7 @@ export class SwipeNavigate {
       return;
     }
 
-    if (lock !== 'h') {
+    if (lock !== "h") {
       this.offset = 0;
       this.offsetY = 0;
       return;
@@ -175,10 +189,16 @@ export class SwipeNavigate {
     const ratio = this.offset / width;
 
     let direction: SwipeNavigateDirection | null = null;
-    if ((ratio <= -COMMIT_RATIO || velocity <= -COMMIT_VELOCITY) && this.#options.hasNext()) {
-      direction = 'next';
-    } else if ((ratio >= COMMIT_RATIO || velocity >= COMMIT_VELOCITY) && this.#options.hasPrevious()) {
-      direction = 'previous';
+    if (
+      (ratio <= -COMMIT_RATIO || velocity <= -COMMIT_VELOCITY) &&
+      this.#options.hasNext()
+    ) {
+      direction = "next";
+    } else if (
+      (ratio >= COMMIT_RATIO || velocity >= COMMIT_VELOCITY) &&
+      this.#options.hasPrevious()
+    ) {
+      direction = "previous";
     }
 
     this.animating = true;
@@ -188,7 +208,7 @@ export class SwipeNavigate {
       return;
     }
 
-    this.offset = direction === 'next' ? -width : width;
+    this.offset = direction === "next" ? -width : width;
     this.#commitTimer = setTimeout(() => {
       this.#commitTimer = undefined;
       this.#options.onCommit(direction);
@@ -211,7 +231,10 @@ export class SwipeNavigate {
   }
 
   #rubber(dx: number) {
-    if ((dx < 0 && !this.#options.hasNext()) || (dx > 0 && !this.#options.hasPrevious())) {
+    if (
+      (dx < 0 && !this.#options.hasNext()) ||
+      (dx > 0 && !this.#options.hasPrevious())
+    ) {
       return dx * RUBBER;
     }
 

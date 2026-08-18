@@ -1,39 +1,47 @@
 /*
  * Asset viewer chrome — M3 tokens
+ *
+ * Mobile breakpoint matches AssetViewer `isMobileViewer`:
+ *   (pointer: coarse) OR (max-width: 767px)
  */
 
 @layer components {
   body.asset-viewer-open {
     background-color: #000000;
+    overscroll-behavior: none;
+  }
+
+  html:has(body.asset-viewer-open) {
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   body.asset-viewer-open nav,
-  body.asset-viewer-open [role='toolbar'] {
-    background-color: color-mix(in srgb, var(--md-sys-color-surface, #000) 8%, transparent);
+  body.asset-viewer-open [role="toolbar"] {
+    background-color: color-mix(
+      in srgb,
+      var(--md-sys-color-surface, #000) 8%,
+      transparent
+    );
     backdrop-filter: blur(12px);
   }
 
   body.asset-viewer-open aside,
   body.asset-viewer-open #detail-panel,
-  body.asset-viewer-open [data-testid='detail-panel'] {
+  body.asset-viewer-open [data-testid="detail-panel"] {
     background-color: var(--md-sys-color-surface-container, #1d1b20);
     border-color: var(--md-sys-color-outline-variant, #49454f);
   }
 
-  @media (pointer: coarse) {
-    body.asset-viewer-open [data-testid='asset-viewer-navbar-actions'] button,
-    body.asset-viewer-open [role='toolbar'] button {
+  @media (pointer: coarse), (max-width: 767px) {
+    body.asset-viewer-open [data-testid="asset-viewer-navbar-actions"] button,
+    body.asset-viewer-open [role="toolbar"] button {
       min-width: 44px;
       min-height: 44px;
     }
-  }
-}
 
-@supports (padding: env(safe-area-inset-bottom)) {
-  @layer utilities {
-    body.asset-viewer-open media-control-bar,
-    body.asset-viewer-open .bottom-0 {
-      padding-bottom: env(safe-area-inset-bottom);
+    #immich-asset-viewer.immich-asset-viewer--mobile .video-mobile-chrome {
+      padding-bottom: 0;
     }
   }
 }

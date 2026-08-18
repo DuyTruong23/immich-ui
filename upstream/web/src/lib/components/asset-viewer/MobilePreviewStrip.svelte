@@ -1,5 +1,10 @@
 <script lang="ts">
   import ImageThumbnail from '$lib/components/assets/thumbnail/ImageThumbnail.svelte';
+  import {
+    PREVIEW_STRIP_CURRENT_SIZE,
+    PREVIEW_STRIP_THUMB_SIZE,
+    windowPreviewStrip,
+  } from '$lib/components/asset-viewer/preview-layout';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getAssetMediaUrl } from '$lib/utils';
   import { AssetMediaSize } from '@immich/sdk';
@@ -18,8 +23,7 @@
 
   let { assets, currentId, onSelect }: Props = $props();
 
-  const thumbnailSize = 52;
-  const currentSize = 60;
+  const visibleAssets = $derived(windowPreviewStrip(assets, currentId));
   let scroller: HTMLElement | undefined = $state();
 
   const urlFor = (asset: PreviewStripAsset) => {
@@ -32,6 +36,7 @@
 
   $effect(() => {
     currentId;
+    visibleAssets;
     const el = scroller?.querySelector('[aria-current="true"]');
     if (!(el instanceof HTMLElement)) {
       return;
@@ -44,19 +49,19 @@
 
 <nav
   bind:this={scroller}
-  class="pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  class="mobile-preview-strip pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   aria-label="Nearby assets"
 >
-  <div class="flex w-max min-w-full items-end justify-center gap-2">
-    {#each assets as asset (asset.id)}
+  <div class="flex w-max min-w-full items-end justify-center gap-1.5">
+    {#each visibleAssets as asset (asset.id)}
       {@const isCurrent = asset.id === currentId}
-      {@const size = isCurrent ? currentSize : thumbnailSize}
+      {@const size = isCurrent ? PREVIEW_STRIP_CURRENT_SIZE : PREVIEW_STRIP_THUMB_SIZE}
       {@const url = urlFor(asset)}
       <button
         type="button"
-        class="relative shrink-0 overflow-hidden rounded-xl bg-white/10 {isCurrent
+        class="relative shrink-0 overflow-hidden rounded-lg bg-white/10 transition-[box-shadow,opacity,transform] duration-200 {isCurrent
           ? 'ring-2 ring-white ring-offset-2 ring-offset-black'
-          : 'opacity-80'}"
+          : 'opacity-75'}"
         style:width="{size}px"
         style:height="{size}px"
         aria-current={isCurrent ? 'true' : undefined}
@@ -74,7 +79,7 @@
             widthStyle="{size}px"
             heightStyle="{size}px"
             curve
-            class="size-full rounded-xl object-cover"
+            class="size-full rounded-lg object-cover"
             preload={isCurrent}
           />
         {/if}

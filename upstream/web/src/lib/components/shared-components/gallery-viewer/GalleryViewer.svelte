@@ -3,6 +3,7 @@
   import { shortcuts, type ShortcutOptions } from '$lib/actions/shortcut';
   import type { Action } from '$lib/components/asset-viewer/actions/action';
   import type { AssetCursor } from '$lib/components/asset-viewer/AssetViewer.svelte';
+  import { PREVIEW_STRIP_RADIUS, buildPreviewStrip } from '$lib/components/asset-viewer/preview-layout';
   import Thumbnail from '$lib/components/assets/thumbnail/Thumbnail.svelte';
   import { AssetAction } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
@@ -350,17 +351,20 @@
   const currentViewerIndex = $derived(
     currentViewerAsset ? navigationAssets.findIndex((asset) => asset.id === currentViewerAsset.id) : -1,
   );
-  const STRIP_RADIUS = 16;
+  const STRIP_RADIUS = PREVIEW_STRIP_RADIUS;
   const assetCursor = $derived<AssetCursor>({
     current: assetViewerManager.asset!,
     nextAsset: getNextAsset(navigationAssets, assetViewerManager.asset),
     previousAsset: getPreviousAsset(navigationAssets, assetViewerManager.asset),
     nearbyAssets:
       currentViewerIndex >= 0
-        ? navigationAssets.slice(
-            Math.max(0, currentViewerIndex - STRIP_RADIUS),
-            currentViewerIndex + STRIP_RADIUS + 1,
-          )
+        ? buildPreviewStrip({
+            current: navigationAssets[currentViewerIndex],
+            previous: getPreviousAsset(navigationAssets, assetViewerManager.asset),
+            next: getNextAsset(navigationAssets, assetViewerManager.asset),
+            laterItems: navigationAssets.slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex).toReversed(),
+            earlierItems: navigationAssets.slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1),
+          })
         : undefined,
   });
 </script>

@@ -55,7 +55,9 @@
   import SlideshowMetadataOverlay from './SlideshowMetadataOverlay.svelte';
   import SwipeBackEdge from '$lib/components/shared-components/SwipeBackEdge.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
+  import { lockViewerPageScroll, unlockViewerPageScroll } from '$lib/utils/viewer-scroll-lock';
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
+  import { buildPreviewStrip } from './preview-layout';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
@@ -126,7 +128,8 @@
       $slideshowState === SlideshowState.None &&
       showNavigation &&
       !assetViewerManager.isShowEditor &&
-      !assetViewerManager.isFaceEditMode,
+      !assetViewerManager.isFaceEditMode &&
+      Boolean(previousAsset || nextAsset || (cursor.nearbyAssets && cursor.nearbyAssets.length > 1)),
   );
   let sharedLink = getSharedLink();
   let fullscreenElement = $state<Element>();
@@ -214,6 +217,7 @@
   });
 
   const closeViewer = () => {
+    unlockViewerPageScroll();
     onClose?.(asset.id);
   };
 
@@ -403,9 +407,14 @@
   });
 
   const syncAssetViewerOpenClass = (isOpen: boolean) => {
-    if (browser) {
-      document.body.classList.toggle('asset-viewer-open', isOpen);
+    if (!browser) {
+      return;
     }
+    if (isOpen) {
+      lockViewerPageScroll();
+      return;
+    }
+    unlockViewerPageScroll();
   };
 
   const refresh = async () => {
@@ -520,7 +529,7 @@
 <section
   id="immich-asset-viewer"
   class="fixed inset-s-0 top-0 grid size-full grid-cols-4 overflow-hidden bg-black {isMobileViewer
-    ? 'grid-rows-[48px_1fr]'
+    ? 'grid-rows-1'
     : 'grid-rows-[64px_1fr]'}"
   class:immich-asset-viewer--mobile={isMobileViewer}
   use:focusTrap
@@ -535,9 +544,9 @@
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
     <div
-      class="col-span-4 col-start-1 row-span-1 row-start-1 transition-transform {isMobileViewer
-        ? 'asset-viewer-navbar--compact'
-        : ''}"
+      class={isMobileViewer
+        ? 'asset-viewer-navbar--overlay absolute inset-x-0 top-0 z-30'
+        : 'col-span-4 col-start-1 row-span-1 row-start-1 transition-transform'}
     >
       <AssetViewerNavBar
         {asset}
@@ -547,7 +556,14 @@
         preAction={handlePreAction}
         onAction={handleAction}
         {onUndoDelete}
-        onClose={onClose ? () => onClose(stack?.primaryAssetId ?? asset.id) : undefined}
+        onClose={
+          onClose
+            ? () => {
+                unlockViewerPageScroll();
+                onClose(stack?.primaryAssetId ?? asset.id);
+              }
+            : undefined
+        }
         {onRemoveFromAlbum}
         {isPlayingOriginalVideo}
         {setPlayOriginalVideo}
@@ -680,11 +696,20 @@
   {/if}
 
   {#if showMobilePreviewStrip}
-    <div class="absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack && withStacked ? 'mb-16' : ''}">
+    <div
+      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack &&
+      withStacked
+        ? 'mb-16'
+        : ''}"
+    >
       <MobilePreviewStrip
         assets={cursor.nearbyAssets?.length
           ? cursor.nearbyAssets
-          : [previousAsset, asset, nextAsset].filter((item): item is typeof asset => Boolean(item))}
+          : buildPreviewStrip({
+              current: asset,
+              previous: previousAsset,
+              next: nextAsset,
+            })}
         currentId={asset.id}
         onSelect={(selected) => {
           void navigate({ targetRoute: 'current', assetId: selected.id });
@@ -775,12 +800,35 @@
     border-radius: 16px;
   }
 
-  :global(.asset-viewer-navbar--compact > div) {
+  :global(.immich-asset-viewer--mobile) {
+    --mobile-preview-strip-offset: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    background-color: rgb(0 0 0 / calc(1 - var(--viewer-dismiss, 0) * 0.75));
+  }
+
+  :global(.asset-viewer-navbar--overlay) {
+    padding-top: env(safe-area-inset-top, 0px);
+    opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
+  }
+
+  :global(.asset-viewer-navbar--overlay > div) {
     height: 3rem;
     padding-inline: 0.5rem;
   }
 
-  :global(.immich-asset-viewer--mobile) {
-    --mobile-preview-strip-offset: calc(5rem + env(safe-area-inset-bottom, 0px));
+  :global(.mobile-preview-strip-host) {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
+  }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    :global(.immich-asset-viewer--mobile) {
+      --mobile-preview-strip-offset: env(safe-area-inset-bottom, 0px);
+    }
+
+    :global(.immich-asset-viewer--mobile .mobile-preview-strip-host) {
+      display: none;
+    }
   }
 </style>
