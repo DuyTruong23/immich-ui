@@ -51,13 +51,10 @@ html[data-mobile-shell] .pg-mobile-shell-main {
 
 .pg-mobile-content {
   bottom: var(--mobile-bottom-nav-offset);
-  height: auto !important;
+  height: unset;
 }
 
 html[data-mobile-shell] [data-id='scrubber'] {
-  top: 0;
-  bottom: 0;
-  height: auto !important;
   max-height: 100%;
 }
 
