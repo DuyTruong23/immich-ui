@@ -24,7 +24,6 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/navigation-bar/NavigationBar.svelte` | Header mobile tối giản (title), desktop giữ nguyên |
 | `lib/components/asset-viewer/AssetViewerNavBar.svelte` | Delete/share/favorite theo `canForAsset()` |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
-| `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
 | `lib/components/shared-components/FullScreenLoadingOverlay.svelte` | Spinner toàn màn hình dùng chung (viewer cử chỉ, submit modal) |
 | `lib/components/asset-viewer/AssetViewer.svelte` | Overlay header trên mobile; ẩn mũi tên prev/next; preview strip 5 ảnh; swipe-down fade; lock scroll; spinner toàn màn khi chờ cử chỉ |
 | `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Tối đa 5 thumbnail (prev 2 + current + next 2); thumb nhỏ; safe-area |
