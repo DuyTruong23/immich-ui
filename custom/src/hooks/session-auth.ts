@@ -1,12 +1,37 @@
 const SESSION_KEY = 'pg_session_active';
 const ADMIN_PERSISTENT_SESSION_KEY = 'pg_admin_persistent_session';
+const PRESERVE_SESSION_ONCE_KEY = 'pg_preserve_session_once';
 
 declare global {
   // eslint-disable-next-line no-var
   var __pgSessionBootstrapped: boolean | undefined;
 }
 
-/** Mỗi lần load/reload trang (F5) — reset session tab */
+const consumePreserveSessionOnce = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const keep = sessionStorage.getItem(PRESERVE_SESSION_ONCE_KEY) === '1';
+  sessionStorage.removeItem(PRESERVE_SESSION_ONCE_KEY);
+  return keep;
+};
+
+/** Reload do app (chunk cũ, bảo trì) — giữ phiên user, khác F5 thủ công. */
+export const markPreserveSessionOnce = (): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  sessionStorage.setItem(PRESERVE_SESSION_ONCE_KEY, '1');
+};
+
+export const reloadPreservingSession = (): void => {
+  markPreserveSessionOnce();
+  location.reload();
+};
+
+/** Mỗi lần load/reload trang (F5) — reset session tab, trừ khi app chủ động preserve. */
 export const beginBrowserSession = (): void => {
   if (typeof window === 'undefined') {
     return;
@@ -17,6 +42,10 @@ export const beginBrowserSession = (): void => {
   }
 
   globalThis.__pgSessionBootstrapped = true;
+  if (consumePreserveSessionOnce()) {
+    return;
+  }
+
   sessionStorage.removeItem(SESSION_KEY);
 };
 

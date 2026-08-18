@@ -6,9 +6,10 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate, type ZoneOption } from '$lib/modals/timezone-utils';
+  import { eventManager } from '$lib/managers/event-manager.svelte';
   import { getOwnedAssetsWithWarning } from '$lib/utils/asset-utils';
   import { handleError } from '$lib/utils/handle-error';
-  import { updateAssets } from '@immich/sdk';
+  import { getAssetInfo, updateAssets } from '@immich/sdk';
   import { Field, FormModal, Label, Switch } from '@immich/ui';
   import { mdiCalendarEdit } from '@mdi/js';
   import { DateTime } from 'luxon';
@@ -57,12 +58,18 @@
             timeZone: selectedOption?.value,
           },
         });
-        location.reload();
-        return;
+      } else {
+        const isoDate = toIsoDate(selectedDate, selectedOption);
+        await updateAssets({ assetBulkUpdateDto: { ids, dateTimeOriginal: isoDate } });
       }
-      const isoDate = toIsoDate(selectedDate, selectedOption);
-      await updateAssets({ assetBulkUpdateDto: { ids, dateTimeOriginal: isoDate } });
-      location.reload();
+
+      const results = await Promise.allSettled(ids.map((id) => getAssetInfo({ id })));
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          eventManager.emit('AssetUpdate', result.value);
+        }
+      }
+      onClose(true);
     } catch (error) {
       isSubmitting = false;
       handleError(error, 'Failed to update original file metadata.');
