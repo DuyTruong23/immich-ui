@@ -4,6 +4,7 @@
 
 <script lang="ts">
   import { page } from '$app/state';
+  import { invalidateAll } from '$app/navigation';
   import { clickOutside } from '$lib/actions/click-outside';
   import BrandLogo from '$lib/components/shared-components/BrandLogo.svelte';
   import NotificationPanel from '$lib/components/shared-components/navigation-bar/NotificationPanel.svelte';
@@ -13,14 +14,16 @@
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { Route } from '$lib/route';
   import { getGlobalActions } from '$lib/services/app.service';
+  import { lang } from '$lib/stores/preferences.store';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { notificationManager } from '$lib/stores/notification-manager.svelte';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
   import { shouldShowNotifications } from '$lib/utils/user-restrictions';
-  import { ActionButton, Button, IconButton } from '@immich/ui';
+  import { convertBCP47 } from '$lib/utils/i18n';
+  import { ActionButton, Button, IconButton, ThemeSwitcher } from '@immich/ui';
   import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiTrayArrowUp } from '@mdi/js';
   import { onMount } from 'svelte';
-  import { t } from 'svelte-i18n';
+  import { locale as i18nLocale, t } from 'svelte-i18n';
   import ThemeButton from '../ThemeButton.svelte';
   import UserAvatar from '../UserAvatar.svelte';
   import AccountInfoPanel from './AccountInfoPanel.svelte';
@@ -84,6 +87,16 @@
     }
     return $t('photos');
   });
+
+  const languageCode = $derived(convertBCP47($lang));
+  const isVietnamese = $derived(languageCode === 'vi' || languageCode.startsWith('vi-'));
+
+  const toggleLanguage = async () => {
+    const next = isVietnamese ? 'en' : 'vi';
+    $lang = next;
+    await i18nLocale.set(next);
+    await invalidateAll();
+  };
 </script>
 
 <svelte:window bind:innerWidth />
@@ -93,6 +106,19 @@
   {#if mobileShell}
     <div class="pg-mobile-header {noBorder ? '' : 'border-b'}">
       <h1 class="pg-mobile-header__title">{mobileTitle}</h1>
+      <div class="pg-mobile-header__actions">
+        <ThemeSwitcher size="small" color="secondary" />
+        <button
+          type="button"
+          class="pg-mobile-header__lang"
+          aria-label={$t('language')}
+          onclick={() => void toggleLanguage()}
+        >
+          <span class:pg-mobile-header__lang-part--active={isVietnamese}>VN</span>
+          <span class="pg-mobile-header__lang-sep" aria-hidden="true">/</span>
+          <span class:pg-mobile-header__lang-part--active={!isVietnamese}>EN</span>
+        </button>
+      </div>
     </div>
   {:else}
   <div
