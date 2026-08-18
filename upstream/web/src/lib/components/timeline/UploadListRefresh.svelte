@@ -11,20 +11,23 @@
 
   let refreshing = false;
 
+  const refreshTimeline = async (assetIds: string[]) => {
+    if (refreshing) {
+      return;
+    }
+
+    refreshing = true;
+    try {
+      await timelineManager.refreshAfterUpload(assetIds);
+    } finally {
+      refreshing = false;
+    }
+  };
+
   onMount(() => {
     return eventManager.on({
-      UploadsComplete: async ({ assetIds }) => {
-        if (refreshing) {
-          return;
-        }
-
-        refreshing = true;
-        try {
-          await timelineManager.refreshAfterUpload(assetIds);
-        } finally {
-          refreshing = false;
-        }
-      },
+      UploadsComplete: ({ assetIds }) => refreshTimeline(assetIds),
+      AssetsDateUpdated: ({ assetIds }) => refreshTimeline(assetIds),
     });
   });
 </script>

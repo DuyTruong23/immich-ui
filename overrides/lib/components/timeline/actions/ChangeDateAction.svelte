@@ -17,12 +17,13 @@
   const handleChangeDate = async () => {
     const assets = assetMultiSelectManager.ownedAssets;
     const initialDate = assets.length === 1 ? fromTimelinePlainDateTime(assets[0].localDateTime) : DateTime.now();
-    // Keep selection on success so updated items stay highlighted after they move on the timeline.
-    // Toast + writeback follow-up come from the modal.
-    await modalManager.show(AssetSelectionChangeDateModal, {
+    const success = await modalManager.show(AssetSelectionChangeDateModal, {
       initialDate,
       assets,
     });
+    if (success) {
+      assetMultiSelectManager.clear();
+    }
   };
 </script>
 

@@ -54,6 +54,7 @@
     try {
       const updated = await updateAsset({ id: asset.id, updateAssetDto: { dateTimeOriginal: isoDate } });
       eventManager.emit('AssetUpdate', updated);
+      eventManager.emit('AssetsDateUpdated', { assetIds: [asset.id] });
       notifyDateUpdated(1);
       void followOriginalFileWriteback([asset.id]);
       isSubmitting = false;

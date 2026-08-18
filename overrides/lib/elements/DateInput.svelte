@@ -58,8 +58,9 @@
     }
 
     const onFormSubmit = () => commitDraft();
-    form.addEventListener('submit', onFormSubmit);
-    return () => form.removeEventListener('submit', onFormSubmit);
+    // Capture phase: commit draft before FormModal onSubmit reads selectedDate.
+    form.addEventListener('submit', onFormSubmit, true);
+    return () => form.removeEventListener('submit', onFormSubmit, true);
   });
 
   const onNativeInput = (event: Event) => {

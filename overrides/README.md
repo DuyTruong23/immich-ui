@@ -35,9 +35,12 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
 | `lib/modals/AssetChangeDateModal.svelte` | Báo lỗi writeback; loading; toast success; theo dõi ghi file gốc |
 | `lib/modals/AssetSelectionChangeDateModal.svelte` | Báo lỗi writeback; loading; toast success; theo dõi ghi file gốc |
-| `lib/utils/change-date-feedback.ts` | Toast đổi ngày + poll `/api/writeback-status`; refresh timeline sau bulk update |
+| `lib/utils/change-date-feedback.ts` | Toast đổi ngày + poll writeback; refresh timeline sau bulk update |
+| `lib/managers/event-manager.svelte.ts` | Event `AssetsDateUpdated` để sync timeline buckets sau đổi ngày |
+| `lib/components/timeline/UploadListRefresh.svelte` | Gọi `refreshAfterUpload` khi upload xong hoặc đổi ngày |
+| `lib/elements/DateInput.svelte` | Commit draft ngày VN trước FormModal submit (capture phase) |
 | `lib/managers/asset-multi-select-manager.svelte.ts` | Đồng bộ selection khi asset đổi ngày (AssetUpdate) |
-| `lib/components/timeline/actions/ChangeDateAction.svelte` | Giữ selection sau đổi ngày để thấy item đã nhảy trên timeline |
+| `lib/components/timeline/actions/ChangeDateAction.svelte` | Bỏ chọn sau khi đổi ngày thành công |
 | `lib/modals/NavigateToDateModal.svelte` | Loading khi submit, rồi nhảy tới ngày (không chỉnh sửa) |
 | `lib/components/asset-viewer/DetailPanelDescription.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/asset-viewer/DetailPanelLocation.svelte` | Báo lỗi writeback file gốc |
