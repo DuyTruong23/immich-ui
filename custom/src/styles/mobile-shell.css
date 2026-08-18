@@ -249,6 +249,16 @@ html[data-mobile-shell] .pg-mobile-hint {
   padding: 0.25rem 0.25rem 0;
 }
 
+.pg-more-account__avatar {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 9999px;
+}
+
 .pg-more-account__text {
   min-width: 0;
 }
