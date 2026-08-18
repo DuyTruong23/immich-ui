@@ -4,6 +4,7 @@
   import DateInput from '$lib/elements/DateInput.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate } from '$lib/modals/timezone-utils';
+  import { eventManager } from '$lib/managers/event-manager.svelte';
   import { handleError } from '$lib/utils/handle-error';
   import { updateAsset } from '@immich/sdk';
   import { FormModal, Label } from '@immich/ui';
@@ -50,8 +51,9 @@
     const isoDate = toIsoDate(selectedDate, selectedOption);
     isSubmitting = true;
     try {
-      await updateAsset({ id: asset.id, updateAssetDto: { dateTimeOriginal: isoDate } });
-      location.reload();
+      const updated = await updateAsset({ id: asset.id, updateAssetDto: { dateTimeOriginal: isoDate } });
+      eventManager.emit('AssetUpdate', updated);
+      onClose(true);
     } catch (error) {
       isSubmitting = false;
       handleError(error, 'Failed to update original file metadata.');

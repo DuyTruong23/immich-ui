@@ -20,6 +20,7 @@
   import { closeWebsocketConnection, openWebsocketConnection, websocketStore } from '$lib/stores/websocket';
   import { maintenanceShouldRedirect } from '$lib/utils/maintenance';
   import { getServerConfig } from '@immich/sdk';
+  import { reloadPreservingSession } from '$custom/hooks/session-auth';
   import {
     CommandPaletteProvider,
     CORE_PAGE_COMMANDS,
@@ -227,7 +228,7 @@
     if (isRestarting && maintenanceShouldRedirect(isRestarting.isMaintenanceMode, location)) {
       const { maintenanceMode } = await getServerConfig();
       if (maintenanceMode === isRestarting.isMaintenanceMode) {
-        location.reload();
+        reloadPreservingSession();
       }
     }
   };

@@ -44,6 +44,7 @@ export type PartnerFavoriteStore = {
   users: Record<string, PartnerFavoriteUser>;
   favorites: Record<string, Record<string, PartnerFavoriteMark>>;
   shareWithEveryone: Record<string, boolean>;
+  clearedFavorites: Record<string, Record<string, true>>;
 };
 
 export type PartnerFavoriteItem = {
@@ -53,6 +54,13 @@ export type PartnerFavoriteItem = {
 };
 
 let memoryStore: PartnerFavoriteStore | null = null;
+
+const emptyStore = (): PartnerFavoriteStore => ({
+  users: {},
+  favorites: {},
+  shareWithEveryone: {},
+  clearedFavorites: {},
+});
 
 export const isAssetId = (value: string): boolean => ASSET_ID_RE.test(value);
 
@@ -101,7 +109,7 @@ const normalizeMark = (value: unknown): PartnerFavoriteMark | null => {
 
 const normalizeStore = (value: unknown): PartnerFavoriteStore => {
   if (!value || typeof value !== 'object') {
-    return { users: {}, favorites: {}, shareWithEveryone: {} };
+    return emptyStore();
   }
 
   const record = value as Record<string, unknown>;
@@ -143,13 +151,41 @@ const normalizeStore = (value: unknown): PartnerFavoriteStore => {
     }
   }
 
-  return { users, favorites, shareWithEveryone };
+  const clearedFavorites: Record<string, Record<string, true>> = {};
+  if (record.clearedFavorites && typeof record.clearedFavorites === 'object') {
+    for (const [assetId, usersCleared] of Object.entries(record.clearedFavorites as Record<string, unknown>)) {
+      if (!isAssetId(assetId) || !usersCleared || typeof usersCleared !== 'object') {
+        continue;
+      }
+
+      const nextCleared: Record<string, true> = {};
+      if (Array.isArray(usersCleared)) {
+        for (const userId of usersCleared) {
+          if (typeof userId === 'string' && userId) {
+            nextCleared[userId] = true;
+          }
+        }
+      } else {
+        for (const [userId, flagged] of Object.entries(usersCleared as Record<string, unknown>)) {
+          if (userId && flagged) {
+            nextCleared[userId] = true;
+          }
+        }
+      }
+
+      if (Object.keys(nextCleared).length > 0) {
+        clearedFavorites[assetId] = nextCleared;
+      }
+    }
+  }
+
+  return { users, favorites, shareWithEveryone, clearedFavorites };
 };
 
 const readStoredJson = async (url: string, token: string): Promise<PartnerFavoriteStore | null> => {
   const result = await readBlobJson<unknown>(url, token, { timeoutMs: BLOB_READ_TIMEOUT_MS });
   if (!result.ok) {
-    return result.status === 404 ? { users: {}, favorites: {}, shareWithEveryone: {} } : null;
+    return result.status === 404 ? emptyStore() : null;
   }
 
   return normalizeStore(result.value);
@@ -179,10 +215,10 @@ const readBlobStore = async (): Promise<PartnerFavoriteStore | null> => {
       ),
     );
     if (!blob?.url) {
-      return { users: {}, favorites: {}, shareWithEveryone: {} };
+      return emptyStore();
     }
 
-    return (await readStoredJson(blob.url, token)) ?? { users: {}, favorites: {}, shareWithEveryone: {} };
+    return (await readStoredJson(blob.url, token)) ?? emptyStore();
   } catch {
     return null;
   }
@@ -194,7 +230,7 @@ export const readPartnerFavorites = async (): Promise<PartnerFavoriteStore> => {
   }
 
   const stored = await readBlobStore();
-  memoryStore = stored ?? { users: {}, favorites: {}, shareWithEveryone: {} };
+  memoryStore = stored ?? emptyStore();
   return memoryStore;
 };
 
@@ -245,13 +281,25 @@ export const setUserFavorite = (
   const existed = Boolean(current[userId]);
 
   if (favorite) {
+    const cleared = { ...store.clearedFavorites };
+    if (cleared[assetId]?.[userId]) {
+      const nextClearedUsers = { ...cleared[assetId] };
+      delete nextClearedUsers[userId];
+      if (Object.keys(nextClearedUsers).length === 0) {
+        delete cleared[assetId];
+      } else {
+        cleared[assetId] = nextClearedUsers;
+      }
+    }
+
     if (existed) {
-      return { store, added: false, removed: false };
+      return { store: { ...store, clearedFavorites: cleared }, added: false, removed: false };
     }
 
     return {
       store: {
         ...store,
+        clearedFavorites: cleared,
         favorites: {
           ...store.favorites,
           [assetId]: {
@@ -265,8 +313,16 @@ export const setUserFavorite = (
     };
   }
 
+  const clearedFavorites = {
+    ...store.clearedFavorites,
+    [assetId]: {
+      ...store.clearedFavorites[assetId],
+      [userId]: true as const,
+    },
+  };
+
   if (!existed) {
-    return { store, added: false, removed: false };
+    return { store: { ...store, clearedFavorites }, added: false, removed: false };
   }
 
   const nextMarks = { ...current };
@@ -279,7 +335,7 @@ export const setUserFavorite = (
   }
 
   return {
-    store: { ...store, favorites: nextFavorites },
+    store: { ...store, favorites: nextFavorites, clearedFavorites },
     added: false,
     removed: true,
   };
@@ -301,6 +357,10 @@ export const syncUserImmichFavorites = (
   }
 
   for (const assetId of wanted) {
+    if (next.clearedFavorites[assetId]?.[userId]) {
+      continue;
+    }
+
     const existing = next.favorites[assetId]?.[userId];
     if (!existing) {
       next = setUserFavorite(next, assetId, userId, true, 'immich').store;
@@ -338,6 +398,19 @@ export const setShareWithEveryone = (
 
 export const isShareWithEveryone = (store: PartnerFavoriteStore, userId: string): boolean =>
   store.shareWithEveryone[userId] === true;
+
+export const listClearedFavoriteUserIds = (
+  store: PartnerFavoriteStore,
+): Record<string, string[]> => {
+  const listed: Record<string, string[]> = {};
+  for (const [assetId, users] of Object.entries(store.clearedFavorites)) {
+    const ids = Object.keys(users);
+    if (ids.length > 0) {
+      listed[assetId] = ids;
+    }
+  }
+  return listed;
+};
 
 export const listUserFavoriteAssetIds = (store: PartnerFavoriteStore, userId: string): string[] => {
   const ids: string[] = [];

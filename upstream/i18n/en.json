@@ -2026,6 +2026,8 @@
   "shared_favorites_no_partner": "Friend sharing is not set up yet. Add a friend in Settings → Friend Sharing to see each other's favorites.",
   "shared_favorites_share_toggle": "Allow everyone to see",
   "shared_favorites_share_toggle_subtitle": "On: everyone can see your favorites on Shared favorites. Off: only admin can see them there; you still see them here.",
+  "shared_favorites_remove_admin": "Remove this member favorite",
+  "shared_favorites_remove_error": "Could not remove favorite",
   "shared_from_partner": "Photos from {partner}",
   "shared_intent_upload_button_progress_text": "{current} / {total} Uploaded",
   "shared_link_app_bar_title": "Shared Links",

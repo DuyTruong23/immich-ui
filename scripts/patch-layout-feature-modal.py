@@ -25,6 +25,15 @@ def patch_layout(layout_path: pathlib.Path) -> None:
             text = text.replace('<FeatureUpdateOnLogin />', '<FeatureUpdateOnLogin />\n<FeatureUpdatePin />', 1)
         layout_path.write_text(text, encoding='utf-8')
         if "from './FeatureUpdateOnLogin.svelte'" in text:
+            if 'reloadPreservingSession' not in text and 'location.reload()' in text:
+                text = text.replace(
+                    "import { getServerConfig } from '@immich/sdk';\n",
+                    "import { getServerConfig } from '@immich/sdk';\n"
+                    "  import { reloadPreservingSession } from '$custom/hooks/session-auth';\n",
+                    1,
+                )
+                text = text.replace('location.reload();', 'reloadPreservingSession();')
+                layout_path.write_text(text, encoding='utf-8')
             return
 
     import_line = "  import FeatureUpdateOnLogin from './FeatureUpdateOnLogin.svelte';\n"
@@ -43,6 +52,15 @@ def patch_layout(layout_path: pathlib.Path) -> None:
         component_marker + '\n<FeatureUpdateOnLogin />\n',
         1,
     )
+
+    if 'reloadPreservingSession' not in text and 'location.reload()' in text:
+        text = text.replace(
+            "import { getServerConfig } from '@immich/sdk';\n",
+            "import { getServerConfig } from '@immich/sdk';\n"
+            "  import { reloadPreservingSession } from '$custom/hooks/session-auth';\n",
+            1,
+        )
+        text = text.replace('location.reload();', 'reloadPreservingSession();')
 
     layout_path.write_text(text, encoding='utf-8')
     print('==> Patch +layout.svelte: FeatureUpdateOnLogin')

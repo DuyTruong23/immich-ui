@@ -22,6 +22,7 @@ export type PartnerFavoritesResponse = {
   items: PartnerFavoriteItem[];
   mineAssetIds?: string[];
   shareWithEveryone?: boolean;
+  clearedFavorites?: Record<string, string[]>;
   ok?: boolean;
   added?: boolean;
   removed?: boolean;
@@ -63,6 +64,7 @@ export const fetchPartnerFavorites = async (): Promise<PartnerFavoritesResponse>
 export const setPartnerFavorite = async (
   assetId: string | string[],
   favorite: boolean,
+  userIds?: string[],
 ): Promise<PartnerFavoritesResponse> => {
   const token = getStoredAccessToken();
   const ids = Array.isArray(assetId) ? assetId : [assetId];
@@ -74,6 +76,7 @@ export const setPartnerFavorite = async (
       assetId: ids[0],
       assetIds: ids,
       favorite,
+      ...(userIds && userIds.length > 0 ? { userIds } : {}),
       ...(token ? { accessToken: token } : {}),
     }),
   });
