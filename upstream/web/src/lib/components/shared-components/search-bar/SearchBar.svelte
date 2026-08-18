@@ -259,11 +259,15 @@
   ]}
 />
 
-<div class="relative z-auto w-full" use:focusOutside={{ onFocusOut }} tabindex="-1">
+<div
+  class="pg-search-bar relative z-auto flex w-full min-w-0 items-center gap-1 md:block"
+  use:focusOutside={{ onFocusOut }}
+  tabindex="-1"
+>
   <form
     draggable="false"
     autocomplete="off"
-    class="text-sm select-text"
+    class="pg-search-bar__form relative min-w-0 flex-1 text-sm select-text md:w-full"
     action={Route.search()}
     onreset={() => (value = '')}
     {onsubmit}
@@ -277,7 +281,7 @@
         name="q"
         id="main-search-bar"
         class="w-full border-2 py-4 ps-14 text-immich-fg/75 transition-all max-md:py-2 dark:text-immich-dark-fg
-        {showClearIcon ? 'pe-22.5' : 'pe-14'}
+        {showClearIcon ? 'max-md:pe-12 pe-22.5' : 'max-md:pe-4 pe-14'}
         {grayTheme ? 'dark:bg-immich-dark-gray' : 'dark:bg-immich-dark-bg'}
         {showSuggestions && isSearchSuggestions ? 'rounded-t-3xl' : 'rounded-3xl bg-gray-200'}
         {searchStore.isSearchEnabled ? 'border-gray-200 bg-white dark:border-gray-700 dark:bg-immich-dark-gray' : 'border-transparent'}"
@@ -320,8 +324,7 @@
 
     <div
       id={searchTypeId}
-      class="absolute inset-y-0 inset-e-16 flex items-center"
-      class:max-md:hidden={value}
+      class="absolute inset-y-0 inset-e-16 hidden items-center md:flex"
       class:inset-e-28={value.length > 0}
     >
       <div class="relative" use:focusOutside={{ onFocusOut: closeSearchTypeDropdown }}>
@@ -386,7 +389,11 @@
     </div>
   </form>
 
-  <div class="absolute inset-y-0 {showClearIcon ? 'inset-e-14' : 'inset-e-2'} flex items-center ps-6 transition-all">
+  <div
+    class="pg-search-bar__filter flex shrink-0 items-center md:absolute md:inset-y-0 md:ps-6 {showClearIcon
+      ? 'md:inset-e-14'
+      : 'md:inset-e-2'}"
+  >
     <IconButton
       aria-label={$t('show_search_options')}
       shape="round"

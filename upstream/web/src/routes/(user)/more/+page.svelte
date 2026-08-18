@@ -10,8 +10,7 @@
     mdiArchiveArrowDownOutline,
     mdiCogOutline,
     mdiFolderOutline,
-    mdiHeartMultipleOutline,
-    mdiHeartOutline,
+    mdiImageAlbum,
     mdiLink,
     mdiLockOutline,
     mdiMagnify,
@@ -41,13 +40,7 @@
 
   const sections = $derived.by((): MoreSection[] => {
     const libraryItems = [
-      can('favorite') && { id: 'favorites', href: Route.favorites(), title: $t('favorites'), icon: mdiHeartOutline },
-      can('sharedFavorites') && {
-        id: 'shared-favorites',
-        href: '/shared-favorites',
-        title: $t('shared_favorites'),
-        icon: mdiHeartMultipleOutline,
-      },
+      can('albums') && { id: 'albums', href: Route.albums(), title: $t('albums'), icon: mdiImageAlbum },
       can('explore') && { id: 'explore', href: Route.explore(), title: $t('explore'), icon: mdiMagnify },
       can('people') && { id: 'people', href: Route.people(), title: $t('people'), icon: mdiAccountOutline },
       can('map') && { id: 'map', href: Route.map(), title: $t('map'), icon: mdiMapOutline },

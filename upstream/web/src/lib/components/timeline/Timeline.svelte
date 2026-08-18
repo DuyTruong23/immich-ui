@@ -27,6 +27,7 @@
   import { getTimelineLayoutOptions, networkManager } from '$lib/utils/mobile-performance.svelte';
   import { isAssetViewerRoute, navigate } from '$lib/utils/navigation';
   import { getTimes, type ScrubberListener } from '$lib/utils/timeline-util';
+  import { isMobileShell } from '$custom/utils/capabilities.svelte';
   import { type AlbumResponseDto, type PersonResponseDto, type UserResponseDto } from '@immich/sdk';
   import { DateTime } from 'luxon';
   import { onDestroy, onMount, tick, type Snippet } from 'svelte';
@@ -108,6 +109,21 @@
   const isEmpty = $derived(timelineManager.isInitialized && timelineManager.months.length === 0);
   const maxMd = $derived(mediaQueryManager.maxMd);
   const usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
+  const scrubberHeight = $derived.by(() => {
+    const height = timelineManager.viewportHeight;
+    if (!isMobileShell() || height <= 0 || typeof window === 'undefined') {
+      return height;
+    }
+
+    const nav = document.querySelector('.pg-mobile-bottom-nav');
+    if (!(nav instanceof HTMLElement)) {
+      return height;
+    }
+
+    const gridBottom = scrollableElement?.getBoundingClientRect().bottom ?? window.innerHeight;
+    const overlap = Math.max(0, gridBottom - nav.getBoundingClientRect().top);
+    return Math.max(0, height - overlap);
+  });
 
   $effect(() => {
     maxMd;
@@ -572,7 +588,7 @@
 {#if timelineManager.months.length > 0}
   <Scrubber
     {timelineManager}
-    height={timelineManager.viewportHeight}
+    height={scrubberHeight}
     timelineTopOffset={timelineManager.topSectionHeight}
     timelineBottomOffset={timelineManager.bottomSectionHeight}
     {timelineScrollPercent}

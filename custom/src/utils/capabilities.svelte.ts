@@ -34,7 +34,7 @@ export type SessionCapability =
 
 export type AssetCapability = 'favorite' | 'delete' | 'editMetadata' | 'edit' | 'share' | 'download' | 'addToAlbum';
 
-export type MobileNavId = 'library' | 'albums' | 'search' | 'more';
+export type MobileNavId = 'library' | 'favorites' | 'search' | 'more';
 
 type AssetLike = {
   ownerId?: string;
@@ -133,15 +133,18 @@ export const isMobileNavActive = (id: MobileNavId, pathname: string): boolean =>
   switch (id) {
     case 'library':
       return pathname === '/photos' || pathname.startsWith('/photos/');
-    case 'albums':
-      return pathname === '/albums' || pathname.startsWith('/albums/');
+    case 'favorites':
+      return pathname.startsWith('/favorites') || pathname.startsWith('/shared-favorites');
     case 'search':
       return pathname === '/search' || pathname.startsWith('/search/');
     case 'more':
       return (
         pathname === '/more' ||
         pathname.startsWith('/more/') ||
-        (!pathname.startsWith('/photos') && !pathname.startsWith('/albums') && !pathname.startsWith('/search'))
+        (!pathname.startsWith('/photos') &&
+          !pathname.startsWith('/favorites') &&
+          !pathname.startsWith('/shared-favorites') &&
+          !pathname.startsWith('/search'))
       );
   }
 };

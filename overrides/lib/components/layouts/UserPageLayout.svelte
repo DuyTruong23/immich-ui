@@ -53,7 +53,12 @@
   const showSidebar = $derived(!mobileShell);
   const showPageTitle = $derived(Boolean(title) && !mobileShell);
   const showToolbar = $derived(showPageTitle || Boolean(buttons));
-  let hasTitleClass = $derived(showToolbar ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
+  let hasTitleClass = $derived.by(() => {
+    if (mobileShell) {
+      return showToolbar ? 'top-16 pg-mobile-content' : 'top-0 pg-mobile-content';
+    }
+    return showToolbar ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full';
+  });
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden">

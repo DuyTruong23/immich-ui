@@ -8,20 +8,22 @@
   --mobile-bottom-nav-offset: 0px;
 }
 
-html[data-mobile-shell] {
+html[data-mobile-shell],
+:root:has(.pg-mobile-bottom-nav) {
   --mobile-bottom-nav-height: 3.125rem;
   --mobile-bottom-nav-offset: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 html[data-mobile-shell] #dashboard-navbar {
-  height: calc(var(--navbar-height-md, 3.625rem) + env(safe-area-inset-top, 0px));
+  height: auto !important;
+  min-height: 0;
   padding-top: env(safe-area-inset-top, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
   background-color: color-mix(in srgb, var(--md-sys-color-surface) 82%, transparent);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom-color: color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent) !important;
+  border-bottom: 0 !important;
 }
 
 html[data-mobile-shell] .pg-mobile-header {
@@ -30,7 +32,8 @@ html[data-mobile-shell] .pg-mobile-header {
   justify-content: space-between;
   width: 100%;
   min-height: 2.75rem;
-  padding: 0 1rem;
+  padding: 0.375rem 1rem;
+  border-bottom: 0 !important;
 }
 
 html[data-mobile-shell] .pg-mobile-header__title {
@@ -46,13 +49,38 @@ html[data-mobile-shell] .pg-mobile-shell-main {
   grid-template-columns: minmax(0, 1fr);
 }
 
-html[data-mobile-shell] .pg-mobile-shell-main > .absolute.w-full.overflow-y-auto {
-  padding-bottom: var(--mobile-bottom-nav-offset);
+.pg-mobile-content {
+  bottom: var(--mobile-bottom-nav-offset);
+  height: auto !important;
+}
+
+html[data-mobile-shell] [data-id='scrubber'] {
+  top: 0;
+  bottom: 0;
+  height: auto !important;
+  max-height: 100%;
+}
+
+html[data-mobile-shell] #search-content {
+  padding-top: 4.25rem;
 }
 
 html[data-mobile-shell] #search-content,
 html[data-mobile-shell] #search-chips {
-  padding-bottom: var(--mobile-bottom-nav-offset);
+  padding-bottom: calc(var(--mobile-bottom-nav-offset) + 5.5rem);
+}
+
+html[data-mobile-shell] section:has(> #search-content) {
+  max-height: none;
+  margin-bottom: 0;
+}
+
+html[data-mobile-shell] #control-bar {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+html[data-mobile-shell] .pg-more-page {
+  padding-bottom: calc(var(--mobile-bottom-nav-offset) + 5.5rem);
 }
 
 html[data-mobile-shell] .fixed.top-0.z-2 {
@@ -79,8 +107,9 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   position: fixed;
   inset-inline: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 90;
   display: flex;
+  overflow: visible;
   align-items: stretch;
   justify-content: space-around;
   min-height: var(--mobile-bottom-nav-height);
@@ -93,6 +122,13 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent);
 }
 
+.pg-mobile-bottom-nav__menu {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .pg-mobile-bottom-nav__item {
   display: flex;
   flex: 1 1 0;
@@ -100,12 +136,62 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   align-items: center;
   justify-content: center;
   gap: 0.125rem;
+  width: 100%;
   min-width: 0;
   min-height: 44px;
   padding: 0.375rem 0.25rem;
+  border: 0;
+  background: transparent;
   color: var(--md-sys-color-on-surface-variant);
   text-decoration: none;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.pg-mobile-favorites-menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.5rem);
+  z-index: 51;
+  display: flex;
+  min-width: 12.5rem;
+  max-width: min(18rem, calc(100vw - 1.5rem));
+  flex-direction: column;
+  padding: 0.375rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
+  box-shadow: var(--md-sys-elevation-3, 0 8px 24px rgb(0 0 0 / 18%));
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.pg-mobile-favorites-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pg-mobile-favorites-menu__item--active {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.pg-mobile-favorites-menu__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--md-sys-color-primary);
 }
 
 .pg-mobile-bottom-nav__item--active {
@@ -131,11 +217,16 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   white-space: nowrap;
 }
 
+html[data-mobile-shell] .pg-mobile-hint {
+  margin: 0;
+  border-top: 0;
+}
+
 .pg-more-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 0.5rem 0.75rem 1.5rem;
+  padding: 0.5rem 0.75rem 2rem;
 }
 
 .pg-more-account {
@@ -220,7 +311,7 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   }
 
   html[data-mobile-shell] #dashboard-navbar {
-    height: calc(2.5rem + env(safe-area-inset-top, 0px));
+    height: auto !important;
   }
 
   html[data-mobile-shell] .pg-mobile-header__title {
