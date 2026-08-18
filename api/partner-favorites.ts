@@ -130,13 +130,21 @@ const jsonPayload = (
 ) =>
   json({
     me,
-    partners,
+    partners: me.isAdmin
+      ? Object.values(store.users).filter((user) => user.id !== me.id)
+      : partners,
     shareWithEveryone: isShareWithEveryone(store, me.id),
     mineAssetIds: listUserFavoriteAssetIds(store, me.id),
-    items: buildFavoriteItems(store, [me.id, ...partners.map((partner) => partner.id)], {
-      id: me.id,
-      isAdmin: me.isAdmin,
-    }),
+    items: buildFavoriteItems(
+      store,
+      me.isAdmin
+        ? Object.keys(store.users)
+        : [me.id, ...partners.map((partner) => partner.id)],
+      {
+        id: me.id,
+        isAdmin: me.isAdmin,
+      },
+    ),
     ...extra,
   });
 
