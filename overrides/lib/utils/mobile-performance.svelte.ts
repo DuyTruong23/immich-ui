@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { gridDensityManager } from '$lib/stores/grid-density.svelte';
 
 export type NetworkQuality = 'fast' | 'slow' | 'save-data';
 
@@ -111,25 +112,27 @@ export const getServiceWorkerThumbnailCacheLimit = (): number => {
   return 400;
 };
 
-export const getTimelineLayoutOptions = (): { rowHeight: number; headerHeight: number } => {
+export const getTimelineLayoutOptions = (viewportWidth = 0): { rowHeight: number; headerHeight: number } => {
   const quality = getNetworkQuality();
   const compact = isNarrowViewport() || isCoarsePointer();
 
+  if (compact) {
+    const width = viewportWidth || (browser ? window.innerWidth : 390);
+    const columns = gridDensityManager.columns;
+    const gap = 2;
+    const rowHeight = Math.max(48, Math.round((width - gap * (columns - 1)) / columns));
+    return { rowHeight, headerHeight: quality === 'save-data' ? 24 : 32 };
+  }
+
   if (quality === 'save-data') {
-    return compact
-      ? { rowHeight: 72, headerHeight: 24 }
-      : { rowHeight: 140, headerHeight: 36 };
+    return { rowHeight: 140, headerHeight: 36 };
   }
 
   if (quality === 'slow') {
-    return compact
-      ? { rowHeight: 80, headerHeight: 28 }
-      : { rowHeight: 160, headerHeight: 40 };
+    return { rowHeight: 160, headerHeight: 40 };
   }
 
-  return compact
-    ? { rowHeight: 100, headerHeight: 32 }
-    : { rowHeight: 235, headerHeight: 48 };
+  return { rowHeight: 235, headerHeight: 48 };
 };
 
 /** Tắt CSS transition timeline trên mobile để giảm jank khi scroll */
