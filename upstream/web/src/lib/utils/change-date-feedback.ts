@@ -88,7 +88,13 @@ export async function refreshAssetsAfterDateUpdate(assetIds: string[]): Promise<
     }),
   );
 
-  return assetIds.map((id) => refreshed.get(id)).filter((asset): asset is AssetResponseDto => !!asset);
+  const assets = assetIds.map((id) => refreshed.get(id)).filter((asset): asset is AssetResponseDto => !!asset);
+
+  if (assetIds.length > 0) {
+    eventManager.emit('AssetsDateUpdated', { assetIds });
+  }
+
+  return assets;
 }
 
 /**

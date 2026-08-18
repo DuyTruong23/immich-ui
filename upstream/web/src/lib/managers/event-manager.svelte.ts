@@ -101,6 +101,7 @@ export type Events = {
   WebsocketConnect: [];
 
   UploadsComplete: [{ assetIds: string[] }];
+  AssetsDateUpdated: [{ assetIds: string[] }];
 };
 
 export const eventManager = new BaseEventManager<Events>();
