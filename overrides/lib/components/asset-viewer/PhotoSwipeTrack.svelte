@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { SwipeNavigate } from '$lib/actions/swipe-navigate.svelte';
+  import { SwipeNavigate, swipeDismissProgress, swipeDismissScale } from '$lib/actions/swipe-navigate.svelte';
   import { motionDuration } from '$lib/utils/mobile-performance.svelte';
   import type { AssetResponseDto, SharedLinkResponseDto } from '@immich/sdk';
   import { onDestroy, untrack, type Snippet } from 'svelte';
@@ -60,10 +60,23 @@
     }
   });
 
-  onDestroy(() => swipe.destroy());
+  onDestroy(() => {
+    swipe.destroy();
+    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+  });
 
   const settleMs = $derived(motionDuration(280));
+  const dismissProgress = $derived(swipeDismissProgress(swipe.offsetY));
+  const dismissScale = $derived(swipeDismissScale(swipe.offsetY));
   const bindTouchGuard = (node: HTMLElement) => swipe.bindTouchGuard(node);
+
+  $effect(() => {
+    const root = document.getElementById('immich-asset-viewer');
+    if (!root) {
+      return;
+    }
+    root.style.setProperty('--viewer-dismiss', String(dismissProgress));
+  });
 </script>
 
 <div
@@ -84,13 +97,15 @@
 >
   <div
     class="absolute inset-0 will-change-transform"
-    style:transform="translate3d({swipe.offset}px, {swipe.offsetY}px, 0)"
-    style:opacity={swipe.offsetY > 0 ? Math.max(0.35, 1 - swipe.offsetY / 420) : 1}
-    style:transition={swipe.animating ? `transform ${settleMs}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none'}
+    style:transform="translate3d({swipe.offset}px, {swipe.offsetY}px, 0) scale({dismissScale})"
+    style:opacity={swipe.offsetY > 0 ? Math.max(0.35, 1 - dismissProgress * 0.65) : 1}
+    style:transition={swipe.animating
+      ? `transform ${settleMs}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${settleMs}ms cubic-bezier(0.22, 1, 0.36, 1)`
+      : 'none'}
   >
     {#if previousAsset}
       <div class="absolute inset-0 -translate-x-full">
-        <PhotoSwipePeek asset={previousAsset} {sharedLink} />
+        <PhotoSwipePeek asset={previousAsset} {sharedLink} containerWidth={width} containerHeight={height} />
       </div>
     {/if}
 
@@ -100,7 +115,7 @@
 
     {#if nextAsset}
       <div class="absolute inset-0 translate-x-full">
-        <PhotoSwipePeek asset={nextAsset} {sharedLink} />
+        <PhotoSwipePeek asset={nextAsset} {sharedLink} containerWidth={width} containerHeight={height} />
       </div>
     {/if}
   </div>

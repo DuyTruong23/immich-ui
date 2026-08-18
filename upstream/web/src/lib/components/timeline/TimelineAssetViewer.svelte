@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Action } from '$lib/components/asset-viewer/actions/action';
   import type { AssetCursor } from '$lib/components/asset-viewer/AssetViewer.svelte';
+  import { PREVIEW_STRIP_RADIUS, buildPreviewStrip } from '$lib/components/asset-viewer/preview-layout';
   import { AssetAction } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { assetCacheManager } from '$lib/managers/AssetCacheManager.svelte';
@@ -62,7 +63,7 @@
     return getAsset(laterTimelineAsset.id);
   };
 
-  const STRIP_RADIUS = 16;
+  const STRIP_RADIUS = PREVIEW_STRIP_RADIUS;
 
   const toStripItem = (asset: { id: string; thumbhash: string | null; originalFileName?: string }) => ({
     id: asset.id,
@@ -90,8 +91,10 @@
     previousAsset: undefined,
     nextAsset: undefined,
   });
+  let nearbyLoadToken = 0;
 
   const loadCloseAssets = async (currentAsset: AssetResponseDto) => {
+    const token = ++nearbyLoadToken;
     const [nextAsset, previousAsset, laterItems, earlierItems] = await Promise.all([
       getNextAsset(currentAsset),
       getPreviousAsset(currentAsset),
@@ -99,20 +102,23 @@
       collectStripSide(currentAsset.id, 'earlier'),
     ]);
 
-    const nearbyAssets = [
-      ...laterItems.toReversed(),
-      toStripItem(currentAsset),
-      ...earlierItems,
-    ];
+    if (token !== nearbyLoadToken) {
+      return;
+    }
+
+    const nearbyAssets = buildPreviewStrip({
+      current: toStripItem(currentAsset),
+      previous: previousAsset ? toStripItem(previousAsset) : undefined,
+      next: nextAsset ? toStripItem(nextAsset) : undefined,
+      laterItems,
+      earlierItems,
+    });
 
     assetCursor = {
       current: currentAsset,
       nextAsset,
       previousAsset,
-      nearbyAssets:
-        nearbyAssets.length > 1
-          ? nearbyAssets
-          : ([previousAsset, currentAsset, nextAsset].filter(Boolean) as typeof nearbyAssets),
+      nearbyAssets: nearbyAssets.length > 1 ? nearbyAssets : undefined,
     };
   };
 

@@ -21,8 +21,10 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/layouts/UserPageLayout.svelte` | Navbar upload admin-only; banner thumbnail lỗi trên mobile |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
-| `lib/components/asset-viewer/AssetViewer.svelte` | Ẩn mũi tên prev/next trên mobile; header compact; preview strip dưới media |
-| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Strip vuông bo góc, cuộn ngang, không giới hạn 5 ảnh |
+| `lib/components/asset-viewer/AssetViewer.svelte` | Overlay header trên mobile; ẩn mũi tên prev/next; preview strip 5 ảnh; swipe-down fade; lock scroll |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Tối đa 5 thumbnail (prev 2 + current + next 2); thumb nhỏ; safe-area |
+| `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS = 2`, `buildPreviewStrip`, `windowPreviewStrip` |
+| `lib/utils/viewer-scroll-lock.ts` | Khóa scroll trang khi viewer mở, restore khi đóng |
 | `lib/components/timeline/TimelineAssetViewer.svelte` | Load ảnh kề cho preview strip |
 | `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor + nearby assets cho preview strip |
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |

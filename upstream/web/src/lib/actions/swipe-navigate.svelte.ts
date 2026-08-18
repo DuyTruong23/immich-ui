@@ -17,8 +17,16 @@ const COMMIT_RATIO = 0.22;
 const COMMIT_VELOCITY = 0.5;
 const DISMISS_PX = 96;
 const DISMISS_VELOCITY = 0.45;
+const DISMISS_FADE_PX = 280;
+const DISMISS_SCALE_PX = 1800;
+const DISMISS_SCALE_MIN = 0.84;
 const RUBBER = 0.34;
 const SETTLE_MS = 280;
+
+export const swipeDismissProgress = (offsetY: number) => Math.min(1, Math.max(0, offsetY) / DISMISS_FADE_PX);
+
+export const swipeDismissScale = (offsetY: number) =>
+  offsetY > 0 ? Math.max(DISMISS_SCALE_MIN, 1 - offsetY / DISMISS_SCALE_PX) : 1;
 
 export class SwipeNavigate {
   offset = $state(0);
