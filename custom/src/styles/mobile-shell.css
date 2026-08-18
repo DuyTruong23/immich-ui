@@ -37,12 +37,49 @@ html[data-mobile-shell] .pg-mobile-header {
 }
 
 html[data-mobile-shell] .pg-mobile-header__title {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
   font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--md-sys-color-on-surface);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-mobile-shell] .pg-mobile-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+html[data-mobile-shell] .pg-mobile-header__lang {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 0.375rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-mobile-shell] .pg-mobile-header__lang-sep {
+  margin: 0 0.0625rem;
+  opacity: 0.45;
+}
+
+html[data-mobile-shell] .pg-mobile-header__lang-part--active {
+  color: var(--md-sys-color-primary);
 }
 
 html[data-mobile-shell] .pg-mobile-shell-main {
