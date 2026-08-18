@@ -5,6 +5,7 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate } from '$lib/modals/timezone-utils';
   import { eventManager } from '$lib/managers/event-manager.svelte';
+  import { followOriginalFileWriteback, notifyDateUpdated } from '$lib/utils/change-date-feedback';
   import { handleError } from '$lib/utils/handle-error';
   import { updateAsset } from '@immich/sdk';
   import { FormModal, Label } from '@immich/ui';
@@ -53,6 +54,8 @@
     try {
       const updated = await updateAsset({ id: asset.id, updateAssetDto: { dateTimeOriginal: isoDate } });
       eventManager.emit('AssetUpdate', updated);
+      notifyDateUpdated(1);
+      void followOriginalFileWriteback([asset.id]);
       onClose(true);
     } catch (error) {
       isSubmitting = false;

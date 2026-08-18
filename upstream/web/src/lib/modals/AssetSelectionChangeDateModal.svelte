@@ -7,6 +7,7 @@
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate, type ZoneOption } from '$lib/modals/timezone-utils';
   import { eventManager } from '$lib/managers/event-manager.svelte';
+  import { followOriginalFileWriteback, notifyDateUpdated } from '$lib/utils/change-date-feedback';
   import { getOwnedAssetsWithWarning } from '$lib/utils/asset-utils';
   import { handleError } from '$lib/utils/handle-error';
   import { getAssetInfo, updateAssets } from '@immich/sdk';
@@ -69,6 +70,8 @@
           eventManager.emit('AssetUpdate', result.value);
         }
       }
+      notifyDateUpdated(ids.length);
+      void followOriginalFileWriteback(ids);
       onClose(true);
     } catch (error) {
       isSubmitting = false;
