@@ -3,6 +3,7 @@
   import { displayToIsoInput, isVietnameseLocale, isoInputToDisplay } from '$lib/utils/date-format';
   import { Icon } from '@immich/ui';
   import { mdiCalendar } from '@mdi/js';
+  import { onMount } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
 
   interface Props extends HTMLInputAttributes {
@@ -29,6 +30,7 @@
   let draft = $state('');
   let lastIso = $state<string | undefined>(undefined);
   let nativeEl: HTMLInputElement | undefined = $state();
+  let rootEl: HTMLDivElement | undefined = $state();
 
   $effect(() => {
     if (value !== lastIso) {
@@ -49,6 +51,17 @@
     updatedValue = parsed;
   };
 
+  onMount(() => {
+    const form = rootEl?.closest('form');
+    if (!form) {
+      return;
+    }
+
+    const onFormSubmit = () => commitDraft();
+    form.addEventListener('submit', onFormSubmit);
+    return () => form.removeEventListener('submit', onFormSubmit);
+  });
+
   const onNativeInput = (event: Event) => {
     const next = (event.currentTarget as HTMLInputElement).value;
     lastIso = next;
@@ -66,7 +79,7 @@
 </script>
 
 {#if useVietnamese}
-  <div class="pg-date-input">
+  <div class="pg-date-input" bind:this={rootEl}>
     <input
       {...rest}
       class="pg-date-input__text {className}"

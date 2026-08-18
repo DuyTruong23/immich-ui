@@ -1,5 +1,6 @@
 <script lang="ts">
   import Combobox from '$lib/components/shared-components/Combobox.svelte';
+  import FullScreenLoadingOverlay from '$lib/components/shared-components/FullScreenLoadingOverlay.svelte';
   import DateInput from '$lib/elements/DateInput.svelte';
   import DurationInput from '$lib/elements/DurationInput.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -29,9 +30,24 @@
   let lastSelectedTimezone = $state(getPreferredTimeZone(initialDate, initialTimeZone, timezones));
   // the offsets (and validity) for time zones may change if the date is changed, which is why we recompute the list
   let selectedOption = $derived(getPreferredTimeZone(initialDate, initialTimeZone, timezones, lastSelectedTimezone));
+  let isSubmitting = $state(false);
+
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+    onClose(false);
+  };
 
   const onSubmit = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    (document.activeElement as HTMLElement | undefined)?.blur();
+
     const ids = getOwnedAssetsWithWarning(assets, authManager.user);
+    isSubmitting = true;
     try {
       if (showRelative && (selectedDuration || selectedOption)) {
         await updateAssets({
@@ -41,15 +57,15 @@
             timeZone: selectedOption?.value,
           },
         });
-        onClose(true);
+        location.reload();
         return;
       }
       const isoDate = toIsoDate(selectedDate, selectedOption);
       await updateAssets({ assetBulkUpdateDto: { ids, dateTimeOriginal: isoDate } });
-      onClose(true);
+      location.reload();
     } catch (error) {
+      isSubmitting = false;
       handleError(error, 'Failed to update original file metadata.');
-      onClose(false);
     }
   };
 
@@ -66,10 +82,10 @@
 <FormModal
   title={$t('edit_date_and_time')}
   icon={mdiCalendarEdit}
-  onClose={() => onClose(false)}
+  onClose={handleClose}
   {onSubmit}
   submitText={$t('confirm')}
-  disabled={!date.isValid}
+  disabled={!date.isValid || isSubmitting}
   size="small"
 >
   <Field label={$t('edit_date_and_time_by_offset')}>
@@ -80,7 +96,13 @@
     <DurationInput class="mb-2 immich-form-input w-full" id="relativedatetime" bind:value={selectedDuration} />
   {:else}
     <Label for="datetime" class="mb-1 block">{$t('date_and_time')}</Label>
-    <DateInput class="mb-2 immich-form-input w-full" id="datetime" type="datetime-local" bind:value={selectedDate} />
+    <DateInput
+      class="mb-2 immich-form-input w-full"
+      id="datetime"
+      type="datetime-local"
+      disabled={isSubmitting}
+      bind:value={selectedDate}
+    />
   {/if}
   <div class="w-full">
     <Combobox
@@ -118,3 +140,4 @@
       </CardBody>
     </Card> -->
 </FormModal>
+<FullScreenLoadingOverlay visible={isSubmitting} fullscreen />
