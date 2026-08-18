@@ -73,20 +73,32 @@ class PartnerFavoritesStore {
   #loadPromise: Promise<void> | null = null;
 
   listedItems = $derived.by(() => {
-    const byId = new Map(this.items.map((item) => [item.assetId, { ...item, favoritedBy: [...item.favoritedBy] }]));
-    for (const extra of this.adminItems) {
-      const current = byId.get(extra.assetId);
+    const byId = new Map<string, PartnerFavoriteItem>();
+    const merge = (item: PartnerFavoriteItem) => {
+      if (!item?.assetId || !Array.isArray(item.favoritedBy)) {
+        return;
+      }
+
+      const current = byId.get(item.assetId);
       if (!current) {
-        byId.set(extra.assetId, extra);
-        continue;
+        byId.set(item.assetId, { ...item, favoritedBy: [...item.favoritedBy] });
+        return;
       }
 
       const known = new Set(current.favoritedBy.map((user) => user.id));
-      for (const user of extra.favoritedBy) {
-        if (!known.has(user.id)) {
+      for (const user of item.favoritedBy) {
+        if (user?.id && !known.has(user.id)) {
           current.favoritedBy.push(user);
+          known.add(user.id);
         }
       }
+    };
+
+    for (const item of this.items) {
+      merge(item);
+    }
+    for (const extra of this.adminItems) {
+      merge(extra);
     }
     return [...byId.values()];
   });
@@ -95,18 +107,23 @@ class PartnerFavoritesStore {
   mineIdSet = $derived(new Set(this.mineAssetIds));
 
   apply(payload: PartnerFavoritesResponse) {
+    if (!payload?.me?.id) {
+      return;
+    }
+
     this.me = payload.me;
+    const incomingPartners = Array.isArray(payload.partners) ? payload.partners : [];
     if (payload.me.isAdmin) {
       const byId = new Map(this.partners.map((user) => [user.id, user]));
-      for (const partner of payload.partners) {
+      for (const partner of incomingPartners) {
         byId.set(partner.id, partner);
       }
       this.partners = [...byId.values()];
     } else {
-      this.partners = payload.partners;
+      this.partners = incomingPartners;
       this.adminItems = [];
     }
-    this.items = payload.items;
+    this.items = Array.isArray(payload.items) ? payload.items : [];
     this.mineAssetIds = payload.mineAssetIds ?? [];
     this.shareWithEveryone = payload.shareWithEveryone === true;
     this.loaded = true;
@@ -148,14 +165,25 @@ class PartnerFavoritesStore {
     onChunk: (assets: TimelineAsset[]) => void,
     options?: { withPartners?: boolean; userId?: string },
   ): Promise<string[]> {
-    const query = {
-      isFavorite: true as const,
-      withPartners: options?.withPartners,
-      userId: options?.userId,
+    const query: { isFavorite: true; withPartners?: boolean; userId?: string } = {
+      isFavorite: true,
     };
-    const buckets = [...(await getTimeBuckets(query))].sort((left, right) =>
-      right.timeBucket.localeCompare(left.timeBucket),
-    );
+    if (options?.withPartners) {
+      query.withPartners = true;
+    }
+    if (options?.userId) {
+      query.userId = options.userId;
+    }
+
+    let buckets: Awaited<ReturnType<typeof getTimeBuckets>> = [];
+    try {
+      buckets = [...(await getTimeBuckets(query))].sort((left, right) =>
+        right.timeBucket.localeCompare(left.timeBucket),
+      );
+    } catch (error) {
+      console.warn('[partner-favorites] failed to list buckets', error);
+      return [];
+    }
     const assetIds: string[] = [];
 
     const loadOne = async (timeBucket: string) => {
@@ -241,7 +269,11 @@ class PartnerFavoritesStore {
       this.apply(await syncPartnerFavorites(ids));
     } catch (error) {
       console.warn('[partner-favorites] sync from Immich failed', error);
-      await this.load();
+      try {
+        await this.load();
+      } catch (loadError) {
+        console.warn('[partner-favorites] reload after sync failed', loadError);
+      }
     }
   }
 
