@@ -1,5 +1,6 @@
 <script lang="ts">
   import Combobox from '$lib/components/shared-components/Combobox.svelte';
+  import FullScreenLoadingOverlay from '$lib/components/shared-components/FullScreenLoadingOverlay.svelte';
   import DateInput from '$lib/elements/DateInput.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate } from '$lib/modals/timezone-utils';
@@ -24,8 +25,22 @@
   const timezones = $derived(getTimezones(selectedDate));
 
   let selectedOption = $state(getPreferredTimeZone(initialDate, initialTimeZone, getTimezones(selectedDate)));
+  let isSubmitting = $state(false);
+
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+    onClose(false);
+  };
 
   const onSubmit = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    (document.activeElement as HTMLElement | undefined)?.blur();
+
     if (!date.isValid || !selectedOption) {
       onClose(false);
       return;
@@ -33,12 +48,13 @@
 
     // Get the local date/time components from the selected string using neutral timezone
     const isoDate = toIsoDate(selectedDate, selectedOption);
+    isSubmitting = true;
     try {
       await updateAsset({ id: asset.id, updateAssetDto: { dateTimeOriginal: isoDate } });
-      onClose(true);
+      location.reload();
     } catch (error) {
+      isSubmitting = false;
       handleError(error, 'Failed to update original file metadata.');
-      onClose(false);
     }
   };
 
@@ -55,10 +71,10 @@
 <FormModal
   title={$t('edit_date_and_time')}
   icon={mdiCalendarEdit}
-  onClose={() => onClose(false)}
+  onClose={handleClose}
   {onSubmit}
   submitText={$t('confirm')}
-  disabled={!date.isValid || !selectedOption}
+  disabled={!date.isValid || !selectedOption || isSubmitting}
   size="small"
 >
   <Label for="datetime" class="mb-1 block">{$t('date_and_time')}</Label>
@@ -66,6 +82,7 @@
     class="mb-2 immich-form-input w-full"
     id="datetime"
     type="datetime-local"
+    disabled={isSubmitting}
     bind:value={() => selectedDate, updateSelectedDate}
   />
   {#if timezoneInput}
@@ -74,3 +91,4 @@
     </div>
   {/if}
 </FormModal>
+<FullScreenLoadingOverlay visible={isSubmitting} fullscreen />
