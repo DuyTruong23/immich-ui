@@ -7,6 +7,7 @@
   import { showFeatureUpdateModal } from '$lib/utils/show-feature-update-modal';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
+  import { can, isMobileShell } from '$custom/utils/capabilities.svelte';
 
   const LEGACY_DISMISS_KEY = 'pg_feature_update_pin_dismissed_version';
 
@@ -25,8 +26,10 @@
   });
 
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
-  const canUpload = $derived(authManager.authenticated && !authManager.isSharedLink && !authManager.user.isAdmin);
-  const showUpload = $derived(canUpload && !viewingAsset && !featureUpdateModalOpen);
+  const canUpload = $derived(can('upload'));
+  const showUpload = $derived(
+    canUpload && !viewingAsset && !featureUpdateModalOpen && (isMobileShell() || !authManager.user.isAdmin),
+  );
   const showWhatsNew = $derived(
     authManager.authenticated &&
       !authManager.user.isAdmin &&

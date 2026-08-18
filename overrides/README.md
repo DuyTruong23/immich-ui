@@ -18,7 +18,11 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/managers/event-manager.svelte.ts` | Event `UploadsComplete` khi batch upload xong |
 | `lib/modals/AvatarEditModal.svelte` | Upload avatar trực tiếp thay vì chọn màu chữ cái |
 | `lib/components/shared-components/UserAvatar.svelte` | URL avatar kèm `sessionKey` khi media cross-origin |
-| `lib/components/layouts/UserPageLayout.svelte` | Navbar upload admin-only; banner thumbnail lỗi trên mobile |
+| `lib/components/mobile/MobileBottomNav.svelte` | Bottom nav Apple Photos-like, item theo `can()` |
+| `lib/stores/media-query-manager.svelte.ts` | `isMobileShell` = dưới 850px |
+| `lib/components/layouts/UserPageLayout.svelte` | Mobile shell: ẩn sidebar, pad bottom nav; upload theo `can()` |
+| `lib/components/shared-components/navigation-bar/NavigationBar.svelte` | Header mobile tối giản (title), desktop giữ nguyên |
+| `lib/components/asset-viewer/AssetViewerNavBar.svelte` | Delete/share/favorite theo `canForAsset()` |
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/PwaInstallHint.svelte` | Gợi ý Add to Home Screen, dismiss localStorage, ẩn khi standalone |
 | `lib/components/shared-components/FullScreenLoadingOverlay.svelte` | Spinner toàn màn hình dùng chung (viewer cử chỉ, submit modal) |
@@ -69,6 +73,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 
 | File (custom routes) | Thay thế |
 |---|---|
+| `custom/src/routes/(user)/more/` | Trang More: menu theo capability |
+| `custom/src/routes/(user)/albums/` | Ẩn tạo album nếu `!can('createAlbum')` |
 | `custom/src/routes/(user)/explore/[[photos=photos]]/[[assetId=id]]/` | Explore URL-sync viewer (`/explore/photos/:id`), back đóng viewer |
 | `custom/src/routes/(user)/user-settings/UserSettingsList.svelte` | Ẩn mục settings cho non-admin |
 | `custom/src/routes/(user)/user-settings/AppSettings.svelte` | Cảnh báo data usage trên mobile |

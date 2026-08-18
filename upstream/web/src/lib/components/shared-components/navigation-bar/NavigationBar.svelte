@@ -24,6 +24,7 @@
   import ThemeButton from '../ThemeButton.svelte';
   import UserAvatar from '../UserAvatar.svelte';
   import AccountInfoPanel from './AccountInfoPanel.svelte';
+  import { isMobileShell } from '$custom/utils/capabilities.svelte';
 
   type Props = {
     onUploadClick?: () => void;
@@ -51,12 +52,49 @@
   });
 
   const { Cast } = $derived(getGlobalActions($t));
+  const mobileShell = $derived(isMobileShell());
+  const mobileTitle = $derived.by(() => {
+    const path = page.url.pathname;
+    if (path.startsWith('/albums')) {
+      return $t('albums');
+    }
+    if (path.startsWith('/search')) {
+      return $t('search');
+    }
+    if (path.startsWith('/more')) {
+      return $t('more');
+    }
+    if (path.startsWith('/explore')) {
+      return $t('explore');
+    }
+    if (path.startsWith('/favorites')) {
+      return $t('favorites');
+    }
+    if (path.startsWith('/shared-favorites')) {
+      return $t('shared_favorites');
+    }
+    if (path.startsWith('/user-settings')) {
+      return $t('settings');
+    }
+    if (path.startsWith('/people')) {
+      return $t('people');
+    }
+    if (path.startsWith('/map')) {
+      return $t('map');
+    }
+    return $t('photos');
+  });
 </script>
 
 <svelte:window bind:innerWidth />
 
 <nav id="dashboard-navbar" class="h-(--navbar-height) w-full text-sm max-md:h-(--navbar-height-md)">
   <SkipLink text={$t('skip_to_content')} />
+  {#if mobileShell}
+    <div class="pg-mobile-header {noBorder ? '' : 'border-b'}">
+      <h1 class="pg-mobile-header__title">{mobileTitle}</h1>
+    </div>
+  {:else}
   <div
     class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
       ? ''
@@ -194,4 +232,5 @@
       </section>
     </div>
   </div>
+  {/if}
 </nav>

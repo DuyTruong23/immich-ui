@@ -56,6 +56,7 @@ import { downloadUrl } from '$lib/utils';
 import { handleError } from '$lib/utils/handle-error';
 import { getFormatter } from '$lib/utils/i18n';
 import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
+import { can, canForAsset } from '$custom/utils/capabilities.svelte';
 
 export const getAssetBulkActions = ($t: MessageFormatter) => {
   const ownedAssets = assetMultiSelectManager.ownedAssets;
@@ -69,6 +70,7 @@ export const getAssetBulkActions = ($t: MessageFormatter) => {
     title: $t('add_to_album'),
     icon: mdiPlus,
     shortcuts: [{ key: 'l' }],
+    $if: () => can('createAlbum'),
     onAction: () =>
       modalManager.show(AssetAddToAlbumModal, { assetIds: assetMultiSelectManager.assets.map((asset) => asset.id) }),
   };
@@ -110,7 +112,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
   const Share: ActionItem = {
     title: $t('share'),
     icon: mdiShareVariantOutline,
-    $if: () => !!(authUser && !asset.isTrashed && asset.visibility !== AssetVisibility.Locked),
+    $if: () => canForAsset('share', asset),
     onAction: () => modalManager.show(SharedLinkCreateModal, { assetIds: [asset.id] }),
   };
 
@@ -118,7 +120,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
     title: $t('download'),
     icon: mdiDownload,
     shortcuts: { key: 'd', shift: true },
-    $if: () => !!authUser,
+    $if: () => canForAsset('download', asset) || !!sharedLink?.allowDownload,
     onAction: () => handleDownloadAsset(asset, { edited: true }),
   };
 
@@ -163,7 +165,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
     title: $t('to_favorite'),
     icon: mdiHeartOutline,
     $if: () => {
-      if (!authUser) {
+      if (!canForAsset('favorite', asset)) {
         return false;
       }
       const isFav = (isOwner && asset.isFavorite) || partnerFavoritesStore.hasMine(asset.id);
@@ -177,7 +179,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
     title: $t('unfavorite'),
     icon: mdiHeart,
     $if: () => {
-      if (!authUser) {
+      if (!canForAsset('favorite', asset)) {
         return false;
       }
       return (isOwner && asset.isFavorite) || partnerFavoritesStore.hasMine(asset.id);
@@ -190,7 +192,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
     title: $t('add_to_album'),
     icon: mdiPlus,
     shortcuts: [{ key: 'l' }],
-    $if: () => asset.visibility !== AssetVisibility.Locked && !asset.isTrashed,
+    $if: () => canForAsset('addToAlbum', asset),
     onAction: () => modalManager.show(AssetAddToAlbumModal, { assetIds: [asset.id] }),
   };
 
@@ -252,7 +254,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto & 
     icon: mdiTune,
     $if: () =>
       !sharedLink &&
-      isOwner &&
+      canForAsset('edit', asset) &&
       asset.type === AssetTypeEnum.Image &&
       !asset.livePhotoVideoId &&
       asset.exifInfo?.projectionType !== ProjectionType.EQUIRECTANGULAR &&

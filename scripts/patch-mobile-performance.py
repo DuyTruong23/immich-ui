@@ -703,10 +703,41 @@ def patch_viewport_dvh(path: pathlib.Path) -> None:
 
 def patch_user_layout_back_guard(path: pathlib.Path) -> None:
     text = path.read_text(encoding='utf-8')
+    if 'MobileBottomNav' in text and 'MobileBackGuard' in text:
+        return
+
+    if 'MobileBackGuard' in text:
+        text = insert_after(
+            text,
+            "  import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';\n",
+            "  import MobileBottomNav from '$lib/components/mobile/MobileBottomNav.svelte';\n",
+            'user layout MobileBottomNav import',
+        )
+        text = replace_once(
+            text,
+            """<MobileBackGuard />
+<div class:display-none={assetViewerManager.isViewing}>
+  {@render children?.()}
+</div>
+<UploadCover />
+""",
+            """<MobileBackGuard />
+<div class:display-none={assetViewerManager.isViewing}>
+  {@render children?.()}
+</div>
+<MobileBottomNav />
+<UploadCover />
+""",
+            'user layout MobileBottomNav markup',
+        )
+        path.write_text(text, encoding='utf-8')
+        return
+
     text = insert_after(
         text,
         "  import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';\n",
-        "  import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';\n",
+        "  import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';\n"
+        "  import MobileBottomNav from '$lib/components/mobile/MobileBottomNav.svelte';\n",
         'user layout MobileBackGuard import',
     )
     text = replace_once(
@@ -720,6 +751,7 @@ def patch_user_layout_back_guard(path: pathlib.Path) -> None:
 <div class:display-none={assetViewerManager.isViewing}>
   {@render children?.()}
 </div>
+<MobileBottomNav />
 <UploadCover />
 """,
         'user layout MobileBackGuard markup',

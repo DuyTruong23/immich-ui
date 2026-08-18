@@ -37,6 +37,7 @@ fi
 sed -e 's|@photo-gallery/branding/|/branding/|g' \
   -e "s|@import '../../../branding/src/|@import '/branding/|g" \
   custom/src/styles/custom.css > upstream/web/static/custom.css
+cp custom/src/styles/mobile-shell.css upstream/web/static/mobile-shell.css
 
 if [ -f custom/src/hooks.server.ts ]; then
   echo "==> Apply custom hooks.server.ts"

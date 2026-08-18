@@ -75,7 +75,7 @@
       uploadAssetsStore.reset();
     }}
     class="fixed z-60 {isMobilePanel
-      ? 'inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))]'
+      ? 'pg-upload-panel-mobile inset-x-3'
       : 'inset-e-16 bottom-6'}"
   >
     {#if showDetail}

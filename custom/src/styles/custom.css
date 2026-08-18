@@ -16,6 +16,7 @@
 @import '../../../branding/src/fluent/responsive.css';
 @import '../../../branding/src/fluent/viewer.css';
 @import '../../../branding/src/loading.css';
+@import './mobile-shell.css';
 
 html,
 body {
