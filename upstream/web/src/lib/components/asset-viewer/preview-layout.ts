@@ -1,4 +1,4 @@
-import { scaleToFit } from "$lib/utils/container-utils";
+import { scaleToFit } from '$lib/utils/container-utils';
 
 /** Previous 2 + current + next 2. Edges may have fewer. */
 export const PREVIEW_STRIP_RADIUS = 2;
@@ -29,19 +29,11 @@ export function containFitFrame(
 ): ContainFitFrame | null {
   const mediaWidth = media.width ?? 0;
   const mediaHeight = media.height ?? 0;
-  if (
-    mediaWidth <= 0 ||
-    mediaHeight <= 0 ||
-    container.width <= 0 ||
-    container.height <= 0
-  ) {
+  if (mediaWidth <= 0 || mediaHeight <= 0 || container.width <= 0 || container.height <= 0) {
     return null;
   }
 
-  const size = scaleToFit(
-    { width: mediaWidth, height: mediaHeight },
-    container,
-  );
+  const size = scaleToFit({ width: mediaWidth, height: mediaHeight }, container);
   return {
     width: size.width,
     height: size.height,
@@ -87,11 +79,7 @@ export function buildPreviewStrip(options: {
     pushUnique(right, item);
   }
 
-  return [
-    ...left.toReversed().slice(-radius),
-    current,
-    ...right.slice(0, radius),
-  ];
+  return [...left.toReversed().slice(-radius), current, ...right.slice(0, radius)];
 }
 
 export function windowPreviewStrip<T extends { id: string }>(

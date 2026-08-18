@@ -575,34 +575,35 @@
             <div
               class="video-mobile-chrome flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4 mb-[var(--mobile-preview-strip-offset,0px)]"
             >
-            <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
-              <media-play-button class="shrink-0 rounded-full p-2 outline-none">
-                <Icon slot="play" icon={mdiPlay} />
-                <Icon slot="pause" icon={mdiPause} />
-              </media-play-button>
-              <media-time-display showduration class="rounded-lg p-2 outline-none"></media-time-display>
+              <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
+                <media-play-button class="shrink-0 rounded-full p-2 outline-none">
+                  <Icon slot="play" icon={mdiPlay} />
+                  <Icon slot="pause" icon={mdiPause} />
+                </media-play-button>
+                <media-time-display showduration class="rounded-lg p-2 outline-none"></media-time-display>
 
-              <span class="grow"></span>
+                <span class="grow"></span>
 
-              <div class="volume-wrapper shrink-0 rounded-full bg-transparent transition-colors duration-400">
-                <media-volume-range class="h-full bg-none outline-none"></media-volume-range>
-                <media-mute-button class="bg-none p-2 outline-none">
-                  <Icon slot="off" icon={mdiVolumeMute} />
-                  <Icon slot="low" icon={mdiVolumeLow} />
-                  <Icon slot="medium" icon={mdiVolumeMedium} />
-                  <Icon slot="high" icon={mdiVolumeHigh} />
-                </media-mute-button>
-              </div>
+                <div class="volume-wrapper shrink-0 rounded-full bg-transparent transition-colors duration-400">
+                  <media-volume-range class="h-full bg-none outline-none"></media-volume-range>
+                  <media-mute-button class="bg-none p-2 outline-none">
+                    <Icon slot="off" icon={mdiVolumeMute} />
+                    <Icon slot="low" icon={mdiVolumeLow} />
+                    <Icon slot="medium" icon={mdiVolumeMedium} />
+                    <Icon slot="high" icon={mdiVolumeHigh} />
+                  </media-mute-button>
+                </div>
 
-              {#if extendedControls}
-                <media-fullscreen-button class="shrink-0 rounded-full p-2 outline-none">
-                  <Icon slot="enter" icon={mdiFullscreen} />
-                  <Icon slot="exit" icon={mdiFullscreenExit} />
-                </media-fullscreen-button>
-                <media-settings-menu-button class="shrink-0 rounded-full p-2 outline-none"></media-settings-menu-button>
-              {/if}
-            </media-control-bar>
-            <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
+                {#if extendedControls}
+                  <media-fullscreen-button class="shrink-0 rounded-full p-2 outline-none">
+                    <Icon slot="enter" icon={mdiFullscreen} />
+                    <Icon slot="exit" icon={mdiFullscreenExit} />
+                  </media-fullscreen-button>
+                  <media-settings-menu-button class="shrink-0 rounded-full p-2 outline-none"
+                  ></media-settings-menu-button>
+                {/if}
+              </media-control-bar>
+              <immich-time-range class="h-8 w-full rounded-lg px-2 pb-3 outline-none"></immich-time-range>
             </div>
           {/if}
         </media-controller>

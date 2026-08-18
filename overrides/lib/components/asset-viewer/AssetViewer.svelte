@@ -556,14 +556,12 @@
         preAction={handlePreAction}
         onAction={handleAction}
         {onUndoDelete}
-        onClose={
-          onClose
-            ? () => {
-                unlockViewerPageScroll();
-                onClose(stack?.primaryAssetId ?? asset.id);
-              }
-            : undefined
-        }
+        onClose={onClose
+          ? () => {
+              unlockViewerPageScroll();
+              onClose(stack?.primaryAssetId ?? asset.id);
+            }
+          : undefined}
         {onRemoveFromAlbum}
         {isPlayingOriginalVideo}
         {setPlayOriginalVideo}

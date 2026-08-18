@@ -362,7 +362,9 @@
             current: navigationAssets[currentViewerIndex],
             previous: getPreviousAsset(navigationAssets, assetViewerManager.asset),
             next: getNextAsset(navigationAssets, assetViewerManager.asset),
-            laterItems: navigationAssets.slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex).toReversed(),
+            laterItems: navigationAssets
+              .slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex)
+              .toReversed(),
             earlierItems: navigationAssets.slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1),
           })
         : undefined,
