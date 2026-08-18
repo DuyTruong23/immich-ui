@@ -14,6 +14,7 @@
     mdiImageAlbum,
     mdiLink,
     mdiLockOutline,
+    mdiLogout,
     mdiMagnify,
     mdiMapOutline,
     mdiShieldAccountOutline,
@@ -119,5 +120,16 @@
         </div>
       </section>
     {/each}
+
+    {#if authManager.authenticated}
+      <div class="pg-more-list pg-more-logout">
+        <a href={Route.logout()} class="pg-more-list__item pg-more-list__item--logout">
+          <span class="pg-more-list__icon" aria-hidden="true">
+            <Icon icon={mdiLogout} size="22" />
+          </span>
+          <span class="pg-more-list__label">{$t('sign_out')}</span>
+        </a>
+      </div>
+    {/if}
   </div>
 </UserPageLayout>
