@@ -33,8 +33,10 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/timeline/TimelineAssetViewer.svelte` | Load ảnh kề cho preview strip |
 | `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor + nearby assets cho preview strip |
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
-| `lib/modals/AssetChangeDateModal.svelte` | Báo lỗi writeback; loading khi submit; reload khi lưu date thành công |
-| `lib/modals/AssetSelectionChangeDateModal.svelte` | Báo lỗi writeback; loading khi submit; reload khi lưu date thành công |
+| `lib/modals/AssetChangeDateModal.svelte` | Báo lỗi writeback; loading; toast success; theo dõi ghi file gốc |
+| `lib/modals/AssetSelectionChangeDateModal.svelte` | Báo lỗi writeback; loading; toast success; theo dõi ghi file gốc |
+| `lib/utils/change-date-feedback.ts` | Toast đổi ngày + poll `/api/writeback-status` |
+| `lib/components/timeline/actions/ChangeDateAction.svelte` | Giữ selection sau đổi ngày để thấy item đã nhảy trên timeline |
 | `lib/modals/NavigateToDateModal.svelte` | Loading khi submit, rồi nhảy tới ngày (không chỉnh sửa) |
 | `lib/components/asset-viewer/DetailPanelDescription.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/asset-viewer/DetailPanelLocation.svelte` | Báo lỗi writeback file gốc |
