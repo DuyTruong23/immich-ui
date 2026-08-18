@@ -1,6 +1,12 @@
+import { authManager } from '$lib/managers/auth-manager.svelte';
+import { eventManager } from '$lib/managers/event-manager.svelte';
+import { waitForWebsocketEvent } from '$lib/stores/websocket';
+import { getAssetInfo, type AssetResponseDto } from '@immich/sdk';
 import { toastManager } from '@immich/ui';
 import { get } from 'svelte/store';
 import { locale, t } from 'svelte-i18n';
+
+const WS_REFRESH_TIMEOUT_MS = 4000;
 
 const WRITEBACK_POLL_MS = 2000;
 const WRITEBACK_POLL_MAX_ATTEMPTS = 90;
@@ -46,6 +52,43 @@ function messageOriginalsFailed(failedCount: number): string {
 /** Toast after Immich DB date update succeeded. */
 export function notifyDateUpdated(count: number): void {
   toastManager.primary(get(t)('edit_date_and_time_action_prompt', { values: { count } }));
+}
+
+/**
+ * Refresh timeline + selection after bulk date change (replaces page reload).
+ * Fetches updated assets, emits AssetUpdate, and falls back to websocket events.
+ */
+export async function refreshAssetsAfterDateUpdate(assetIds: string[]): Promise<AssetResponseDto[]> {
+  if (assetIds.length === 0) {
+    return [];
+  }
+
+  const refreshed = new Map<string, AssetResponseDto>();
+  const results = await Promise.allSettled(
+    assetIds.map((id) => getAssetInfo({ ...authManager.params, id })),
+  );
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      refreshed.set(result.value.id, result.value);
+      eventManager.emit('AssetUpdate', result.value);
+    }
+  }
+
+  const pendingIds = assetIds.filter((id) => !refreshed.has(id));
+  await Promise.all(
+    pendingIds.map(async (id) => {
+      try {
+        const [asset] = await waitForWebsocketEvent('on_asset_update', (candidate) => candidate.id === id, WS_REFRESH_TIMEOUT_MS);
+        refreshed.set(asset.id, asset);
+        eventManager.emit('AssetUpdate', asset);
+      } catch {
+        // Best-effort; writeback may still finish in the background.
+      }
+    }),
+  );
+
+  return assetIds.map((id) => refreshed.get(id)).filter((asset): asset is AssetResponseDto => !!asset);
 }
 
 /**

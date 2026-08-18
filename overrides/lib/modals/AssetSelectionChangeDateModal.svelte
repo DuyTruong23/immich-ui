@@ -6,11 +6,14 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import { getPreferredTimeZone, getTimezones, toIsoDate, type ZoneOption } from '$lib/modals/timezone-utils';
-  import { eventManager } from '$lib/managers/event-manager.svelte';
-  import { followOriginalFileWriteback, notifyDateUpdated } from '$lib/utils/change-date-feedback';
+  import {
+    followOriginalFileWriteback,
+    notifyDateUpdated,
+    refreshAssetsAfterDateUpdate,
+  } from '$lib/utils/change-date-feedback';
   import { getOwnedAssetsWithWarning } from '$lib/utils/asset-utils';
   import { handleError } from '$lib/utils/handle-error';
-  import { getAssetInfo, updateAssets } from '@immich/sdk';
+  import { updateAssets } from '@immich/sdk';
   import { Field, FormModal, Label, Switch } from '@immich/ui';
   import { mdiCalendarEdit } from '@mdi/js';
   import { DateTime } from 'luxon';
@@ -64,14 +67,10 @@
         await updateAssets({ assetBulkUpdateDto: { ids, dateTimeOriginal: isoDate } });
       }
 
-      const results = await Promise.allSettled(ids.map((id) => getAssetInfo({ id })));
-      for (const result of results) {
-        if (result.status === 'fulfilled') {
-          eventManager.emit('AssetUpdate', result.value);
-        }
-      }
+      await refreshAssetsAfterDateUpdate(ids);
       notifyDateUpdated(ids.length);
       void followOriginalFileWriteback(ids);
+      isSubmitting = false;
       onClose(true);
     } catch (error) {
       isSubmitting = false;
