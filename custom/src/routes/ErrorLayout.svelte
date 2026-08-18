@@ -3,7 +3,9 @@
   import {
     getServerConnectionErrorCode,
     isServerConnectionError,
+    isStaleChunkError,
   } from '$custom/utils/server-connection-error';
+  import { onMount } from 'svelte';
   import BrandLogo from '$lib/components/shared-components/BrandLogo.svelte';
   import { copyToClipboard } from '$lib/utils';
   import {
@@ -34,6 +36,19 @@
   let { error = undefined }: Props = $props();
 
   const showServerConnectionPage = $derived(isServerConnectionError(error));
+  const showStaleChunkPage = $derived(isStaleChunkError(error));
+
+  onMount(() => {
+    if (!showStaleChunkPage) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      location.reload();
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  });
 
   const handleCopy = async () => {
     if (!error) {
@@ -44,7 +59,17 @@
   };
 </script>
 
-{#if showServerConnectionPage}
+{#if showStaleChunkPage}
+  <div class="pg-server-error" role="status" aria-live="polite">
+    <div class="pg-server-error__content">
+      <h1 class="pg-server-error__title">Đang tải bản mới</h1>
+      <p class="pg-server-error__description">
+        Ứng dụng vừa được cập nhật. Trang sẽ tải lại để lấy phiên bản mới.
+      </p>
+      <button type="button" class="pg-stale-chunk-reload" onclick={() => location.reload()}>Tải lại</button>
+    </div>
+  </div>
+{:else if showServerConnectionPage}
   <ServerConnectionErrorPage code={getServerConnectionErrorCode(error)} message={error?.message} />
 {:else}
   <div class="flex h-dvh w-full flex-col">
