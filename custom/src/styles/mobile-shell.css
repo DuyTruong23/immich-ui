@@ -103,6 +103,22 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
   bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
 }
 
+html[data-feature-update-modal] .pg-mobile-bottom-nav,
+html[data-mobile-shell]:has([data-dialog-overlay]) .pg-mobile-bottom-nav,
+html[data-mobile-shell]:has([data-slot='dialog-overlay']) .pg-mobile-bottom-nav,
+html[data-mobile-shell]:has([data-bits-dialog-overlay]) .pg-mobile-bottom-nav {
+  display: none;
+}
+
+html[data-feature-update-modal] [data-dialog-overlay],
+html[data-feature-update-modal] [data-slot='dialog-overlay'],
+html[data-feature-update-modal] [data-bits-dialog-overlay],
+html[data-feature-update-modal] [data-dialog-content],
+html[data-feature-update-modal] [data-slot='dialog-content'],
+html[data-feature-update-modal] [data-bits-dialog-content] {
+  z-index: 100;
+}
+
 .pg-mobile-bottom-nav {
   position: fixed;
   inset-inline: 0;
