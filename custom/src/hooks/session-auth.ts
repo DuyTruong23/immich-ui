@@ -28,7 +28,9 @@ export const markPreserveSessionOnce = (): void => {
 
 export const reloadPreservingSession = (): void => {
   markPreserveSessionOnce();
-  location.reload();
+  const next = new URL(location.href);
+  next.searchParams.set('_pg', String(Date.now()));
+  location.replace(`${next.pathname}${next.search}${next.hash}`);
 };
 
 /** Mỗi lần load/reload trang (F5) — reset session tab, trừ khi app chủ động preserve. */
