@@ -1,9 +1,9 @@
 <script lang="ts">
   import OnEvents from '$lib/components/OnEvents.svelte';
   import TableButton from '$lib/components/TableButton.svelte';
-  import { dateFormats } from '$lib/constants';
   import { getApiKeyActions, getApiKeysActions } from '$lib/services/api-key.service';
   import { locale } from '$lib/stores/preferences.store';
+  import { formatDate } from '$lib/utils/date-format';
   import { getApiKeys, type ApiKeyResponseDto } from '@immich/sdk';
   import { Button, Table, TableBody, TableCell, TableHeader, TableHeading, TableRow, Text } from '@immich/ui';
   import { t } from 'svelte-i18n';
@@ -61,7 +61,7 @@
                   title={JSON.stringify(key.permissions, null, 2)}>{key.permissions}</Text
                 >
               </TableCell>
-              <TableCell>{new Date(key.createdAt).toLocaleDateString($locale, dateFormats.settings)}</TableCell>
+              <TableCell>{formatDate(new Date(key.createdAt), $locale)}</TableCell>
               <TableCell class="flex flex-row flex-wrap justify-center gap-x-2 gap-y-1">
                 <TableButton action={Update} size="small" />
                 <TableButton action={Delete} size="small" />

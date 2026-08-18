@@ -25,7 +25,7 @@
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { locale } from '$lib/stores/preferences.store';
   import { getAssetMediaUrl, handlePromiseError, memoryLaneTitle } from '$lib/utils';
-  import { fromISODateTimeUTC, toTimelineAsset } from '$lib/utils/timeline-util';
+  import { fromISODateTimeUTC, getDateLocaleString, toTimelineAsset } from '$lib/utils/timeline-util';
   import { AssetMediaSize, AssetTypeEnum, getAssetInfo } from '@immich/sdk';
   import { ActionButton, IconButton, Text, toastManager } from '@immich/ui';
   import {
@@ -47,7 +47,6 @@
     mdiVolumeOff,
   } from '@mdi/js';
   import type { NavigationTarget, Page } from '@sveltejs/kit';
-  import { DateTime } from 'luxon';
   import 'media-chrome/media-mute-button';
   import { t } from 'svelte-i18n';
   import type { Attachment } from 'svelte/attachments';
@@ -608,9 +607,7 @@
 
             <div class="absolute inset-s-8 top-4 text-sm font-medium text-white">
               <p>
-                {fromISODateTimeUTC(current.memory.assets[0].localDateTime).toLocaleString(DateTime.DATE_FULL, {
-                  locale: $locale,
-                })}
+                {getDateLocaleString(fromISODateTimeUTC(current.memory.assets[0].localDateTime))}
               </p>
               <p>
                 {#await currentMemoryAssetFull then asset}
