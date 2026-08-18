@@ -8,7 +8,7 @@
   import AssetViewerNavBar from '$lib/components/asset-viewer/AssetViewerNavBar.svelte';
   import { preloadManager } from '$lib/components/asset-viewer/PreloadManager.svelte';
   import OnEvents from '$lib/components/OnEvents.svelte';
-  import { AssetAction, ProjectionType } from '$lib/constants';
+  import { AssetAction, ProjectionType, timeBeforeShowLoadingSpinner } from '$lib/constants';
   import { activityManager } from '$lib/managers/activity-manager.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -37,6 +37,7 @@
     type PersonResponseDto,
     type StackResponseDto,
   } from '@immich/sdk';
+  import FullScreenLoadingOverlay from '$lib/components/shared-components/FullScreenLoadingOverlay.svelte';
   import { CommandPaletteDefaultProvider } from '@immich/ui';
   import { onDestroy, onMount, untrack } from 'svelte';
   import type { SwipeCustomEvent } from 'svelte-gestures';
@@ -496,6 +497,67 @@
       !assetViewerManager.isShowEditor,
   );
 
+  const GESTURE_WAIT_TIMEOUT_MS = 8000;
+  const waitsForGestureMediaReady = (kind: typeof viewerKind) =>
+    kind === 'PhotoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer' || kind === 'VideoViewer';
+  let pendingGestureAssetId = $state<string | null>(null);
+  let showGestureSpinner = $state(false);
+
+  const beginGestureWait = (targetId: string | undefined) => {
+    if (!targetId || targetId === asset.id) {
+      return;
+    }
+    pendingGestureAssetId = targetId;
+  };
+
+  const clearGestureWait = () => {
+    pendingGestureAssetId = null;
+    showGestureSpinner = false;
+  };
+
+  $effect(() => {
+    const pending = pendingGestureAssetId;
+    if (!pending) {
+      showGestureSpinner = false;
+      return;
+    }
+
+    const showTimer = setTimeout(() => {
+      showGestureSpinner = true;
+    }, timeBeforeShowLoadingSpinner);
+    const giveUp = setTimeout(() => {
+      clearGestureWait();
+    }, GESTURE_WAIT_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(giveUp);
+    };
+  });
+
+  $effect(() => {
+    const pending = pendingGestureAssetId;
+    const kind = viewerKind;
+    if (!pending || asset.id !== pending || waitsForGestureMediaReady(kind)) {
+      return;
+    }
+
+    clearGestureWait();
+  });
+
+  const onGestureMediaReady = () => {
+    if (pendingGestureAssetId === asset.id) {
+      clearGestureWait();
+    }
+  };
+
+  const onCommitStart = (direction: 'next' | 'previous') => {
+    if (assetViewerManager.zoom > 1 || ocrManager.showOverlay || tracker.isActive()) {
+      return;
+    }
+    beginGestureWait(direction === 'next' ? nextAsset?.id : previousAsset?.id);
+  };
+
   const onSwipe = (event: SwipeCustomEvent) => {
     if (assetViewerManager.zoom > 1) {
       return;
@@ -506,10 +568,17 @@
     }
 
     if (event.detail.direction === 'left') {
+      if (!tracker.isActive()) {
+        beginGestureWait(nextAsset?.id);
+      }
       navigateAsset('next');
     } else if (event.detail.direction === 'right') {
+      if (!tracker.isActive()) {
+        beginGestureWait(previousAsset?.id);
+      }
       navigateAsset('previous');
     } else if (event.detail.direction === 'bottom') {
+      clearGestureWait();
       closeViewer();
     }
   };
@@ -605,6 +674,8 @@
         nextAsset={cursor.nextAsset}
         previousAsset={cursor.previousAsset}
         {onSwipe}
+        {onCommitStart}
+        onMediaReady={onGestureMediaReady}
       />
     {:else if viewerKind === 'LiveVideoViewer'}
       <VideoViewer
@@ -620,13 +691,22 @@
         nextAsset={cursor.nextAsset}
         previousAsset={cursor.previousAsset}
         {onSwipe}
+        {onCommitStart}
+        onMediaReady={onGestureMediaReady}
       />
     {:else if viewerKind === 'ImagePanaramaViewer'}
       <ImagePanoramaViewer {asset} />
     {:else if viewerKind === 'CropArea'}
       <CropArea {asset} />
     {:else if viewerKind === 'PhotoViewer'}
-      <PhotoViewer cursor={{ ...cursor, current: asset }} {sharedLink} {onSwipe} />
+      <PhotoViewer
+        cursor={{ ...cursor, current: asset }}
+        {sharedLink}
+        {onSwipe}
+        {onCommitStart}
+        onReady={onGestureMediaReady}
+        onError={onGestureMediaReady}
+      />
     {:else if viewerKind === 'VideoViewer'}
       <VideoViewer
         {asset}
@@ -643,6 +723,8 @@
         nextAsset={cursor.nextAsset}
         previousAsset={cursor.previousAsset}
         {onSwipe}
+        {onCommitStart}
+        onMediaReady={onGestureMediaReady}
       />
     {/if}
 
@@ -710,11 +792,14 @@
             })}
         currentId={asset.id}
         onSelect={(selected) => {
+          beginGestureWait(selected.id);
           void navigate({ targetRoute: 'current', assetId: selected.id });
         }}
       />
     </div>
   {/if}
+
+  <FullScreenLoadingOverlay visible={showGestureSpinner} />
 
   {#if stack && withStacked && !assetViewerManager.isShowEditor && $slideshowState === SlideshowState.None}
     {@const stackedAssets = stack.assets}

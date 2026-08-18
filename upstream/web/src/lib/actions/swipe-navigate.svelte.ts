@@ -9,6 +9,7 @@ type SwipeNavigateOptions = {
   hasNext: () => boolean;
   hasPrevious: () => boolean;
   onCommit: (direction: SwipeNavigateDirection) => void;
+  onCommitStart?: (direction: SwipeNavigateDirection) => void;
   onDismiss?: () => void;
 };
 
@@ -197,6 +198,7 @@ export class SwipeNavigate {
     }
 
     this.offset = direction === 'next' ? -width : width;
+    this.#options.onCommitStart?.(direction);
     this.#commitTimer = setTimeout(() => {
       this.#commitTimer = undefined;
       this.#options.onCommit(direction);

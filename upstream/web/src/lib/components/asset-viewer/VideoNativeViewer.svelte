@@ -68,6 +68,8 @@
     onVideoStarted?: () => void;
     onClose?: () => void;
     onSwipe?: (event: SwipeCustomEvent) => void;
+    onCommitStart?: (direction: 'next' | 'previous') => void;
+    onMediaReady?: () => void;
   }
 
   let {
@@ -85,6 +87,8 @@
     onVideoStarted = () => {},
     onClose = () => {},
     onSwipe,
+    onCommitStart,
+    onMediaReady,
   }: Props = $props();
 
   let videoPlayer: HTMLVideoElement | undefined = $state();
@@ -302,13 +306,19 @@
     }
   });
 
+  const notifyMediaReady = () => {
+    onMediaReady?.();
+  };
+
   const handleLoadedMetadata = () => {
     isLoading = false;
+    notifyMediaReady();
   };
 
   const handleLoadedData = () => {
     if (isMobileDevice) {
       isLoading = false;
+      notifyMediaReady();
     }
   };
 
@@ -321,16 +331,19 @@
     }
 
     isLoading = false;
+    notifyMediaReady();
   };
 
   const handleCanPlay = async (video: HTMLVideoElement) => {
     if (!$autoPlayVideo) {
       isLoading = false;
+      notifyMediaReady();
       return;
     }
 
     if (autoplayAttempted) {
       isLoading = false;
+      notifyMediaReady();
       return;
     }
 
@@ -349,6 +362,7 @@
       }
     } finally {
       isLoading = false;
+      notifyMediaReady();
     }
   };
 
@@ -463,6 +477,7 @@
       disabled={swipeDisabled}
       canStart={canStartVideoSwipe}
       onSwipe={handleSwipe}
+      {onCommitStart}
     >
       <PhotoBlurBackdrop {asset} />
       {#if castManager.isCasting}

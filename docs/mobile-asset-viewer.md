@@ -34,6 +34,8 @@ Grid → tap → fullscreen viewer (nền đen, media contain)
 | Pinch / double-tap | photo | zoom; khi zoom > 1 swipe = pan, không đổi asset |
 | Seek / chrome video | target trong `.video-mobile-chrome` | không swipe |
 
+Sau khi swipe ngang (hoặc tap thumbnail) được nhận, overlay `LoadingSpinner` toàn màn hình hiện sau 100ms (`timeBeforeShowLoadingSpinner`) và tắt khi ảnh/video mới sẵn sàng (`onReady` / `onMediaReady`). Không hiện khi vuốt xuống đóng. Timeout 8s nếu điều hướng lỗi.
+
 ## Video
 
 - Autoplay khi `canplay` (muted trên mobile nếu browser block). Promise rejection được bắt.
