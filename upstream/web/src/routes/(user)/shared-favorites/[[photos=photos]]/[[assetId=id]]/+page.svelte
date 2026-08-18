@@ -295,7 +295,11 @@
             revealGrid();
             resolveFirstBucket();
           }, { withPartners: true })
-          .then(() => resolveFirstBucket());
+          .then(() => resolveFirstBucket())
+          .catch((error) => {
+            console.warn('[shared-favorites] partner buckets failed', error);
+            resolveFirstBucket();
+          });
         void favoriteIdsPromise.then(() => resolveFirstBucket());
 
         await partnerFavoritesStore.ensureLoaded();
