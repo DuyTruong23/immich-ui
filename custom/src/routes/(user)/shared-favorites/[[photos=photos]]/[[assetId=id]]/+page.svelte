@@ -14,8 +14,9 @@
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { handlePromiseError } from '$lib/utils';
   import { navigate } from '$lib/utils/navigation';
-  import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { AssetTypeEnum, getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
+  import { toTimelineAsset, type TimelineDateTime } from '$lib/utils/timeline-util';
+  import { AssetTypeEnum, AssetVisibility, getAssetInfo, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
+  import { DateTime } from 'luxon';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -38,7 +39,7 @@
   const myId = $derived(partnerFavoritesStore.me?.id);
 
   const items = $derived.by(() => {
-    const all = partnerFavoritesStore.items;
+    const all = partnerFavoritesStore.listedItems;
     if (filter === 'both') {
       return all.filter((item) => item.favoritedBy.length > 1);
     }
@@ -53,12 +54,48 @@
 
   const displayItems = $derived(items);
 
-  const visibleAssets = $derived(
-    displayItems.map((item) => assetsById.get(item.assetId)).filter((asset): asset is TimelineAsset => Boolean(asset)),
-  );
+  const stubDate = (): TimelineDateTime => {
+    const now = DateTime.now();
+    return {
+      year: now.year,
+      month: now.month,
+      day: now.day,
+      hour: now.hour,
+      minute: now.minute,
+      second: now.second,
+      millisecond: now.millisecond,
+    };
+  };
+
+  const stubAsset = (assetId: string, ownerId = ''): TimelineAsset => ({
+    id: assetId,
+    ownerId,
+    ratio: 1,
+    thumbhash: null,
+    localDateTime: stubDate(),
+    createdAt: stubDate(),
+    fileCreatedAt: stubDate(),
+    visibility: AssetVisibility.Timeline,
+    isFavorite: false,
+    isTrashed: false,
+    isVideo: false,
+    isImage: true,
+    stack: null,
+    duration: null,
+    projectionType: null,
+    livePhotoVideoId: null,
+    city: null,
+    country: null,
+    people: null,
+  });
+
+  const assetForItem = (item: { assetId: string; favoritedBy: PartnerFavoriteUser[] }): TimelineAsset =>
+    assetsById.get(item.assetId) ?? stubAsset(item.assetId, item.favoritedBy[0]?.id ?? '');
+
+  const visibleAssets = $derived(displayItems.map((item) => assetForItem(item)));
 
   const counts = $derived.by(() => {
-    const all = partnerFavoritesStore.items;
+    const all = partnerFavoritesStore.listedItems;
     return {
       all: all.length,
       both: all.filter((item) => item.favoritedBy.length > 1).length,
@@ -156,10 +193,17 @@
       }
 
       const incoming: TimelineAsset[] = [];
-      for (const result of results) {
+      for (const [index, result] of results.entries()) {
         if (result.status === 'fulfilled' && !result.value.isTrashed) {
           incoming.push(toTimelineAsset(result.value));
+          continue;
         }
+
+        if (result.status === 'fulfilled' && result.value.isTrashed) {
+          continue;
+        }
+
+        incoming.push(stubAsset(chunk[index]));
       }
       mergeAssets(incoming);
       revealGrid();
@@ -242,9 +286,32 @@
           revealGrid();
           resolveFirstBucket();
         });
+        void partnerFavoritesStore
+          .loadFavoriteBuckets((assets) => {
+            if (cancelled) {
+              return;
+            }
+            mergeAssets(assets);
+            revealGrid();
+            resolveFirstBucket();
+          }, { withPartners: true })
+          .then(() => resolveFirstBucket());
         void favoriteIdsPromise.then(() => resolveFirstBucket());
 
         await partnerFavoritesStore.ensureLoaded();
+        if (cancelled) {
+          return;
+        }
+        if (partnerFavoritesStore.me?.isAdmin) {
+          await partnerFavoritesStore.loadEveryoneFavoritesForAdmin((assets) => {
+            if (cancelled) {
+              return;
+            }
+            mergeAssets(assets);
+            revealGrid();
+            resolveFirstBucket();
+          });
+        }
         if (cancelled) {
           return;
         }
@@ -256,7 +323,7 @@
 
         const ownerId = partnerFavoritesStore.me?.id;
         const partnerOnlyIds = ownerId
-          ? partnerFavoritesStore.items
+          ? partnerFavoritesStore.listedItems
               .filter((item) => !item.favoritedBy.some((user) => user.id === ownerId))
               .map((item) => item.assetId)
           : [];
@@ -275,7 +342,9 @@
         }
         revealGrid();
 
-        const leftoverIds = partnerFavoritesStore.items.map((item) => item.assetId).filter((id) => !assetsById.has(id));
+        const leftoverIds = partnerFavoritesStore.listedItems
+          .map((item) => item.assetId)
+          .filter((id) => !assetsById.has(id));
         await loadMissingAssets(leftoverIds, () => cancelled);
       } catch (error) {
         if (!cancelled) {
@@ -315,7 +384,7 @@
     {$t('shared_favorites_description')}
   </p>
 
-  {#if partnerFavoritesStore.partners.length === 0 && partnerFavoritesStore.loaded}
+  {#if !partnerFavoritesStore.me?.isAdmin && partnerFavoritesStore.partners.length === 0 && partnerFavoritesStore.loaded}
     <p
       class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
     >
@@ -340,9 +409,9 @@
 
   {#if errorMessage}
     <p class="text-sm text-red-500">{errorMessage}</p>
-  {:else if visibleAssets.length === 0 && loadingAssets}
+  {:else if displayItems.length === 0 && loadingAssets}
     <p class="text-sm text-(--pg-text-muted)">{$t('shared_favorites_loading')}</p>
-  {:else if visibleAssets.length === 0}
+  {:else if displayItems.length === 0}
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div
@@ -354,29 +423,27 @@
       use:pinchGrid
     >
       {#each displayItems as item (item.assetId)}
-        {@const asset = assetsById.get(item.assetId)}
-        {#if asset}
-          <div class="relative isolate aspect-square overflow-hidden rounded-xl">
-            <Thumbnail
-              {asset}
-              thumbnailSize={thumbSize || undefined}
-              imageClass="size-full"
-              readonly
-              onClick={() => handlePromiseError(onViewAsset(asset))}
-            />
-            <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
-              {#each item.favoritedBy as user, index (user.id)}
-                <div
-                  class="relative rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
-                  style="z-index: {item.favoritedBy.length - index}"
-                  title={$t('shared_favorites_liked_by', { values: { name: user.name } })}
-                >
-                  <UserAvatar user={toAvatarUser(user)} size="sm" />
-                </div>
-              {/each}
-            </div>
+        {@const asset = assetForItem(item)}
+        <div class="relative isolate aspect-square overflow-hidden rounded-xl">
+          <Thumbnail
+            {asset}
+            thumbnailSize={thumbSize || undefined}
+            imageClass="size-full"
+            readonly
+            onClick={() => handlePromiseError(onViewAsset(asset))}
+          />
+          <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
+            {#each item.favoritedBy as user, index (user.id)}
+              <div
+                class="relative rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
+                style="z-index: {item.favoritedBy.length - index}"
+                title={$t('shared_favorites_liked_by', { values: { name: user.name } })}
+              >
+                <UserAvatar user={toAvatarUser(user)} size="sm" />
+              </div>
+            {/each}
           </div>
-        {/if}
+        </div>
       {/each}
     </div>
   {/if}

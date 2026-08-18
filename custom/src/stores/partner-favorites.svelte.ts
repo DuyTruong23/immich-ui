@@ -1,4 +1,4 @@
-import { getTimeBucket, getTimeBuckets, type TimeBucketAssetResponseDto } from '@immich/sdk';
+import { getTimeBucket, getTimeBuckets, searchUsersAdmin, type TimeBucketAssetResponseDto } from '@immich/sdk';
 import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
 import { fromISODateTimeUTC, getTimes } from '$lib/utils/timeline-util';
 import {
@@ -66,17 +66,46 @@ class PartnerFavoritesStore {
   me = $state<PartnerFavoriteUser | null>(null);
   partners = $state<PartnerFavoriteUser[]>([]);
   items = $state<PartnerFavoriteItem[]>([]);
+  adminItems = $state<PartnerFavoriteItem[]>([]);
   mineAssetIds = $state<string[]>([]);
   shareWithEveryone = $state(false);
 
   #loadPromise: Promise<void> | null = null;
 
-  byAssetId = $derived(new Map(this.items.map((item) => [item.assetId, item])));
+  listedItems = $derived.by(() => {
+    const byId = new Map(this.items.map((item) => [item.assetId, { ...item, favoritedBy: [...item.favoritedBy] }]));
+    for (const extra of this.adminItems) {
+      const current = byId.get(extra.assetId);
+      if (!current) {
+        byId.set(extra.assetId, extra);
+        continue;
+      }
+
+      const known = new Set(current.favoritedBy.map((user) => user.id));
+      for (const user of extra.favoritedBy) {
+        if (!known.has(user.id)) {
+          current.favoritedBy.push(user);
+        }
+      }
+    }
+    return [...byId.values()];
+  });
+
+  byAssetId = $derived(new Map(this.listedItems.map((item) => [item.assetId, item])));
   mineIdSet = $derived(new Set(this.mineAssetIds));
 
   apply(payload: PartnerFavoritesResponse) {
     this.me = payload.me;
-    this.partners = payload.partners;
+    if (payload.me.isAdmin) {
+      const byId = new Map(this.partners.map((user) => [user.id, user]));
+      for (const partner of payload.partners) {
+        byId.set(partner.id, partner);
+      }
+      this.partners = [...byId.values()];
+    } else {
+      this.partners = payload.partners;
+      this.adminItems = [];
+    }
     this.items = payload.items;
     this.mineAssetIds = payload.mineAssetIds ?? [];
     this.shareWithEveryone = payload.shareWithEveryone === true;
@@ -115,15 +144,23 @@ class PartnerFavoritesStore {
     }
   }
 
-  async loadFavoriteBuckets(onChunk: (assets: TimelineAsset[]) => void): Promise<string[]> {
-    const buckets = [...(await getTimeBuckets({ isFavorite: true }))].sort((left, right) =>
+  async loadFavoriteBuckets(
+    onChunk: (assets: TimelineAsset[]) => void,
+    options?: { withPartners?: boolean; userId?: string },
+  ): Promise<string[]> {
+    const query = {
+      isFavorite: true as const,
+      withPartners: options?.withPartners,
+      userId: options?.userId,
+    };
+    const buckets = [...(await getTimeBuckets(query))].sort((left, right) =>
       right.timeBucket.localeCompare(left.timeBucket),
     );
     const assetIds: string[] = [];
 
     const loadOne = async (timeBucket: string) => {
       try {
-        const chunk = await getTimeBucket({ timeBucket, isFavorite: true });
+        const chunk = await getTimeBucket({ ...query, timeBucket });
         assetIds.push(...chunk.id);
         onChunk(timeBucketToTimelineAssets(chunk));
       } catch (error) {
@@ -146,6 +183,53 @@ class PartnerFavoritesStore {
     await Promise.all(workers);
 
     return assetIds;
+  }
+
+  async loadEveryoneFavoritesForAdmin(onChunk: (assets: TimelineAsset[]) => void): Promise<void> {
+    if (!this.me?.isAdmin) {
+      return;
+    }
+
+    const users = new Map<string, PartnerFavoriteUser>(this.partners.map((user) => [user.id, user]));
+    try {
+      const admins = await searchUsersAdmin({});
+      for (const user of admins) {
+        if (!user.id || user.id === this.me.id) {
+          continue;
+        }
+        users.set(user.id, {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isAdmin: Boolean(user.isAdmin),
+          avatarColor: user.avatarColor ?? 'primary',
+          profileImagePath: user.profileImagePath ?? '',
+          profileChangedAt: user.profileChangedAt ?? new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      console.warn('[partner-favorites] admin user list failed', error);
+    }
+
+    this.partners = [...users.values()];
+    const discovered: PartnerFavoriteItem[] = [];
+
+    for (const user of users.values()) {
+      try {
+        const assetIds = await this.loadFavoriteBuckets(onChunk, { userId: user.id });
+        for (const assetId of assetIds) {
+          discovered.push({
+            assetId,
+            favoritedAt: new Date().toISOString(),
+            favoritedBy: [user],
+          });
+        }
+      } catch (error) {
+        console.warn('[partner-favorites] admin load user favorites failed', user.id, error);
+      }
+    }
+
+    this.adminItems = discovered;
   }
 
   async syncMineFromImmich(assetIds?: string[]): Promise<void> {
