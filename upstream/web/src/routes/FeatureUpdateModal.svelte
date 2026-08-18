@@ -14,6 +14,7 @@
     unsubscribeFeatureUpdateEmail,
   } from '$custom/hooks/feature-update-subscribe';
   import { submitFeedback } from '$custom/hooks/feedback-submit';
+  import FullScreenLoadingOverlay from '$lib/components/shared-components/FullScreenLoadingOverlay.svelte';
   import {
     coerceFeatureUpdateItems,
     getFeatureUpdateItemDetail,
@@ -63,6 +64,7 @@
   let editingNotifyEmail = $state(!hasConfirmedNotifyEmail(notifyIdentity));
   let sentFeedback = $state(false);
   let savingNotifyEmail = $state(false);
+  let isSubmitting = $state(false);
   let isClosing = $state(false);
   let expandedItems = $state<ReadonlySet<string>>(new Set());
 
@@ -88,6 +90,7 @@
   );
   const emailDirty = $derived(emailNeedsSave || emailNeedsUnsubscribe);
   const canSubmit = $derived(hasFeedback || emailDirty);
+  const showSubmitOverlay = $derived(isSubmitting || savingNotifyEmail);
   const submitLabel = $derived(
     hasFeedback && emailDirty
       ? $t('feature_updates_save_and_send_feedback')
@@ -275,7 +278,7 @@
   };
 
   const handleDismiss = () => {
-    if (isClosing || savingNotifyEmail) {
+    if (isClosing || showSubmitOverlay) {
       return;
     }
 
@@ -283,23 +286,32 @@
   };
 
   const handleSendFeedback = async () => {
-    if (!canSubmit || sentFeedback || savingNotifyEmail) {
+    if (!canSubmit || sentFeedback || showSubmitOverlay) {
       return;
     }
 
-    const trimmed = feedback.trim();
-    if (trimmed) {
-      submitFeedback(trimmed, accessToken);
-      sentFeedback = true;
-    }
+    isSubmitting = true;
+    try {
+      const trimmed = feedback.trim();
+      if (trimmed) {
+        submitFeedback(trimmed, accessToken);
+        sentFeedback = true;
+      }
 
-    if (emailNeedsUnsubscribe) {
-      await persistUnsubscribeEmail();
-    } else if (emailNeedsSave) {
-      await persistNotifyEmail();
-    }
+      if (emailNeedsUnsubscribe) {
+        if (!(await persistUnsubscribeEmail())) {
+          return;
+        }
+      } else if (emailNeedsSave) {
+        if (!(await persistNotifyEmail())) {
+          return;
+        }
+      }
 
-    closeModal();
+      closeModal();
+    } finally {
+      isSubmitting = false;
+    }
   };
 </script>
 
@@ -392,7 +404,7 @@
           <button
             type="button"
             class="feature-update-notify-change"
-            disabled={savingNotifyEmail}
+            disabled={showSubmitOverlay}
             onclick={startChangeNotifyEmail}
           >
             {$t('feature_updates_notify_email_change')}
@@ -406,7 +418,7 @@
             autocomplete="email"
             bind:value={notifyEmail}
             placeholder={$t('feature_updates_notify_email_placeholder')}
-            disabled={savingNotifyEmail}
+            disabled={showSubmitOverlay}
           >
             {#snippet trailingIcon()}
               {#if notifyEmail}
@@ -417,7 +429,7 @@
                   shape="round"
                   color="secondary"
                   class="me-1"
-                  disabled={savingNotifyEmail}
+                  disabled={showSubmitOverlay}
                   onclick={handleClearNotifyEmail}
                   aria-label={$t('clear')}
                 />
@@ -432,7 +444,7 @@
           <button
             type="button"
             class="feature-update-notify-change"
-            disabled={savingNotifyEmail}
+            disabled={showSubmitOverlay}
             onclick={cancelChangeNotifyEmail}
           >
             {$t('cancel')}
@@ -445,7 +457,7 @@
   <ModalFooter class="feature-update-footer">
     <div class="feature-update-footer__inner">
       <HStack fullWidth gap={3}>
-      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={savingNotifyEmail}>
+      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={showSubmitOverlay}>
         {$t('close')}
       </Button>
       <Button
@@ -453,13 +465,15 @@
         fullWidth
         type="button"
         onclick={handleSendFeedback}
-        disabled={!canSubmit || savingNotifyEmail}
+        disabled={!canSubmit || showSubmitOverlay}
       >
-        {savingNotifyEmail ? $t('feature_updates_notify_email_saving') : submitLabel}
+        {showSubmitOverlay ? $t('feature_updates_notify_email_saving') : submitLabel}
       </Button>
     </HStack>
     </div>
   </ModalFooter>
+
+  <FullScreenLoadingOverlay visible={showSubmitOverlay} fullscreen />
 </Modal>
 
 <style>

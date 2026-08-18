@@ -21,6 +21,8 @@
     onVideoEnded?: () => void;
     onVideoStarted?: () => void;
     onSwipe?: (event: SwipeCustomEvent) => void;
+    onCommitStart?: (direction: 'next' | 'previous') => void;
+    onMediaReady?: () => void;
   }
 
   let {
@@ -39,6 +41,8 @@
     onVideoEnded,
     onVideoStarted,
     onSwipe,
+    onCommitStart,
+    onMediaReady,
   }: Props = $props();
 
   const effectiveAssetId = $derived(assetId ?? asset.id);
@@ -62,5 +66,7 @@
     {onVideoStarted}
     {onClose}
     {onSwipe}
+    {onCommitStart}
+    {onMediaReady}
   />
 {/if}

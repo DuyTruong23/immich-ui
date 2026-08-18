@@ -3,9 +3,9 @@
 
   import PurchaseContent from '$lib/components/shared-components/purchasing/PurchaseContent.svelte';
   import SettingSwitch from '$lib/components/shared-components/settings/SettingSwitch.svelte';
-  import { dateFormats } from '$lib/constants';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { locale } from '$lib/stores/preferences.store';
+  import { formatDate } from '$lib/utils/date-format';
   import { handleError } from '$lib/utils/handle-error';
   import { setSupportBadgeVisibility } from '$lib/utils/purchase-utils';
   import {
@@ -131,7 +131,7 @@
               <p class="col-start-2 mt-1 text-sm dark:text-white">
                 {$t('purchase_activated_time', {
                   values: {
-                    date: new Date(serverPurchaseInfo.activatedAt).toLocaleString($locale, dateFormats.settings),
+                    date: formatDate(new Date(serverPurchaseInfo.activatedAt), $locale),
                   },
                 })}
               </p>
@@ -162,7 +162,7 @@
               <p class="col-start-2 mt-1 text-sm dark:text-white">
                 {$t('purchase_activated_time', {
                   values: {
-                    date: new Date(authManager.user.license?.activatedAt).toLocaleString($locale, dateFormats.settings),
+                    date: formatDate(new Date(authManager.user.license?.activatedAt), $locale),
                   },
                 })}
               </p>

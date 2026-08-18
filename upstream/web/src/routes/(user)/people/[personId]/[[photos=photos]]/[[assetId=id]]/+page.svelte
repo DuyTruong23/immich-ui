@@ -34,6 +34,7 @@
   import { locale } from '$lib/stores/preferences.store';
   import { websocketEvents } from '$lib/stores/websocket';
   import { getPeopleThumbnailUrl } from '$lib/utils';
+  import { formatDate } from '$lib/utils/date-format';
   import { handleError } from '$lib/utils/handle-error';
   import { isExternalUrl } from '$lib/utils/navigation';
   import { normalizeSearchString } from '$lib/utils/string-utils';
@@ -400,14 +401,7 @@
                       <p class="text-sm text-gray-500 dark:text-gray-400">
                         {$t('person_birthdate', {
                           values: {
-                            date: DateTime.fromISO(person.birthDate).toLocaleString(
-                              {
-                                month: 'numeric',
-                                day: 'numeric',
-                                year: 'numeric',
-                              },
-                              { locale: $locale },
-                            ),
+                            date: formatDate(DateTime.fromISO(person.birthDate).toJSDate(), $locale),
                           },
                         })}
                       </p>

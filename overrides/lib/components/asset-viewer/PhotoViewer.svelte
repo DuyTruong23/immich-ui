@@ -32,9 +32,10 @@
     onReady?: () => void;
     onError?: () => void;
     onSwipe?: (event: SwipeCustomEvent) => void;
+    onCommitStart?: (direction: 'next' | 'previous') => void;
   };
 
-  let { cursor, element = $bindable(), sharedLink, onReady, onError, onSwipe }: Props = $props();
+  let { cursor, element = $bindable(), sharedLink, onReady, onError, onSwipe, onCommitStart }: Props = $props();
 
   const { slideshowState, slideshowLook } = slideshowStore;
   const asset = $derived(cursor.current);
@@ -279,6 +280,7 @@
     {sharedLink}
     disabled={swipeDisabled}
     {onSwipe}
+    {onCommitStart}
   >
     <AdaptiveImage
       {asset}

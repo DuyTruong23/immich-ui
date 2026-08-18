@@ -138,3 +138,71 @@ export const formatDateTime = (date: Date, stored?: string | null): string =>
 
 export const formatMonthYear = (date: Date, stored?: string | null): string =>
   formatMonthYearParts({ year: date.getFullYear(), month: date.getMonth() + 1 }, stored);
+
+const ISO_INPUT_RE =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/;
+const DISPLAY_INPUT_RE =
+  /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
+
+const isValidYmd = (year: number, month: number, day: number) => {
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+};
+
+/** ISO `yyyy-MM-dd[THH:mm[:ss]]` → `17/08/2026` hoặc `17/08/2026 16:38:05` */
+export const isoInputToDisplay = (iso: string, type: 'date' | 'datetime-local'): string => {
+  const match = ISO_INPUT_RE.exec(iso.trim());
+  if (!match) {
+    return '';
+  }
+
+  const date = `${match[3]}/${match[2]}/${match[1]}`;
+  if (type === 'date') {
+    return date;
+  }
+
+  return `${date} ${match[4] ?? '00'}:${match[5] ?? '00'}:${match[6] ?? '00'}`;
+};
+
+/** `17/08/2026` hoặc `17/08/2026 16:38:05` → ISO cho `<input type="date|datetime-local">` */
+export const displayToIsoInput = (display: string, type: 'date' | 'datetime-local'): string | null => {
+  const text = display.trim();
+  if (!text) {
+    return '';
+  }
+
+  const isoMatch = ISO_INPUT_RE.exec(text);
+  if (isoMatch && text.includes('-') && text.indexOf('-') === 4) {
+    const date = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+    if (type === 'date') {
+      return date;
+    }
+    return `${date}T${isoMatch[4] ?? '00'}:${isoMatch[5] ?? '00'}:${isoMatch[6] ?? '00'}.000`;
+  }
+
+  const match = DISPLAY_INPUT_RE.exec(text);
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  if (!isValidYmd(year, month, day)) {
+    return null;
+  }
+
+  const date = `${String(year).padStart(4, '0')}-${pad2(month)}-${pad2(day)}`;
+  if (type === 'date') {
+    return date;
+  }
+
+  const hour = Number(match[4] ?? 0);
+  const minute = Number(match[5] ?? 0);
+  const second = Number(match[6] ?? 0);
+  if (hour > 23 || minute > 59 || second > 59) {
+    return null;
+  }
+
+  return `${date}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}.000`;
+};

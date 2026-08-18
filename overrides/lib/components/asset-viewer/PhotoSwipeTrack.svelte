@@ -14,6 +14,7 @@
     disabled?: boolean;
     canStart?: (event: PointerEvent) => boolean;
     onSwipe?: (event: SwipeCustomEvent) => void;
+    onCommitStart?: (direction: 'next' | 'previous') => void;
     children?: Snippet;
   }
 
@@ -25,6 +26,7 @@
     disabled = false,
     canStart,
     onSwipe,
+    onCommitStart,
     children,
   }: Props = $props();
 
@@ -37,6 +39,9 @@
     canStart: (event) => !disabled && (canStart?.(event) ?? true),
     hasNext: () => Boolean(nextAsset),
     hasPrevious: () => Boolean(previousAsset),
+    onCommitStart: (direction) => {
+      onCommitStart?.(direction);
+    },
     onCommit: (direction) => {
       onSwipe?.({
         detail: { direction: direction === 'next' ? 'left' : 'right' },
