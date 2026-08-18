@@ -739,12 +739,4 @@
     display: none !important;
     -webkit-appearance: none;
   }
-
-  @media (pointer: coarse) {
-    media-controller[userinactive] .video-mobile-chrome {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-  }
 </style>

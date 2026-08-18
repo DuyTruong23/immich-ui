@@ -43,5 +43,13 @@
     #immich-asset-viewer.immich-asset-viewer--mobile .video-mobile-chrome {
       padding-bottom: 0;
     }
+
+    #immich-asset-viewer.immich-asset-viewer--mobile
+      media-controller[userinactive]
+      .video-mobile-chrome {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
   }
 }
