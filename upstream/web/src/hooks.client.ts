@@ -1,13 +1,34 @@
 import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
+import { reloadPreservingSession } from '$custom/hooks/session-auth';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
 import type { HandleClientError } from '@sveltejs/kit';
+
+const STALE_CHUNK_RELOAD_KEY = 'pg-stale-chunk-reload';
+const STALE_CHUNK_RELOAD_WINDOW_MS = 10_000;
+
+function reloadOnceForStaleChunk(): boolean {
+  try {
+    const last = Number(sessionStorage.getItem(STALE_CHUNK_RELOAD_KEY) ?? '0');
+    const now = Date.now();
+    if (last && now - last < STALE_CHUNK_RELOAD_WINDOW_MS) {
+      return false;
+    }
+    sessionStorage.setItem(STALE_CHUNK_RELOAD_KEY, String(now));
+  } catch {
+    // sessionStorage unavailable — still try a one-shot reload
+  }
+
+  reloadPreservingSession();
+  return true;
+}
 
 function isImmutableAssetUrl(url: string | undefined): boolean {
   return Boolean(url && url.includes('/_app/immutable/'));
 }
 
 function noteStaleChunk(reason: string) {
-  console.warn('[stale-chunk] skip reload to keep user session:', reason);
+  console.warn('[stale-chunk] Reloading after missing JS chunk:', reason);
+  reloadOnceForStaleChunk();
 }
 
 function isAssetViewerOpen() {
@@ -148,7 +169,8 @@ export const handleError: HandleClientError = ({ error, status, message }) => {
   const result = parseError(error, status, message);
 
   if (isStaleChunkError(error) || isStaleChunkError(result)) {
-    console.warn('[stale-chunk] skip reload to keep user session:', result.message);
+    console.warn('[stale-chunk] Reloading after missing JS chunk:', result.message);
+    reloadOnceForStaleChunk();
     return result;
   }
 

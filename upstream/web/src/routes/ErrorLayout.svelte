@@ -6,6 +6,7 @@
     isStaleChunkError,
   } from '$custom/utils/server-connection-error';
   import { reloadPreservingSession } from '$custom/hooks/session-auth';
+  import { onMount } from 'svelte';
   import BrandLogo from '$lib/components/shared-components/BrandLogo.svelte';
   import { copyToClipboard } from '$lib/utils';
   import {
@@ -38,6 +39,18 @@
   const showServerConnectionPage = $derived(isServerConnectionError(error));
   const showStaleChunkPage = $derived(isStaleChunkError(error));
 
+  onMount(() => {
+    if (!showStaleChunkPage) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      reloadPreservingSession();
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  });
+
   const handleCopy = async () => {
     if (!error) {
       return;
@@ -50,9 +63,9 @@
 {#if showStaleChunkPage}
   <div class="pg-server-error" role="status" aria-live="polite">
     <div class="pg-server-error__content">
-      <h1 class="pg-server-error__title">Cần tải bản mới</h1>
+      <h1 class="pg-server-error__title">Đang tải bản mới</h1>
       <p class="pg-server-error__description">
-        Ứng dụng vừa được cập nhật. Bấm Tải lại nếu trang không hoạt động — bạn không phải đăng nhập lại.
+        Ứng dụng vừa được cập nhật. Trang sẽ tải lại — bạn không phải đăng nhập lại.
       </p>
       <button type="button" class="pg-stale-chunk-reload" onclick={() => reloadPreservingSession()}>Tải lại</button>
     </div>
