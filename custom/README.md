@@ -7,10 +7,12 @@ Trang và component mới — **không** duplicate logic Immich.
 ```
 custom/src/
 ├── api/              # Wrapper @immich/sdk theo domain
+├── components/       # FeatureUpdatePin, error pages
 ├── hooks/            # feature-guard, lifecycle hooks
 ├── providers/        # app config bootstrap
 ├── routes/           # SvelteKit routes → sync vào upstream/web
-├── styles/           # CSS tùy biến
+├── styles/           # CSS tùy biến + mobile-shell
+├── utils/            # capabilities (`can` / `canForAsset`)
 └── types/            # TypeScript types
 ```
 

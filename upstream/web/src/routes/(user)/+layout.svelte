@@ -3,6 +3,7 @@
   import UploadCover from './DragAndDropUploadOverlay.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import MobileBackGuard from '$lib/components/shared-components/MobileBackGuard.svelte';
+  import MobileBottomNav from '$lib/components/mobile/MobileBottomNav.svelte';
   import type { Snippet } from 'svelte';
   interface Props {
     children?: Snippet;
@@ -27,6 +28,7 @@
 <div class:display-none={assetViewerManager.isViewing}>
   {@render children?.()}
 </div>
+<MobileBottomNav />
 <UploadCover />
 
 <style>

@@ -1,0 +1,233 @@
+/*
+ * Apple Photos-like mobile shell — composition on existing M3 tokens.
+ * Active only when html[data-mobile-shell] is set from capability + breakpoint.
+ */
+
+:root {
+  --mobile-bottom-nav-height: 0px;
+  --mobile-bottom-nav-offset: 0px;
+}
+
+html[data-mobile-shell] {
+  --mobile-bottom-nav-height: 3.125rem;
+  --mobile-bottom-nav-offset: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-mobile-shell] #dashboard-navbar {
+  height: calc(var(--navbar-height-md, 3.625rem) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  background-color: color-mix(in srgb, var(--md-sys-color-surface) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom-color: color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent) !important;
+}
+
+html[data-mobile-shell] .pg-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+}
+
+html[data-mobile-shell] .pg-mobile-header__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--md-sys-color-on-surface);
+}
+
+html[data-mobile-shell] .pg-mobile-shell-main {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-mobile-shell] .pg-mobile-shell-main > .absolute.w-full.overflow-y-auto {
+  padding-bottom: var(--mobile-bottom-nav-offset);
+}
+
+html[data-mobile-shell] #search-content,
+html[data-mobile-shell] #search-chips {
+  padding-bottom: var(--mobile-bottom-nav-offset);
+}
+
+html[data-mobile-shell] .fixed.top-0.z-2 {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+html[data-mobile-shell] main .absolute.flex.h-16.w-full {
+  height: 3rem;
+}
+
+html[data-mobile-shell] .pg-gallery-fabs {
+  bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
+}
+
+.pg-upload-panel-mobile {
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+html[data-mobile-shell] .pg-upload-panel-mobile {
+  bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
+}
+
+.pg-mobile-bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  min-height: var(--mobile-bottom-nav-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  background-color: color-mix(in srgb, var(--md-sys-color-surface) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent);
+}
+
+.pg-mobile-bottom-nav__item {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.375rem 0.25rem;
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pg-mobile-bottom-nav__item--active {
+  color: var(--md-sys-color-primary);
+}
+
+.pg-mobile-bottom-nav__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.pg-mobile-bottom-nav__label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pg-more-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0.75rem 1.5rem;
+}
+
+.pg-more-account {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.25rem 0.25rem 0;
+}
+
+.pg-more-account__text {
+  min-width: 0;
+}
+
+.pg-more-account__name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--md-sys-color-on-surface);
+}
+
+.pg-more-account__email {
+  margin: 0.125rem 0 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--md-sys-color-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pg-more-section__title {
+  margin: 0 0 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.pg-more-list {
+  overflow: hidden;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 0.875rem;
+  background: var(--md-sys-color-surface-container);
+}
+
+.pg-more-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.75rem 0.875rem;
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pg-more-list__item + .pg-more-list__item {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.pg-more-list__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--md-sys-color-primary);
+}
+
+.pg-more-list__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  html[data-mobile-shell] {
+    --mobile-bottom-nav-height: 2.5rem;
+  }
+
+  html[data-mobile-shell] #dashboard-navbar {
+    height: calc(2.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  html[data-mobile-shell] .pg-mobile-header__title {
+    font-size: 1.125rem;
+  }
+
+  .pg-mobile-bottom-nav__label {
+    display: none;
+  }
+}

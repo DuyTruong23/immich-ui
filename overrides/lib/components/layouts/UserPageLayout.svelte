@@ -10,11 +10,11 @@
   import UiDevModeBanner from '$lib/components/UiDevModeBanner.svelte';
   import UserSidebar from '$lib/components/shared-components/side-bar/UserSidebar.svelte';
   import type { HeaderButtonActionItem } from '$lib/types';
-  import { authManager } from '$lib/managers/auth-manager.svelte';
   import { openFileUploadDialog } from '$lib/utils/file-uploader';
   import { Button, ContextMenuButton, HStack, isMenuItemType, type MenuItemType } from '@immich/ui';
   import type { Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
+  import { can, isMobileShell } from '$custom/utils/capabilities.svelte';
 
   interface Props {
     hideNavbar?: boolean;
@@ -47,9 +47,13 @@
   );
 
   let scrollbarClass = $derived(scrollbar ? 'immich-scrollbar' : 'scrollbar-hidden');
-  let hasTitleClass = $derived(title ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
-  const canUpload = $derived(authManager.authenticated && !authManager.isSharedLink);
+  const canUpload = $derived(can('upload'));
+  const mobileShell = $derived(isMobileShell());
   let onUploadClick = $derived(canUpload ? () => openFileUploadDialog() : undefined);
+  const showSidebar = $derived(!mobileShell);
+  const showPageTitle = $derived(Boolean(title) && !mobileShell);
+  const showToolbar = $derived(showPageTitle || Boolean(buttons));
+  let hasTitleClass = $derived(showToolbar ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full');
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden">
@@ -64,12 +68,15 @@
   <div
     tabindex="-1"
     class="relative z-0 grid min-h-0 flex-1 grid-cols-[--spacing(0)_auto] overflow-hidden sidebar:grid-cols-[--spacing(64)_auto]
-      {hideNavbar ? 'pt-(--navbar-height) max-md:pt-(--navbar-height-md)' : ''}"
+      {hideNavbar ? 'pt-(--navbar-height) max-md:pt-(--navbar-height-md)' : ''}
+      {mobileShell ? 'pg-mobile-shell-main' : ''}"
   >
-  {#if sidebar}
-    {@render sidebar()}
-  {:else}
-    <UserSidebar />
+  {#if showSidebar}
+    {#if sidebar}
+      {@render sidebar()}
+    {:else}
+      <UserSidebar />
+    {/if}
   {/if}
 
   <main class="relative z-0 isolate">
@@ -77,10 +84,10 @@
       {@render children?.()}
     </div>
 
-    {#if title || buttons}
+    {#if showToolbar}
       <div class="absolute flex h-16 w-full place-items-center justify-between border-b p-2 text-dark">
         <div class="flex items-center gap-2">
-          {#if title}
+          {#if showPageTitle}
             <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>
           {/if}
           {#if description}
