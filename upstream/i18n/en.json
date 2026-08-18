@@ -1005,6 +1005,8 @@
   "error_saving_image": "Error: {error}",
   "error_tag_face_bounding_box": "Error tagging face - cannot get bounding box coordinates",
   "error_title": "Error - Something went wrong",
+  "pg_maintenance_title": "We'll Be Back Soon",
+  "pg_maintenance_description": "The system is being updated. We expect to be back on {date} at {time}.",
   "error_while_navigating": "Error while navigating to asset",
   "errors": {
     "cannot_navigate_next_asset": "Cannot navigate to the next asset",

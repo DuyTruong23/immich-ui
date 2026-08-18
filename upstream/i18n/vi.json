@@ -1004,6 +1004,8 @@
   "error_saving_image": "Lỗi: {error}",
   "error_tag_face_bounding_box": "Lỗi gắn thẻ khuôn mặt: - không thể lấy được tọa độ khung bao",
   "error_title": "Lỗi - Có điều gì đó không đúng",
+  "pg_maintenance_title": "Chúng tôi sẽ sớm quay lại",
+  "pg_maintenance_description": "Hệ thống đang được cập nhật, chúng tôi sẽ trở lại vào {date} lúc {time}.",
   "error_while_navigating": "Không thể điều hướng đến tài nguyên",
   "errors": {
     "cannot_navigate_next_asset": "Không thể chuyển đến tài nguyên tiếp theo",

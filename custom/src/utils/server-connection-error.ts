@@ -8,8 +8,7 @@ const STALE_CHUNK_PATTERN =
 
 export const SERVER_CONNECTION_DISPLAY_CODE = 505;
 
-export const SERVER_CONNECTION_MESSAGE =
-  'Cảm ơn bạn đã ghé thăm, chúng tôi sẽ quay lại vào 17:30 ngày 13/8/2026.';
+export const SERVER_CONNECTION_MESSAGE = '';
 
 export interface ServerConnectionErrorData {
   message: string;
@@ -82,7 +81,7 @@ export function createServerConnectionError(initError: unknown): ServerConnectio
 
   return {
     message: SERVER_CONNECTION_MESSAGE,
-    code: readErrorStatus(initError) ?? SERVER_CONNECTION_DISPLAY_CODE,
+    code: SERVER_CONNECTION_DISPLAY_CODE,
     stack: initError instanceof Error ? initError.stack : undefined,
     serverConnectionError: true,
   };
