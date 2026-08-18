@@ -56,6 +56,7 @@
       eventManager.emit('AssetUpdate', updated);
       notifyDateUpdated(1);
       void followOriginalFileWriteback([asset.id]);
+      isSubmitting = false;
       onClose(true);
     } catch (error) {
       isSubmitting = false;
