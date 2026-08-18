@@ -328,6 +328,15 @@ html[data-mobile-shell] .pg-mobile-hint {
   font-weight: 500;
 }
 
+.pg-more-logout {
+  margin-top: 0.25rem;
+}
+
+.pg-more-logout .pg-more-list__icon,
+.pg-more-logout .pg-more-list__label {
+  color: var(--md-sys-color-error);
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   html[data-mobile-shell] {
     --mobile-bottom-nav-height: 2.5rem;
