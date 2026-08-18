@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "v1.0.12",
+      "items": [
+        {
+          "title": "Cho phép đăng ảnh và video lên từ điện thoại",
+          "detail": "Mọi tài khoản có thể tải ảnh, video lên từ điện thoại hoặc máy tính. Trên điện thoại có nút + cạnh nút What's new."
+        },
+        {
+          "title": "Chum hai ngón để đổi lưới ảnh",
+          "detail": "Trên điện thoại, xoè hai ngón để ảnh to hơn (tối thiểu 3 cột), chum lại để xem nhiều ảnh hơn (tối đa 6 cột). Trang không bị zoom theo trình duyệt."
+        }
+      ]
+    },
+    {
       "version": "v1.0.11",
       "items": [
         {
