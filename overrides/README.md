@@ -46,7 +46,11 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/timeline/actions/ChangeDescriptionAction.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/timeline/actions/ChangeLocationAction.svelte` | Báo lỗi writeback file gốc |
 | `lib/components/asset-viewer/PhotoViewer.svelte` | Vuốt ngang + vuốt xuống đóng; blur backdrop; double-tap zoom |
-| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Cùng cử chỉ ảnh; autoplay mobile; progress bar không đè preview strip |
+| `lib/components/asset-viewer/VideoNativeViewer.svelte` | Double-buffer MP4; audio session; debounced loading; swipe |
+| `lib/components/asset-viewer/VideoPreloadManager.svelte.ts` | Preload video kề (5–10s next, metadata prev) khi xem ảnh/video |
+| `lib/managers/playback-state.svelte.ts` | Giữ muted/volume/playbackRate trong viewer session |
+| `lib/utils/video-playback-resolver.ts` | Original vs playback vs HLS resolver |
+| `lib/utils/video-buffer-utils.ts` | Buffer metrics + dev diagnostics |
 | `lib/components/asset-viewer/VideoWrapperViewer.svelte` | Truyền next/prev + onSwipe xuống video viewer |
 | `lib/components/asset-viewer/hls-setup.ts` | hls.js tách chunk, chỉ load trên desktop |
 | `lib/components/asset-viewer/PreloadManager.svelte.ts` | Bỏ preload adjacent khi mạng chậm |
