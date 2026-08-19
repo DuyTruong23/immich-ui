@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildPreviewStrip, containFitFrame, PREVIEW_STRIP_MAX_ITEMS, windowPreviewStrip } from './preview-layout';
+import {
+  buildFilmstrip,
+  buildPreviewStrip,
+  containFitFrame,
+  FILMSTRIP_MAX_ITEMS,
+  PREVIEW_STRIP_MAX_ITEMS,
+  windowPreviewStrip,
+} from './preview-layout';
 
 const item = (id: string) => ({ id, thumbhash: null });
 
@@ -99,6 +106,21 @@ describe('buildPreviewStrip', () => {
     });
 
     expect(strip.map((entry) => entry.id)).toEqual(['p', 'c', 'n']);
+  });
+});
+
+describe('buildFilmstrip', () => {
+  it('uses a wider default radius than swipe peek', () => {
+    const strip = buildFilmstrip({
+      current: item('c'),
+      previous: item('p'),
+      next: item('n'),
+      laterItems: ['a', 'b', 'c', 'd', 'e', 'f'].map(item),
+      earlierItems: ['x', 'y', 'z', 'w', 'v', 'u'].map(item),
+    });
+
+    expect(strip).toHaveLength(FILMSTRIP_MAX_ITEMS);
+    expect(strip.map((entry) => entry.id)).toEqual(['f', 'e', 'd', 'b', 'a', 'p', 'c', 'n', 'x', 'y', 'z', 'w', 'v']);
   });
 });
 

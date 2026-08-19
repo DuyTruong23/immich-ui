@@ -60,14 +60,14 @@
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { lockViewerPageScroll, unlockViewerPageScroll } from '$lib/utils/viewer-scroll-lock';
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
-  import { buildPreviewStrip } from './preview-layout';
+  import { buildFilmstrip, type PreviewStripItem } from './preview-layout';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
     current: AssetResponseDto;
     nextAsset?: AssetResponseDto;
     previousAsset?: AssetResponseDto;
-    nearbyAssets?: Array<{ id: string; thumbhash: string | null; originalFileName?: string }>;
+    nearbyAssets?: PreviewStripItem[];
   };
 
   interface Props {
@@ -84,6 +84,7 @@
     onClose?: (assetId: string) => void;
     onRemoveFromAlbum?: (assetIds: string[]) => void;
     onRandom?: () => Promise<{ id: string } | undefined>;
+    onFilmstripNearEdge?: (direction: 'earlier' | 'later') => void;
   }
 
   let {
@@ -100,6 +101,7 @@
     onClose,
     onRemoveFromAlbum,
     onRandom,
+    onFilmstripNearEdge,
   }: Props = $props();
 
   const {
@@ -111,6 +113,14 @@
   } = slideshowStore;
   const stackThumbnailSize = 60;
   const stackSelectedThumbnailSize = 65;
+
+  const toFilmstripItem = (entry: AssetResponseDto): PreviewStripItem => ({
+    id: entry.id,
+    thumbhash: entry.thumbhash,
+    originalFileName: entry.originalFileName,
+    isVideo: entry.type === AssetTypeEnum.Video,
+    duration: entry.duration ?? null,
+  });
 
   let previewStackedAsset: AssetResponseDto | undefined = $state();
   let stack: StackResponseDto | null = $state(null);
@@ -791,12 +801,13 @@
       <MobilePreviewStrip
         assets={cursor.nearbyAssets?.length
           ? cursor.nearbyAssets
-          : buildPreviewStrip({
-              current: asset,
-              previous: previousAsset,
-              next: nextAsset,
+          : buildFilmstrip({
+              current: toFilmstripItem(asset),
+              previous: previousAsset ? toFilmstripItem(previousAsset) : undefined,
+              next: nextAsset ? toFilmstripItem(nextAsset) : undefined,
             })}
         currentId={asset.id}
+        onNearEdge={onFilmstripNearEdge}
         onSelect={(selected) => {
           beginGestureWait(selected.id);
           void navigate({ targetRoute: 'current', assetId: selected.id });

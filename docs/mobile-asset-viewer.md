@@ -19,7 +19,8 @@ Grid → tap → fullscreen viewer (nền đen, media contain)
 ## Layout mobile
 
 - Media chiếm toàn viewport; header overlay phía trên (safe-area notch / Dynamic Island).
-- Preview strip tối đa **5** thumbnail: previous 2 + current + next 2. Đầu/cuối list có thể ít hơn.
+- Filmstrip scroll ngang tối đa **13** thumbnail (`FILMSTRIP_RADIUS=6`): previous 6 + current + next 6. Swipe peek vẫn 5 item (`PREVIEW_STRIP_RADIUS=2`).
+- Video trên filmstrip: icon play + duration; chỉ dùng thumbnail endpoint, không phát video trong strip.
 - Landscape + `max-height: 500px`: ẩn strip, ưu tiên media (`--mobile-preview-strip-offset` chỉ còn safe-area).
 - Video controls / progress nằm **trên** strip qua `--mobile-preview-strip-offset`.
 
@@ -52,8 +53,8 @@ Sau khi swipe ngang (hoặc tap thumbnail) được nhận, overlay `LoadingSpin
 | File | Vai trò |
 |---|---|
 | `lib/components/asset-viewer/AssetViewer.svelte` | Shell, ẩn mũi tên desktop trên mobile, overlay header, strip |
-| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | 5 thumbnail |
-| `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS = 2`, `buildPreviewStrip`, `windowPreviewStrip` |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Filmstrip scroll ngang, auto-center, badge video |
+| `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS`, `FILMSTRIP_RADIUS`, `buildFilmstrip` |
 | `lib/components/asset-viewer/PhotoViewer.svelte` | Pinch, double-tap, swipe track |
 | `lib/components/asset-viewer/PhotoSwipeTrack.svelte` | Swipe ngang + dismiss scale/fade |
 | `lib/components/asset-viewer/VideoNativeViewer.svelte` | Autoplay, chrome, swipe block khi seek |

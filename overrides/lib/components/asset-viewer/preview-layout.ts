@@ -1,16 +1,27 @@
 import { scaleToFit } from '$lib/utils/container-utils';
 
-/** Previous 2 + current + next 2. Edges may have fewer. */
+/** Previous 2 + current + next 2 for swipe peek. Edges may have fewer. */
 export const PREVIEW_STRIP_RADIUS = 2;
 export const PREVIEW_STRIP_MAX_ITEMS = PREVIEW_STRIP_RADIUS * 2 + 1;
-export const PREVIEW_STRIP_THUMB_SIZE = 40;
-export const PREVIEW_STRIP_CURRENT_SIZE = 48;
+
+/** Filmstrip window: scrollable strip around current (does not render entire library). */
+export const FILMSTRIP_RADIUS = 6;
+export const FILMSTRIP_MAX_ITEMS = FILMSTRIP_RADIUS * 2 + 1;
+
+export const PREVIEW_STRIP_THUMB_SIZE = 44;
+export const PREVIEW_STRIP_CURRENT_SIZE = 44;
+export const FILMSTRIP_THUMB_SIZE = 44;
 
 export type PreviewStripItem = {
   id: string;
   thumbhash: string | null;
   originalFileName?: string;
+  isVideo?: boolean;
+  duration?: number | null;
 };
+
+/** @deprecated Use PreviewStripItem */
+export type FilmstripItem = PreviewStripItem;
 
 export type ContainFitFrame = {
   left: number;
@@ -80,6 +91,18 @@ export function buildPreviewStrip(options: {
   }
 
   return [...left.toReversed().slice(-radius), current, ...right.slice(0, radius)];
+}
+
+/** Filmstrip uses a wider window than swipe peek; same ordering rules. */
+export function buildFilmstrip(options: {
+  current: PreviewStripItem;
+  previous?: PreviewStripItem;
+  next?: PreviewStripItem;
+  laterItems?: PreviewStripItem[];
+  earlierItems?: PreviewStripItem[];
+  radius?: number;
+}): PreviewStripItem[] {
+  return buildPreviewStrip({ ...options, radius: options.radius ?? FILMSTRIP_RADIUS });
 }
 
 export function windowPreviewStrip<T extends { id: string }>(

@@ -26,8 +26,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/MobileThumbnailHint.svelte` | Dòng alert mobile: ảnh lỗi vẫn bấm xem được |
 | `lib/components/shared-components/FullScreenLoadingOverlay.svelte` | Spinner toàn màn hình dùng chung (viewer cử chỉ, submit modal) |
 | `lib/components/asset-viewer/AssetViewer.svelte` | Overlay header trên mobile; ẩn mũi tên prev/next; preview strip 5 ảnh; swipe-down fade; lock scroll; spinner toàn màn khi chờ cử chỉ |
-| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Tối đa 5 thumbnail (prev 2 + current + next 2); thumb nhỏ; safe-area |
-| `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS = 2`, `buildPreviewStrip`, `windowPreviewStrip` |
+| `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Filmstrip mobile: scroll ngang, highlight current, badge video, auto-center |
+| `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS=2` (swipe peek), `FILMSTRIP_RADIUS=6`, `buildFilmstrip` |
 | `lib/utils/viewer-scroll-lock.ts` | Khóa scroll trang khi viewer mở, restore khi đóng |
 | `lib/components/timeline/TimelineAssetViewer.svelte` | Load ảnh kề cho preview strip |
 | `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor + nearby assets cho preview strip |
