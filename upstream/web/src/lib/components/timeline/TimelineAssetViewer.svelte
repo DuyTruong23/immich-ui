@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Action } from '$lib/components/asset-viewer/actions/action';
   import type { AssetCursor } from '$lib/components/asset-viewer/AssetViewer.svelte';
-  import { PREVIEW_STRIP_RADIUS, buildPreviewStrip } from '$lib/components/asset-viewer/preview-layout';
+  import { FILMSTRIP_RADIUS, buildFilmstrip, type PreviewStripItem } from '$lib/components/asset-viewer/preview-layout';
   import { AssetAction } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { assetCacheManager } from '$lib/managers/AssetCacheManager.svelte';
@@ -63,28 +63,58 @@
     return getAsset(laterTimelineAsset.id);
   };
 
-  const STRIP_RADIUS = PREVIEW_STRIP_RADIUS;
+  const STRIP_RADIUS = FILMSTRIP_RADIUS;
 
-  const toStripItem = (asset: { id: string; thumbhash: string | null; originalFileName?: string }) => ({
+  const toStripItem = (asset: {
+    id: string;
+    thumbhash: string | null;
+    originalFileName?: string;
+    isVideo?: boolean;
+    duration?: number | null;
+    type?: string;
+  }): PreviewStripItem => ({
     id: asset.id,
     thumbhash: asset.thumbhash,
     originalFileName: asset.originalFileName,
+    isVideo: asset.isVideo ?? asset.type === 'VIDEO',
+    duration: asset.duration ?? null,
   });
 
-  const collectStripSide = async (currentId: string, direction: 'earlier' | 'later') => {
-    const items: Array<{ id: string; thumbhash: string | null }> = [];
+  let extraLaterItems = $state<PreviewStripItem[]>([]);
+  let extraEarlierItems = $state<PreviewStripItem[]>([]);
+  let baseLaterItems = $state<PreviewStripItem[]>([]);
+  let baseEarlierItems = $state<PreviewStripItem[]>([]);
+  let expandToken = 0;
+
+  const collectStripSide = async (currentId: string, direction: 'earlier' | 'later', skipIds: Set<string>) => {
+    const items: PreviewStripItem[] = [];
     const start = { id: currentId } as TimelineAsset;
     for await (const asset of timelineManager.assetsIterator({ startAsset: start, direction })) {
-      if (asset.id === currentId) {
+      if (asset.id === currentId || skipIds.has(asset.id)) {
         continue;
       }
-      items.push({ id: asset.id, thumbhash: asset.thumbhash });
+      items.push(toStripItem(asset));
       if (items.length >= STRIP_RADIUS) {
         break;
       }
     }
     return items;
   };
+
+  const buildNearbyAssets = (
+    currentAsset: AssetResponseDto,
+    nextAsset: AssetResponseDto | undefined,
+    previousAsset: AssetResponseDto | undefined,
+    laterItems: PreviewStripItem[],
+    earlierItems: PreviewStripItem[],
+  ) =>
+    buildFilmstrip({
+      current: toStripItem(currentAsset),
+      previous: previousAsset ? toStripItem(previousAsset) : undefined,
+      next: nextAsset ? toStripItem(nextAsset) : undefined,
+      laterItems: [...laterItems, ...extraLaterItems],
+      earlierItems: [...earlierItems, ...extraEarlierItems],
+    });
 
   let assetCursor = $state<AssetCursor>({
     current: assetViewerManager.asset!,
@@ -95,29 +125,75 @@
 
   const loadCloseAssets = async (currentAsset: AssetResponseDto) => {
     const token = ++nearbyLoadToken;
+    extraLaterItems = [];
+    extraEarlierItems = [];
     const [nextAsset, previousAsset, laterItems, earlierItems] = await Promise.all([
       getNextAsset(currentAsset),
       getPreviousAsset(currentAsset),
-      collectStripSide(currentAsset.id, 'later'),
-      collectStripSide(currentAsset.id, 'earlier'),
+      collectStripSide(currentAsset.id, 'later', new Set()),
+      collectStripSide(currentAsset.id, 'earlier', new Set()),
     ]);
 
     if (token !== nearbyLoadToken) {
       return;
     }
 
-    const nearbyAssets = buildPreviewStrip({
-      current: toStripItem(currentAsset),
-      previous: previousAsset ? toStripItem(previousAsset) : undefined,
-      next: nextAsset ? toStripItem(nextAsset) : undefined,
-      laterItems,
-      earlierItems,
-    });
+    baseLaterItems = laterItems;
+    baseEarlierItems = earlierItems;
+
+    const nearbyAssets = buildNearbyAssets(currentAsset, nextAsset, previousAsset, laterItems, earlierItems);
 
     assetCursor = {
       current: currentAsset,
       nextAsset,
       previousAsset,
+      nearbyAssets: nearbyAssets.length > 1 ? nearbyAssets : undefined,
+    };
+  };
+
+  const expandFilmstrip = async (direction: 'earlier' | 'later') => {
+    const token = ++expandToken;
+    const currentAsset = assetCursor.current;
+    const existingIds = new Set(assetCursor.nearbyAssets?.map((entry) => entry.id) ?? [currentAsset.id]);
+
+    const anchorId =
+      direction === 'later'
+        ? assetCursor.nearbyAssets?.[0]?.id ?? currentAsset.id
+        : (assetCursor.nearbyAssets?.at(-1)?.id ?? currentAsset.id);
+
+    const batch: PreviewStripItem[] = [];
+    const start = { id: anchorId } as TimelineAsset;
+    for await (const asset of timelineManager.assetsIterator({ startAsset: start, direction })) {
+      if (existingIds.has(asset.id)) {
+        continue;
+      }
+      batch.push(toStripItem(asset));
+      existingIds.add(asset.id);
+      if (batch.length >= 4) {
+        break;
+      }
+    }
+
+    if (token !== expandToken || batch.length === 0) {
+      return;
+    }
+
+    if (direction === 'later') {
+      extraLaterItems = [...batch, ...extraLaterItems];
+    } else {
+      extraEarlierItems = [...extraEarlierItems, ...batch];
+    }
+
+    const nearbyAssets = buildNearbyAssets(
+      currentAsset,
+      assetCursor.nextAsset,
+      assetCursor.previousAsset,
+      baseLaterItems,
+      baseEarlierItems,
+    );
+
+    assetCursor = {
+      ...assetCursor,
       nearbyAssets: nearbyAssets.length > 1 ? nearbyAssets : undefined,
     };
   };
@@ -297,5 +373,6 @@
     onRandom={handleRandom}
     onRemoveFromAlbum={handleRemoveFromAlbum}
     onClose={handleClose}
+    onFilmstripNearEdge={expandFilmstrip}
   />
 {/await}

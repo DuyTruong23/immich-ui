@@ -3,7 +3,7 @@
   import { shortcuts, type ShortcutOptions } from '$lib/actions/shortcut';
   import type { Action } from '$lib/components/asset-viewer/actions/action';
   import type { AssetCursor } from '$lib/components/asset-viewer/AssetViewer.svelte';
-  import { PREVIEW_STRIP_RADIUS, buildPreviewStrip } from '$lib/components/asset-viewer/preview-layout';
+  import { FILMSTRIP_RADIUS, buildFilmstrip, type PreviewStripItem } from '$lib/components/asset-viewer/preview-layout';
   import Thumbnail from '$lib/components/assets/thumbnail/Thumbnail.svelte';
   import { AssetAction } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
@@ -28,7 +28,7 @@
   import { pinchGrid } from '$lib/actions/pinch-grid.svelte';
   import { gridDensityManager } from '$lib/stores/grid-density.svelte';
   import { getTimelineIntersectionExpand, getTimelineLayoutOptions } from '$lib/utils/mobile-performance.svelte';
-  import { AssetVisibility, type AssetResponseDto } from '@immich/sdk';
+  import { AssetTypeEnum, AssetVisibility, type AssetResponseDto } from '@immich/sdk';
   import { modalManager } from '@immich/ui';
   import { debounce } from 'lodash-es';
   import { onMount } from 'svelte';
@@ -354,21 +354,35 @@
   const currentViewerIndex = $derived(
     currentViewerAsset ? navigationAssets.findIndex((asset) => asset.id === currentViewerAsset.id) : -1,
   );
-  const STRIP_RADIUS = PREVIEW_STRIP_RADIUS;
+  const STRIP_RADIUS = FILMSTRIP_RADIUS;
+  const toFilmstripItem = (asset: TimelineAsset | AssetResponseDto): PreviewStripItem => ({
+    id: asset.id,
+    thumbhash: asset.thumbhash,
+    originalFileName: asset.originalFileName,
+    isVideo: 'isVideo' in asset ? asset.isVideo : asset.type === AssetTypeEnum.Video,
+    duration: asset.duration ?? null,
+  });
   const assetCursor = $derived<AssetCursor>({
     current: assetViewerManager.asset!,
     nextAsset: getNextAsset(navigationAssets, assetViewerManager.asset),
     previousAsset: getPreviousAsset(navigationAssets, assetViewerManager.asset),
     nearbyAssets:
       currentViewerIndex >= 0
-        ? buildPreviewStrip({
-            current: navigationAssets[currentViewerIndex],
-            previous: getPreviousAsset(navigationAssets, assetViewerManager.asset),
-            next: getNextAsset(navigationAssets, assetViewerManager.asset),
+        ? buildFilmstrip({
+            current: toFilmstripItem(navigationAssets[currentViewerIndex]),
+            previous:
+              currentViewerIndex > 0 ? toFilmstripItem(navigationAssets[currentViewerIndex - 1]) : undefined,
+            next:
+              currentViewerIndex < navigationAssets.length - 1
+                ? toFilmstripItem(navigationAssets[currentViewerIndex + 1])
+                : undefined,
             laterItems: navigationAssets
               .slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex)
-              .toReversed(),
-            earlierItems: navigationAssets.slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1),
+              .toReversed()
+              .map(toFilmstripItem),
+            earlierItems: navigationAssets
+              .slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1)
+              .map(toFilmstripItem),
           })
         : undefined,
   });
