@@ -1,5 +1,6 @@
 import { page } from '$app/state';
 import { getAppConfig } from '@photo-gallery/config';
+import { isCookRoute } from '$custom/utils/cook-route';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
 import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
@@ -52,7 +53,10 @@ const isOwner = (asset: AssetLike) =>
   Boolean(signedIn() && asset.ownerId && authManager.user.id === asset.ownerId);
 
 export const isMobileShell = () =>
-  !mediaQueryManager.isFullSidebar && signedIn() && !page.url.pathname.startsWith('/admin');
+  !mediaQueryManager.isFullSidebar &&
+  signedIn() &&
+  !page.url.pathname.startsWith('/admin') &&
+  !isCookRoute(page.url.pathname);
 
 export const can = (capability: SessionCapability): boolean => {
   const flags = features();
@@ -141,7 +145,8 @@ export const isMobileNavActive = (id: MobileNavId, pathname: string): boolean =>
       return (
         pathname === '/more' ||
         pathname.startsWith('/more/') ||
-        (!pathname.startsWith('/photos') &&
+        (!isCookRoute(pathname) &&
+          !pathname.startsWith('/photos') &&
           !pathname.startsWith('/favorites') &&
           !pathname.startsWith('/shared-favorites') &&
           !pathname.startsWith('/search'))
