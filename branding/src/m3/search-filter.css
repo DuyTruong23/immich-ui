@@ -1,0 +1,265 @@
+/*
+ * Search filter modal — Material 3 tokens, mobile-first
+ */
+
+@layer components {
+  .ant-search-filter-modal {
+    background: var(--md-sys-color-surface-container-high) !important;
+  }
+
+  .ant-search-filter-modal header,
+  .ant-search-filter-modal [class*='CardHeader'] {
+    flex-shrink: 0;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    background: var(--md-sys-color-surface-container-high);
+    padding-block: 0.75rem !important;
+    padding-inline: 1rem !important;
+  }
+
+  .ant-search-filter-modal [class*='CardTitle'] {
+    font-size: var(--md-sys-typescale-title-medium-size, 1rem) !important;
+    font-weight: var(--md-sys-typescale-title-medium-weight, 600) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .ant-search-filter-modal__body,
+  .pg-search-filter-modal__scroll {
+    background: var(--md-sys-color-surface-container) !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .ant-search-filter-modal__form {
+    margin: 0;
+  }
+
+  .ant-search-filter-modal__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .ant-search-filter-modal__section {
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-medium, 0.75rem);
+    padding: 0.875rem 1rem;
+    transition: border-color 150ms ease;
+  }
+
+  .ant-search-filter-modal__section:focus-within {
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .ant-search-filter-modal__grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .ant-search-filter-modal__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .ant-search-filter-modal__footer {
+    background: var(--md-sys-color-surface-container-high) !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    padding: 0.75rem 1rem !important;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .ant-search-filter-modal__actions {
+    gap: 0.75rem;
+  }
+
+  .ant-search-filter-modal__btn {
+    border-radius: var(--md-sys-shape-corner-full, 999px) !important;
+    font-weight: 600 !important;
+    min-height: 2.75rem;
+  }
+
+  .ant-search-filter-modal__btn--secondary {
+    border: 1px solid var(--md-sys-color-outline-variant) !important;
+    background: var(--md-sys-color-surface-container-highest) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .ant-search-filter-modal__btn--secondary:hover {
+    border-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-primary) !important;
+  }
+
+  .ant-search-filter-modal__section fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .ant-search-filter-modal__section p,
+  .ant-search-filter-modal__section [class*='Text'] {
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .ant-search-filter-modal__section label {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-medium-size, 0.875rem);
+  }
+
+  .ant-search-filter-modal__section input:not([type='radio']):not([type='checkbox']),
+  .ant-search-filter-modal__section textarea,
+  .ant-search-filter-modal__section select,
+  .ant-search-filter-modal__section [class*='Input'],
+  .ant-search-filter-modal__section .immich-form-input {
+    border-radius: var(--md-sys-shape-corner-extra-small, 0.25rem) !important;
+    border: 1px solid var(--md-sys-color-outline) !important;
+    background: var(--md-sys-color-surface-container-highest) !important;
+  }
+
+  .ant-search-filter-modal__section input:focus-within,
+  .ant-search-filter-modal__section textarea:focus,
+  .ant-search-filter-modal__section [class*='Input']:focus-within {
+    border-color: var(--md-sys-color-primary) !important;
+    outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 24%, transparent) !important;
+    outline-offset: 0 !important;
+  }
+
+  .ant-search-filter-modal__section input[type='radio'],
+  .ant-search-filter-modal__section input[type='checkbox'] {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    margin: 0;
+    accent-color: var(--md-sys-color-primary);
+    cursor: pointer;
+  }
+
+  .ant-search-filter-modal__section .my-2.flex.flex-wrap,
+  .ant-search-filter-modal__section .mt-1.flex.flex-wrap {
+    gap: 0.5rem 1.25rem !important;
+  }
+
+  .ant-search-filter-modal__section #people-selection {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ant-search-filter-modal__section .pg-people-selection__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .ant-search-filter-modal__section .pg-people-filter > div {
+    min-height: 2.5rem;
+    border-radius: var(--md-sys-shape-corner-medium, 0.75rem) !important;
+    background: var(--md-sys-color-surface-container-highest) !important;
+  }
+
+  /* IconButton search/clear — giữ tròn, không dính style card người */
+  .ant-search-filter-modal__section .pg-people-filter button {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-width: 2.25rem !important;
+    min-height: 2.25rem !important;
+    flex-shrink: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+  }
+
+  .ant-search-filter-modal__section .pg-people-filter input {
+    min-width: 0;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Chỉ card chọn người — không áp lên nút search */
+  .ant-search-filter-modal__section #people-selection .pg-people-selection-item {
+    border-radius: var(--md-sys-shape-corner-large, 1rem) !important;
+    border-width: 1px !important;
+    border-color: var(--md-sys-color-outline-variant) !important;
+    background: var(--md-sys-color-surface-container-highest) !important;
+    padding: 0.5rem !important;
+  }
+
+  .ant-search-filter-modal__section #people-selection .pg-people-selection-item[class*='border-slate'] {
+    border-color: var(--md-sys-color-primary) !important;
+    background: var(--md-sys-color-primary-container) !important;
+  }
+
+  .ant-search-filter-modal__section .pg-people-selection--collapsed .pg-people-selection__grid {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ant-search-filter-modal__section .pg-people-selection--expanded .pg-people-selection__grid {
+    max-height: min(40vh, 18rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+
+  .ant-search-filter-modal__section .pg-people-selection__toggle {
+    padding-bottom: 0.125rem;
+  }
+
+  .pg-search-display-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .pg-search-display-options__item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    padding-block: 0.25rem;
+  }
+
+  .pg-search-display-options__input {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    margin: 0;
+    accent-color: var(--md-sys-color-primary);
+    cursor: pointer;
+  }
+
+  .pg-search-display-options__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+  }
+
+  @media (min-width: 640px) {
+    .pg-search-display-options {
+      flex-flow: row wrap;
+      gap: 0.5rem 1.25rem;
+    }
+
+    .pg-search-display-options__item {
+      min-height: auto;
+      padding-block: 0;
+    }
+  }
+
+  /* Search type radio — cột dọc trên mobile hẹp */
+  @media (max-width: 639px) {
+    .ant-search-filter-modal__section .my-2.flex.flex-wrap {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.375rem !important;
+    }
+  }
+}

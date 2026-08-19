@@ -10,6 +10,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/shared-components/side-bar/BottomInfo.svelte` | Ẩn Storage space & Server offline |
 | `lib/components/shared-components/side-bar/StorageSpace.svelte` | Sửa dark mode cho Storage space |
 | `lib/components/shared-components/search-bar/SearchBar.svelte` | Sửa dark mode cho badge Context trong search bar |
+| `lib/components/shared-components/search-bar/SearchDisplaySection.svelte` | Display options mobile: checkbox native, layout cột dọc |
+| `lib/components/shared-components/search-bar/SearchPeopleSection.svelte` | People filter: icon search tròn, expand không tràn border |
 | `lib/components/Image.svelte` | Không abort request thumbnail khi unmount (tránh 204 khi scroll/scrub) |
 | `lib/components/assets/thumbnail/Thumbnail.svelte` | Chờ `sessionKey`; `preload={!lazy}` theo `shouldLazyLoadThumbnails()`; giữ thumbhash |
 | `lib/components/assets/thumbnail/ImageThumbnail.svelte` | Retry thumbnail có delay (job Immich chưa xong); retry 2 lần trước khi hiện lỗi |
@@ -29,6 +31,8 @@ Mirror cấu trúc `$lib/` upstream để thay component mà không sửa upstre
 | `lib/components/asset-viewer/MobilePreviewStrip.svelte` | Filmstrip mobile: scroll ngang, highlight current, badge video, auto-center |
 | `lib/components/asset-viewer/preview-layout.ts` | `PREVIEW_STRIP_RADIUS=2` (swipe peek), `FILMSTRIP_RADIUS=6`, `buildFilmstrip` |
 | `lib/utils/viewer-scroll-lock.ts` | Khóa scroll trang khi viewer mở, restore khi đóng |
+| `lib/utils/modal-scroll-lock.ts` | Khóa scroll canvas phía sau modal (mobile shell) |
+| `lib/modals/SearchFilterModal.svelte` | Search options mobile: scroll lock + layout full-screen |
 | `lib/components/timeline/TimelineAssetViewer.svelte` | Load ảnh kề cho preview strip |
 | `lib/components/shared-components/gallery-viewer/GalleryViewer.svelte` | Cursor + nearby assets cho preview strip |
 | `lib/utils/file-uploader.ts` | Upload qua media URL; accept image/*,video/* trên mobile; validate MIME |
