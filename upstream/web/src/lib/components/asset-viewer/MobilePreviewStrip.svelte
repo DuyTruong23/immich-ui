@@ -95,7 +95,7 @@
     }, 120);
   };
 
-  const stopGestureBubble = (event: Event) => {
+  const isolateFromViewerSwipe = (event: Event) => {
     event.stopPropagation();
   };
 
@@ -113,14 +113,36 @@
   });
 </script>
 
+<style>
+  .mobile-preview-strip__thumb-skeleton {
+    animation: filmstrip-thumb-pulse 1.35s ease-in-out infinite;
+  }
+
+  @keyframes filmstrip-thumb-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+
+    50% {
+      opacity: 0.85;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-preview-strip__thumb-skeleton {
+      animation: none;
+      opacity: 0.65;
+    }
+  }
+</style>
+
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <nav
   bind:this={scroller}
   class="mobile-preview-strip pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pt-1.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
   aria-label="Filmstrip"
   onscroll={onScrollerScroll}
-  onpointerdown={stopGestureBubble}
-  ontouchstart={stopGestureBubble}
 >
   <div class="flex w-max min-w-full items-center justify-start gap-1.5 sm:justify-center">
     {#each assets as asset (asset.id)}
@@ -129,7 +151,7 @@
       {@const durationLabel = asset.isVideo ? formatDuration(asset.duration) : ''}
       <button
         type="button"
-        class="relative shrink-0 overflow-hidden rounded-md bg-white/10 transition-[box-shadow,opacity] duration-200 {isCurrent
+        class="relative shrink-0 overflow-hidden rounded-full bg-white/10 transition-[box-shadow,opacity] duration-200 {isCurrent
           ? 'z-10 opacity-100 ring-2 ring-white ring-offset-1 ring-offset-black/80'
           : 'opacity-70 hover:opacity-90'}"
         style:width="{THUMB_SIZE}px"
@@ -138,6 +160,7 @@
         aria-label={asset.isVideo
           ? `${asset.originalFileName ?? asset.id} (video${durationLabel ? `, ${durationLabel}` : ''})`
           : (asset.originalFileName ?? asset.id)}
+        onpointerdown={isolateFromViewerSwipe}
         onclick={() => {
           if (!isCurrent) {
             onSelect(asset);
@@ -150,10 +173,13 @@
             altText={asset.originalFileName}
             widthStyle="{THUMB_SIZE}px"
             heightStyle="{THUMB_SIZE}px"
-            curve
-            class="size-full rounded-md object-cover"
+            circle
+            class="size-full object-cover"
             preload={isCurrent || Math.abs(assets.findIndex((entry) => entry.id === asset.id) - assets.findIndex((entry) => entry.id === currentId)) <= 2}
           />
+        {:else}
+          <span class="mobile-preview-strip__thumb-skeleton absolute inset-0 rounded-full bg-white/15" aria-hidden="true"
+          ></span>
         {/if}
 
         {#if asset.isVideo}

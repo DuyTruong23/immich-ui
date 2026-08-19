@@ -198,25 +198,28 @@
   };
 
   export const scrollAfterNavigate = async () => {
-    if (timelineManager.viewportHeight === 0 || timelineManager.viewportWidth === 0) {
-      // this can happen if you do the following navigation order
-      // /photos?at=<id>, /photos/<id>, https://example.com, browser back, browser back
-      const rect = scrollableElement?.getBoundingClientRect();
-      if (rect) {
-        timelineManager.viewportHeight = rect.height;
-        timelineManager.viewportWidth = rect.width;
+    try {
+      if (timelineManager.viewportHeight === 0 || timelineManager.viewportWidth === 0) {
+        // this can happen if you do the following navigation order
+        // /photos?at=<id>, /photos/<id>, https://example.com, browser back, browser back
+        const rect = scrollableElement?.getBoundingClientRect();
+        if (rect) {
+          timelineManager.viewportHeight = rect.height;
+          timelineManager.viewportWidth = rect.width;
+        }
       }
+      const scrollTarget = assetViewerManager.gridScrollTarget?.at;
+      const scrolled = scrollTarget ? await scrollAndLoadAsset(scrollTarget) : false;
+      if (!scrolled) {
+        // if the asset is not found, scroll to the top
+        timelineManager.scrollTo(0);
+      } else if (scrollTarget) {
+        await tick();
+        focusAsset(scrollTarget);
+      }
+    } finally {
+      invisible = false;
     }
-    const scrollTarget = assetViewerManager.gridScrollTarget?.at;
-    const scrolled = scrollTarget ? await scrollAndLoadAsset(scrollTarget) : false;
-    if (!scrolled) {
-      // if the asset is not found, scroll to the top
-      timelineManager.scrollTo(0);
-    } else if (scrollTarget) {
-      await tick();
-      focusAsset(scrollTarget);
-    }
-    invisible = false;
   };
 
   // note: only modified once in afterNavigate()
