@@ -1,6 +1,7 @@
 import { getStoredAccessToken } from '$custom/hooks/access-token';
 import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
+import { isCookRoute } from '$custom/utils/cook-route';
 import {
   coerceFeatureUpdateItems,
   upsertFeatureUpdateRelease,
@@ -43,6 +44,10 @@ export const showFeatureUpdateModal = async ({
   userId,
   accountEmail,
 }: ShowFeatureUpdateModalOptions = {}) => {
+  if (typeof location !== 'undefined' && isCookRoute(location.pathname)) {
+    return;
+  }
+
   const preview = isUiDevMode();
   const peeked = peekFeatureUpdatesConfig();
   const identity = getAuthIdentity();

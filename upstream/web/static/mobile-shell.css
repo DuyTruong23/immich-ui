@@ -3,6 +3,13 @@
  * Active only when html[data-mobile-shell] is set from capability + breakpoint.
  */
 
+html[data-cook-page] .pg-gallery-fabs,
+html[data-cook-page] .pg-mobile-bottom-nav,
+html[data-cook-page] .pg-upload-panel-mobile,
+html[data-cook-page] .pg-mobile-hint {
+  display: none !important;
+}
+
 :root {
   --mobile-bottom-nav-height: 0px;
   --mobile-bottom-nav-offset: 0px;
