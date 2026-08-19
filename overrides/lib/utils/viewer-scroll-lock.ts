@@ -45,3 +45,16 @@ export const unlockViewerPageScroll = () => {
   clearInlineLock(body, documentElement);
   window.scrollTo(0, lockedScrollY);
 };
+
+/** Reset scroll lock when viewer closes — tránh lockCount lệch sau dismiss / video. */
+export const resetViewerPageScrollLock = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  lockCount = 0;
+  const { body, documentElement } = document;
+  body.classList.remove('asset-viewer-open');
+  clearInlineLock(body, documentElement);
+  window.scrollTo(0, lockedScrollY);
+};

@@ -125,6 +125,23 @@
 
   const loadCloseAssets = async (currentAsset: AssetResponseDto) => {
     const token = ++nearbyLoadToken;
+
+    // Giữ strip đầy đủ trong lúc tải lại — tránh fallback chỉ prev/current/next (3 ảnh).
+    const interimNearby = buildNearbyAssets(
+      currentAsset,
+      assetCursor.nextAsset,
+      assetCursor.previousAsset,
+      baseLaterItems,
+      baseEarlierItems,
+    );
+    if (interimNearby.length > 1) {
+      assetCursor = {
+        ...assetCursor,
+        current: currentAsset,
+        nearbyAssets: interimNearby,
+      };
+    }
+
     extraLaterItems = [];
     extraEarlierItems = [];
     const [nextAsset, previousAsset, laterItems, earlierItems] = await Promise.all([
@@ -218,12 +235,20 @@
 
   const handleClose = async (assetId: string) => {
     invisible = true;
+    assetViewerManager.showAssetViewer(false);
     assetViewerManager.gridScrollTarget = { at: assetId };
-    await navigate({
-      targetRoute: 'current',
-      assetId: null,
-      assetGridRouteSearchParams: assetViewerManager.gridScrollTarget,
-    });
+    try {
+      await navigate({
+        targetRoute: 'current',
+        assetId: null,
+        assetGridRouteSearchParams: assetViewerManager.gridScrollTarget,
+      });
+    } finally {
+      // Fallback: timeline phải tương tác lại nếu scrollAfterNavigate không chạy (vuốt đóng sau video).
+      setTimeout(() => {
+        invisible = false;
+      }, 2500);
+    }
   };
 
   const handleRemoveFromAlbum = async (assetIds: string[]) => {

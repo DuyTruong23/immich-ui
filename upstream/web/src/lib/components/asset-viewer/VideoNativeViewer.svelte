@@ -574,7 +574,7 @@
   };
 
   const VIDEO_SWIPE_BLOCK =
-    'media-control-bar, immich-time-range, media-settings-menu, media-volume-range, .volume-wrapper, media-play-button, media-mute-button, media-fullscreen-button, media-settings-menu-button, media-time-display, .video-mobile-chrome';
+    'media-control-bar, immich-time-range, media-settings-menu, media-volume-range, .volume-wrapper, media-play-button, media-mute-button, media-fullscreen-button, media-settings-menu-button, media-time-display, .video-mobile-chrome, .mobile-preview-strip, .mobile-preview-strip-host';
 
   let isSeeking = $state(false);
 

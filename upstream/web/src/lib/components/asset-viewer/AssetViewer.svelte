@@ -58,9 +58,10 @@
   import SlideshowMetadataOverlay from './SlideshowMetadataOverlay.svelte';
   import SwipeBackEdge from '$lib/components/shared-components/SwipeBackEdge.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
-  import { lockViewerPageScroll, unlockViewerPageScroll } from '$lib/utils/viewer-scroll-lock';
+  import { lockViewerPageScroll, resetViewerPageScrollLock, unlockViewerPageScroll } from '$lib/utils/viewer-scroll-lock';
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
-  import { buildFilmstrip, type PreviewStripItem } from './preview-layout';
+  import MobilePreviewStripSkeleton from './MobilePreviewStripSkeleton.svelte';
+  import { type PreviewStripItem } from './preview-layout';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
@@ -114,14 +115,6 @@
   const stackThumbnailSize = 60;
   const stackSelectedThumbnailSize = 65;
 
-  const toFilmstripItem = (entry: AssetResponseDto): PreviewStripItem => ({
-    id: entry.id,
-    thumbhash: entry.thumbhash,
-    originalFileName: entry.originalFileName,
-    isVideo: entry.type === AssetTypeEnum.Video,
-    duration: entry.duration ?? null,
-  });
-
   let previewStackedAsset: AssetResponseDto | undefined = $state();
   let stack: StackResponseDto | null = $state(null);
 
@@ -136,13 +129,17 @@
       !assetViewerManager.isShowEditor &&
       !assetViewerManager.isFaceEditMode,
   );
-  const showMobilePreviewStrip = $derived(
+  const filmstripAssets = $derived(cursor.nearbyAssets ?? []);
+  const showMobileFilmstripHost = $derived(
     isMobileViewer &&
       $slideshowState === SlideshowState.None &&
       showNavigation &&
       !assetViewerManager.isShowEditor &&
-      !assetViewerManager.isFaceEditMode &&
-      Boolean(previousAsset || nextAsset || (cursor.nearbyAssets && cursor.nearbyAssets.length > 1)),
+      !assetViewerManager.isFaceEditMode,
+  );
+  const showMobilePreviewStrip = $derived(showMobileFilmstripHost && filmstripAssets.length > 1);
+  const showMobilePreviewStripSkeleton = $derived(
+    showMobileFilmstripHost && filmstripAssets.length <= 1 && Boolean(onFilmstripNearEdge),
   );
   let sharedLink = getSharedLink();
   let fullscreenElement = $state<Element>();
@@ -225,15 +222,19 @@
   onDestroy(() => {
     activityManager.reset();
     assetViewerManager.resetPanelState();
-    syncAssetViewerOpenClass(false);
+    clearGestureWait();
+    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    resetViewerPageScrollLock();
     preloadManager.destroy();
     videoPreloadManager.destroy();
     playbackStateManager.reset();
   });
 
-  const closeViewer = () => {
-    unlockViewerPageScroll();
-    onClose?.(asset.id);
+  const closeViewer = (assetId = asset.id) => {
+    clearGestureWait();
+    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    resetViewerPageScrollLock();
+    onClose?.(assetId);
   };
 
   const closeEditor = async () => {
@@ -516,8 +517,11 @@
   const GESTURE_WAIT_TIMEOUT_MS = 8000;
   const waitsForGestureMediaReady = (kind: typeof viewerKind) =>
     kind === 'PhotoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer' || kind === 'VideoViewer';
+  const isVideoViewerKind = (kind: typeof viewerKind) =>
+    kind === 'VideoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer';
   let pendingGestureAssetId = $state<string | null>(null);
   let showGestureSpinner = $state(false);
+  const showFullScreenGestureSpinner = $derived(showGestureSpinner && !isVideoViewerKind(viewerKind));
 
   const beginGestureWait = (targetId: string | undefined) => {
     if (!targetId || targetId === asset.id) {
@@ -641,12 +645,7 @@
         preAction={handlePreAction}
         onAction={handleAction}
         {onUndoDelete}
-        onClose={onClose
-          ? () => {
-              unlockViewerPageScroll();
-              onClose(stack?.primaryAssetId ?? asset.id);
-            }
-          : undefined}
+        onClose={onClose ? () => closeViewer(stack?.primaryAssetId ?? asset.id) : undefined}
         {onRemoveFromAlbum}
         {isPlayingOriginalVideo}
         {setPlayOriginalVideo}
@@ -791,32 +790,32 @@
     </div>
   {/if}
 
-  {#if showMobilePreviewStrip}
+  {#if showMobilePreviewStrip || showMobilePreviewStripSkeleton}
     <div
       class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack &&
       withStacked
         ? 'mb-16'
         : ''}"
     >
-      <MobilePreviewStrip
-        assets={cursor.nearbyAssets?.length
-          ? cursor.nearbyAssets
-          : buildFilmstrip({
-              current: toFilmstripItem(asset),
-              previous: previousAsset ? toFilmstripItem(previousAsset) : undefined,
-              next: nextAsset ? toFilmstripItem(nextAsset) : undefined,
-            })}
-        currentId={asset.id}
-        onNearEdge={onFilmstripNearEdge}
-        onSelect={(selected) => {
-          beginGestureWait(selected.id);
-          void navigate({ targetRoute: 'current', assetId: selected.id });
-        }}
-      />
+      {#if showMobilePreviewStrip}
+        <MobilePreviewStrip
+          assets={filmstripAssets}
+          currentId={asset.id}
+          onNearEdge={onFilmstripNearEdge}
+          onSelect={(selected) => {
+            if (!selected.isVideo) {
+              beginGestureWait(selected.id);
+            }
+            void navigate({ targetRoute: 'current', assetId: selected.id });
+          }}
+        />
+      {:else}
+        <MobilePreviewStripSkeleton />
+      {/if}
     </div>
   {/if}
 
-  <FullScreenLoadingOverlay visible={showGestureSpinner} />
+  <FullScreenLoadingOverlay visible={showFullScreenGestureSpinner} />
 
   {#if stack && withStacked && !assetViewerManager.isShowEditor && $slideshowState === SlideshowState.None}
     {@const stackedAssets = stack.assets}
