@@ -2,8 +2,9 @@
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
   import UserAvatar from '$lib/components/shared-components/UserAvatar.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
+  import AvatarEditModal from '$lib/modals/AvatarEditModal.svelte';
   import { Route } from '$lib/route';
-  import { Icon } from '@immich/ui';
+  import { Icon, modalManager } from '@immich/ui';
   import {
     mdiAccountMultipleOutline,
     mdiAccountOutline,
@@ -13,6 +14,7 @@
     mdiImageAlbum,
     mdiLink,
     mdiLockOutline,
+    mdiLogout,
     mdiMagnify,
     mdiMapOutline,
     mdiShieldAccountOutline,
@@ -88,7 +90,14 @@
   <div class="pg-more-page">
     {#if authManager.authenticated}
       <div class="pg-more-account">
-        <UserAvatar user={authManager.user} size="lg" noTitle />
+        <button
+          type="button"
+          class="pg-more-account__avatar"
+          aria-label={$t('edit_avatar')}
+          onclick={() => modalManager.show(AvatarEditModal)}
+        >
+          <UserAvatar user={authManager.user} size="lg" noTitle interactive />
+        </button>
         <div class="pg-more-account__text">
           <p class="pg-more-account__name">{authManager.user.name}</p>
           <p class="pg-more-account__email">{authManager.user.email}</p>
@@ -111,5 +120,16 @@
         </div>
       </section>
     {/each}
+
+    {#if authManager.authenticated}
+      <div class="pg-more-list pg-more-logout">
+        <a href={Route.logout()} class="pg-more-list__item pg-more-list__item--logout">
+          <span class="pg-more-list__icon" aria-hidden="true">
+            <Icon icon={mdiLogout} size="22" />
+          </span>
+          <span class="pg-more-list__label">{$t('sign_out')}</span>
+        </a>
+      </div>
+    {/if}
   </div>
 </UserPageLayout>
