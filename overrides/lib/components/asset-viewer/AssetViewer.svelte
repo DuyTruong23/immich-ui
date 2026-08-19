@@ -7,6 +7,8 @@
   import PreviousAssetAction from '$lib/components/asset-viewer/actions/PreviousAssetAction.svelte';
   import AssetViewerNavBar from '$lib/components/asset-viewer/AssetViewerNavBar.svelte';
   import { preloadManager } from '$lib/components/asset-viewer/PreloadManager.svelte';
+  import { videoPreloadManager } from '$lib/components/asset-viewer/VideoPreloadManager.svelte';
+  import { playbackStateManager } from '$lib/managers/playback-state.svelte';
   import OnEvents from '$lib/components/OnEvents.svelte';
   import { AssetAction, ProjectionType, timeBeforeShowLoadingSpinner } from '$lib/constants';
   import { activityManager } from '$lib/managers/activity-manager.svelte';
@@ -215,6 +217,8 @@
     assetViewerManager.resetPanelState();
     syncAssetViewerOpenClass(false);
     preloadManager.destroy();
+    videoPreloadManager.destroy();
+    playbackStateManager.reset();
   });
 
   const closeViewer = () => {
@@ -242,6 +246,7 @@
     }
 
     preloadManager.cancelBeforeNavigation(order);
+    videoPreloadManager.cancelBeforeNavigation(order);
 
     if (tracker.isActive()) {
       return;
@@ -450,6 +455,7 @@
     if (!lastCursor) {
       preloadManager.initializePreloads(cursor, sharedLink);
     }
+    videoPreloadManager.syncWithCursor(cursor, isPlayingOriginalVideo, isMobileViewer);
     lastCursor = cursor;
   });
 

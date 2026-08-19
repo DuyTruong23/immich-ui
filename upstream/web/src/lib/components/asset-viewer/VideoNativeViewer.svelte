@@ -3,20 +3,29 @@
   import PhotoBlurBackdrop from '$lib/components/asset-viewer/PhotoBlurBackdrop.svelte';
   import PhotoSwipeTrack from '$lib/components/asset-viewer/PhotoSwipeTrack.svelte';
   import VideoRemoteViewer from '$lib/components/asset-viewer/VideoRemoteViewer.svelte';
+  import { videoPreloadManager } from '$lib/components/asset-viewer/VideoPreloadManager.svelte';
   import { assetViewerFadeDuration } from '$lib/constants';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { castManager } from '$lib/managers/cast-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { mediaCapabilitiesManager } from '$lib/managers/media-capabilities-manager.svelte';
+  import { playbackStateManager } from '$lib/managers/playback-state.svelte';
   import { ocrManager } from '$lib/stores/ocr.svelte';
   import { autoPlayVideo, lang, loopVideo as loopVideoPreference } from '$lib/stores/preferences.store';
   import { SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
-  import { getAssetHlsSessionUrl, getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
+  import { getAssetHlsSessionUrl, getAssetMediaUrl } from '$lib/utils';
   import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
-  import { getNetworkQuality, motionDuration, networkManager } from '$lib/utils/mobile-performance.svelte';
-  import { AssetMediaSize, getBaseUrl, type AssetResponseDto } from '@immich/sdk';
+  import {
+    createVideoDiagnostics,
+    getBufferedAhead,
+    isInstantPlayReady,
+    logVideoDiagnostics,
+  } from '$lib/utils/video-buffer-utils';
+  import { resolveVideoSource } from '$lib/utils/video-playback-resolver';
+  import { motionDuration, networkManager } from '$lib/utils/mobile-performance.svelte';
+  import { AssetMediaSize, AssetTypeEnum, getBaseUrl, type AssetResponseDto } from '@immich/sdk';
   import { Icon, LoadingSpinner, shortcuts } from '@immich/ui';
   import {
     mdiCheck,
@@ -91,7 +100,22 @@
     onMediaReady,
   }: Props = $props();
 
-  let videoPlayer: HTMLVideoElement | undefined = $state();
+  let videoBuffer0: HTMLVideoElement | undefined = $state();
+  let videoBuffer1: HTMLVideoElement | undefined = $state();
+  let bufferIndex = $state<0 | 1>(0);
+  let bufferLoadedKey0 = $state<string | undefined>();
+  let bufferLoadedKey1 = $state<string | undefined>();
+  const getBufferEl = (index: 0 | 1) => (index === 0 ? videoBuffer0 : videoBuffer1);
+  const getBufferLoadedKey = (index: 0 | 1) => (index === 0 ? bufferLoadedKey0 : bufferLoadedKey1);
+  const setBufferLoadedKey = (index: 0 | 1, key: string | undefined) => {
+    if (index === 0) {
+      bufferLoadedKey0 = key;
+    } else {
+      bufferLoadedKey1 = key;
+    }
+  };
+  let videoPlayer = $derived(getBufferEl(bufferIndex));
+  const inactiveBufferIndex = $derived((bufferIndex === 0 ? 1 : 0) as 0 | 1);
   let isLoading = $state(true);
   let hlsFallback = $state(false);
   let useSameOriginFallback = $state(false);
@@ -101,18 +125,17 @@
   const mediaAuthReady = $derived(
     !isCrossOriginMediaBase() || authManager.isSharedLink || 'sessionKey' in authManager.params,
   );
-  let resolvedFileUrl = $derived.by(() => {
+  let resolvedSource = $derived.by(() => {
     networkManager.quality;
-    if (featureFlagsManager.value.realtimeTranscoding && !hlsFallback && !isMobileDevice) {
-      return getAssetHlsUrl(assetId);
-    }
-
-    if (playOriginalVideo && getNetworkQuality() === 'fast') {
-      return getAssetMediaUrl({ id: assetId, size: AssetMediaSize.Original, cacheKey });
-    }
-
-    return getAssetPlaybackUrl({ id: assetId, cacheKey });
+    return resolveVideoSource({
+      assetId,
+      cacheKey,
+      playOriginalVideo,
+      isMobileDevice,
+      hlsFallback,
+    });
   });
+  let resolvedFileUrl = $derived(resolvedSource.url);
   let assetFileUrl = $derived.by(() => {
     if (!useSameOriginFallback) {
       return resolvedFileUrl;
@@ -131,6 +154,48 @@
   let loadedSourceKey: string | undefined;
   let rebuildCount = 0;
   let autoplayAttempted = false;
+  let waitingTimer: ReturnType<typeof setTimeout> | undefined;
+  let diagnosticsStart = 0;
+  let diagnostics = $state<ReturnType<typeof createVideoDiagnostics> | undefined>();
+  let playbackSyncCleanup: (() => void) | undefined;
+
+  const LOADING_DEBOUNCE_MS = 350;
+  const VIDEO_CLASS = 'h-full object-contain touch-pinch-zoom';
+  const posterUrl = $derived(getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey }));
+
+  const clearWaitingTimer = () => {
+    if (waitingTimer) {
+      clearTimeout(waitingTimer);
+      waitingTimer = undefined;
+    }
+  };
+
+  const syncPlaybackFromVideo = (video: HTMLVideoElement) => {
+    playbackStateManager.syncFrom(video);
+  };
+
+  const wirePlaybackSync = (video: HTMLVideoElement) => {
+    playbackSyncCleanup?.();
+    const onSync = () => syncPlaybackFromVideo(video);
+    video.addEventListener('volumechange', onSync);
+    video.addEventListener('ratechange', onSync);
+    playbackSyncCleanup = () => {
+      video.removeEventListener('volumechange', onSync);
+      video.removeEventListener('ratechange', onSync);
+    };
+  };
+
+  const showLoadingDebounced = () => {
+    clearWaitingTimer();
+    waitingTimer = setTimeout(() => {
+      isLoading = true;
+    }, LOADING_DEBOUNCE_MS);
+  };
+
+  const hideLoading = () => {
+    clearWaitingTimer();
+    isLoading = false;
+  };
 
   const MAX_REBUILDS = 1;
   const SESSION_ID_REGEX = /\/video\/stream\/([0-9a-f-]{36})\//;
@@ -256,33 +321,95 @@
   });
 
   $effect(() => {
-    // reactive on `assetFileUrl` changes
-    if (!videoPlayer || !assetFileUrl || !mediaAuthReady) {
+    // reactive on `assetFileUrl` / asset changes
+    if (!assetFileUrl || !mediaAuthReady) {
       return;
     }
 
     const sourceKey = `${assetId}:${assetFileUrl}`;
-    if (sourceKey === loadedSourceKey) {
+    const inactive = inactiveBufferIndex;
+
+    if (getBufferLoadedKey(inactive) === sourceKey) {
+      const inactiveEl = getBufferEl(inactive);
+      if (inactiveEl) {
+        inactiveEl.pause();
+        bufferIndex = inactive;
+        loadedSourceKey = sourceKey;
+        hasFocused = false;
+        rebuildCount = 0;
+        autoplayAttempted = false;
+        diagnosticsStart = performance.now();
+        diagnostics = createVideoDiagnostics(assetId, resolvedSource.kind);
+        diagnostics.preloadStatus = 'buffer-hit';
+        wirePlaybackSync(inactiveEl);
+        playbackStateManager.applyTo(inactiveEl, isMobileDevice);
+        isLoading = !isInstantPlayReady(inactiveEl);
+        if (isInstantPlayReady(inactiveEl)) {
+          notifyMediaReady();
+        }
+        void tryAutoplay(inactiveEl);
+        return;
+      }
+    }
+
+    const activeEl = getBufferEl(bufferIndex);
+    if (!activeEl) {
+      return;
+    }
+
+    if (sourceKey === loadedSourceKey && getBufferLoadedKey(bufferIndex) === sourceKey) {
       return;
     }
 
     releaseSession();
-    videoPlayer.pause();
+    activeEl.pause();
     loadedSourceKey = sourceKey;
+    setBufferLoadedKey(bufferIndex, sourceKey);
     hasFocused = false;
     rebuildCount = 0;
     autoplayAttempted = false;
-    isLoading = true;
+    diagnosticsStart = performance.now();
+    diagnostics = createVideoDiagnostics(assetId, resolvedSource.kind);
+    diagnostics.preloadStatus = videoPreloadManager.isReady(assetId) ? 'pool-warm' : 'miss';
 
-    if (isHlsElement(videoPlayer) && hlsConfig) {
-      videoPlayer.config = hlsConfig;
-      videoPlayer.src = assetFileUrl;
-      const el = videoPlayer;
-      queueMicrotask(() => wireHlsListeners(el, assetId));
-    } else {
-      videoPlayer.src = assetFileUrl;
-      videoPlayer.load();
+    isLoading = true;
+    playbackStateManager.applyTo(activeEl, isMobileDevice);
+    wirePlaybackSync(activeEl);
+    assignSourceToVideo(activeEl, assetFileUrl);
+  });
+
+  $effect(() => {
+    if (useHlsPlayback || !nextAsset || nextAsset.type !== AssetTypeEnum.Video) {
+      return;
     }
+
+    const inactive = inactiveBufferIndex;
+    const inactiveEl = getBufferEl(inactive);
+    if (!inactiveEl) {
+      return;
+    }
+
+    const nextSource = resolveVideoSource({
+      assetId: nextAsset.id,
+      cacheKey: nextAsset.thumbhash,
+      playOriginalVideo,
+      isMobileDevice,
+    });
+
+    if (nextSource.usesHls) {
+      return;
+    }
+
+    const nextKey = `${nextAsset.id}:${nextSource.url}`;
+    if (getBufferLoadedKey(inactive) === nextKey) {
+      return;
+    }
+
+    setBufferLoadedKey(inactive, nextKey);
+    inactiveEl.preload = 'auto';
+    inactiveEl.muted = true;
+    inactiveEl.src = nextSource.url;
+    inactiveEl.load();
   });
 
   const onPagehide = (event: PageTransitionEvent) => {
@@ -297,27 +424,46 @@
   });
 
   onDestroy(() => {
+    clearWaitingTimer();
+    playbackSyncCleanup?.();
     releaseSession();
     loadedSourceKey = undefined;
-    if (videoPlayer) {
-      videoPlayer.pause();
-      videoPlayer.src = '';
-      videoPlayer.load();
+    for (const el of [videoBuffer0, videoBuffer1]) {
+      if (!el) {
+        continue;
+      }
+      syncPlaybackFromVideo(el);
+      el.pause();
+      el.src = '';
+      el.load();
     }
   });
+
+  const isActiveVideo = (video: HTMLVideoElement) => video === getBufferEl(bufferIndex);
 
   const notifyMediaReady = () => {
     onMediaReady?.();
   };
 
-  const handleLoadedMetadata = () => {
-    isLoading = false;
+  const handleLoadedMetadata = (event: Event) => {
+    const video = event.currentTarget as HTMLVideoElement;
+    if (!isActiveVideo(video)) {
+      return;
+    }
+    if (diagnostics && diagnosticsStart) {
+      diagnostics.timeToMetadataMs = performance.now() - diagnosticsStart;
+    }
+    hideLoading();
     notifyMediaReady();
   };
 
-  const handleLoadedData = () => {
+  const handleLoadedData = (event: Event) => {
+    const video = event.currentTarget as HTMLVideoElement;
+    if (!isActiveVideo(video)) {
+      return;
+    }
     if (isMobileDevice) {
-      isLoading = false;
+      hideLoading();
       notifyMediaReady();
     }
   };
@@ -330,39 +476,86 @@
       return;
     }
 
-    isLoading = false;
+    hideLoading();
     notifyMediaReady();
   };
 
-  const handleCanPlay = async (video: HTMLVideoElement) => {
+  const tryAutoplay = async (video: HTMLVideoElement) => {
     if (!$autoPlayVideo) {
-      isLoading = false;
+      hideLoading();
       notifyMediaReady();
       return;
     }
 
     if (autoplayAttempted) {
-      isLoading = false;
+      hideLoading();
       notifyMediaReady();
       return;
     }
 
     autoplayAttempted = true;
+    playbackStateManager.applyTo(video, isMobileDevice);
 
     try {
-      if (isMobileDevice && !video.muted) {
-        video.muted = true;
-      }
       await video.play();
       onVideoStarted();
+      if (diagnostics && diagnosticsStart) {
+        diagnostics.timeToFirstPlayMs = performance.now() - diagnosticsStart;
+        diagnostics.bufferedSeconds = getBufferedAhead(video);
+        logVideoDiagnostics(diagnostics);
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'NotAllowedError') {
         await tryForceMutedPlay(video);
         return;
       }
     } finally {
-      isLoading = false;
+      hideLoading();
       notifyMediaReady();
+    }
+  };
+
+  const assignSourceToVideo = (video: HTMLVideoElement, url: string) => {
+    if (isHlsElement(video) && hlsConfig) {
+      video.config = hlsConfig;
+      video.src = url;
+      const el = video;
+      queueMicrotask(() => wireHlsListeners(el, assetId));
+    } else {
+      video.src = url;
+      video.load();
+    }
+  };
+
+  const handleCanPlay = async (video: HTMLVideoElement) => {
+    if (!isActiveVideo(video)) {
+      return;
+    }
+    await tryAutoplay(video);
+  };
+
+  const handleWaiting = () => {
+    if (!videoPlayer?.paused) {
+      showLoadingDebounced();
+    }
+  };
+
+  const handlePlaying = () => {
+    hideLoading();
+  };
+
+  const handleStalled = () => {
+    if (diagnostics) {
+      diagnostics.stalledEvents++;
+    }
+    if (!videoPlayer?.paused) {
+      showLoadingDebounced();
+    }
+  };
+
+  const handleProgress = () => {
+    if (diagnostics && videoPlayer) {
+      diagnostics.bufferedSeconds = getBufferedAhead(videoPlayer);
     }
   };
 
@@ -429,6 +622,23 @@
       videoPlayer?.pause();
     }
   });
+
+  $effect(() => {
+    if (!videoPlayer) {
+      return;
+    }
+    playbackStateManager.applyTo(videoPlayer, isMobileDevice);
+    wirePlaybackSync(videoPlayer);
+  });
+
+  const onVideoPlaying = (e: Event) => {
+    handlePlaying();
+    if (hasFocused) {
+      return;
+    }
+    (e.currentTarget as HTMLElement).focus();
+    hasFocused = true;
+  };
 
   // The time is only refreshed on HLS fragment decode by default,
   // so manually emit events on seek to update it immediately.
@@ -502,63 +712,80 @@
         >
           {#if useHlsPlayback}
             <hls-video
-              bind:this={videoPlayer}
+              bind:this={videoBuffer0}
               slot="media"
               loop={$loopVideoPreference && loopVideo}
               autoplay={$autoPlayVideo}
-              muted={isMobileDevice}
+              muted={playbackStateManager.initialMutedForAutoplay(isMobileDevice)}
               preload={videoPreload}
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="h-full object-contain touch-pinch-zoom"
+              class={VIDEO_CLASS}
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}
               oncanplay={(e: Event) => handleCanPlay(e.currentTarget as HTMLVideoElement)}
+              onwaiting={handleWaiting}
+              onstalled={handleStalled}
+              onprogress={handleProgress}
               onended={onVideoEnded}
               onseeking={onSeeking}
               onseeked={onSeeked}
-              onplaying={(e: Event) => {
-                if (hasFocused) {
-                  return;
-                }
-
-                (e.currentTarget as HTMLElement).focus();
-                hasFocused = true;
-              }}
+              onplaying={onVideoPlaying}
               onclose={onClose}
-              poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
+              poster={posterUrl}
             ></hls-video>
           {:else}
             <video
-              bind:this={videoPlayer}
-              slot="media"
+              bind:this={videoBuffer0}
+              slot={bufferIndex === 0 ? 'media' : undefined}
               loop={$loopVideoPreference && loopVideo}
               autoplay={$autoPlayVideo}
-              muted={isMobileDevice}
+              muted={playbackStateManager.initialMutedForAutoplay(isMobileDevice)}
               preload={videoPreload}
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="h-full object-contain touch-pinch-zoom"
+              class="{VIDEO_CLASS}{bufferIndex === 0 ? '' : ' pointer-events-none fixed h-0 w-0 opacity-0'}"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}
               oncanplay={(e) => handleCanPlay(e.currentTarget)}
+              onwaiting={handleWaiting}
+              onstalled={handleStalled}
+              onprogress={handleProgress}
               onended={onVideoEnded}
               onseeking={onSeeking}
               onseeked={onSeeked}
-              onplaying={(e) => {
-                if (hasFocused) {
-                  return;
-                }
-
-                e.currentTarget.focus();
-                hasFocused = true;
-              }}
+              onplaying={onVideoPlaying}
               onclose={onClose}
-              poster={getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey })}
+              poster={posterUrl}
+            ></video>
+            <video
+              bind:this={videoBuffer1}
+              slot={bufferIndex === 1 ? 'media' : undefined}
+              loop={$loopVideoPreference && loopVideo}
+              autoplay={$autoPlayVideo}
+              muted={playbackStateManager.initialMutedForAutoplay(isMobileDevice)}
+              preload="auto"
+              disablePictureInPicture
+              playsinline
+              controlslist="nodownload nofullscreen noremoteplayback"
+              class="{VIDEO_CLASS}{bufferIndex === 1 ? '' : ' pointer-events-none fixed h-0 w-0 opacity-0'}"
+              onloadedmetadata={handleLoadedMetadata}
+              onloadeddata={handleLoadedData}
+              onerror={handleVideoError}
+              oncanplay={(e) => handleCanPlay(e.currentTarget)}
+              onwaiting={handleWaiting}
+              onstalled={handleStalled}
+              onprogress={handleProgress}
+              onended={onVideoEnded}
+              onseeking={onSeeking}
+              onseeked={onSeeked}
+              onplaying={onVideoPlaying}
+              onclose={onClose}
+              poster={posterUrl}
             ></video>
           {/if}
 
