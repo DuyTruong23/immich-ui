@@ -12,12 +12,10 @@
   import { handlePromiseError } from '$lib/utils';
   import { updateStackedAssetInTimeline, updateUnstackedAssetInTimeline } from '$lib/utils/actions';
   import { navigateToAsset } from '$lib/utils/asset-utils';
-  import { handleErrorAsync } from '$lib/utils/handle-error';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { type AlbumResponseDto, type AssetResponseDto, type PersonResponseDto, getAssetInfo } from '@immich/sdk';
   import { onDestroy, onMount } from 'svelte';
-  import { t } from 'svelte-i18n';
 
   interface Props {
     timelineManager: TimelineManager;
@@ -40,11 +38,13 @@
     person,
   }: Props = $props();
 
-  const getAsset = (id: string) => {
-    return handleErrorAsync(
-      () => assetCacheManager.getAsset({ ...authManager.params, id }),
-      $t('error_retrieving_asset_information'),
-    );
+  const prefetchNeighborAsset = async (id: string) => {
+    try {
+      return await assetCacheManager.getAsset({ ...authManager.params, id });
+    } catch {
+      // Prefetch kề cho filmstrip — lỗi im lặng, tránh spam toast.
+      return undefined;
+    }
   };
 
   const getNextAsset = async (currentAsset: AssetResponseDto) => {
@@ -52,7 +52,7 @@
     if (!earlierTimelineAsset) {
       return;
     }
-    return getAsset(earlierTimelineAsset.id);
+    return prefetchNeighborAsset(earlierTimelineAsset.id);
   };
 
   const getPreviousAsset = async (currentAsset: AssetResponseDto) => {
@@ -60,7 +60,7 @@
     if (!laterTimelineAsset) {
       return;
     }
-    return getAsset(laterTimelineAsset.id);
+    return prefetchNeighborAsset(laterTimelineAsset.id);
   };
 
   const STRIP_RADIUS = FILMSTRIP_RADIUS;
@@ -86,11 +86,37 @@
   let baseEarlierItems = $state<PreviewStripItem[]>([]);
   let expandToken = 0;
 
-  const collectStripSide = async (currentId: string, direction: 'earlier' | 'later', skipIds: Set<string>) => {
+  const iterateTimelineFromAsset = async function* (
+    anchor: AssetResponseDto | { id: string },
+    direction: 'earlier' | 'later',
+  ) {
+    const timelineMonth = await timelineManager.findTimelineMonthForAsset(anchor);
+    if (!timelineMonth) {
+      return;
+    }
+
+    const timelineAsset = timelineMonth.findAssetById(anchor);
+    if (!timelineAsset) {
+      return;
+    }
+
+    const timelineDay = timelineMonth.findTimelineDayForAsset(timelineAsset);
+    yield* timelineManager.assetsIterator({
+      startTimelineMonth: timelineMonth,
+      startTimelineDay: timelineDay,
+      startAsset: timelineAsset,
+      direction,
+    });
+  };
+
+  const collectStripSide = async (
+    currentAsset: AssetResponseDto,
+    direction: 'earlier' | 'later',
+    skipIds: Set<string>,
+  ) => {
     const items: PreviewStripItem[] = [];
-    const start = { id: currentId } as TimelineAsset;
-    for await (const asset of timelineManager.assetsIterator({ startAsset: start, direction })) {
-      if (asset.id === currentId || skipIds.has(asset.id)) {
+    for await (const asset of iterateTimelineFromAsset(currentAsset, direction)) {
+      if (asset.id === currentAsset.id || skipIds.has(asset.id)) {
         continue;
       }
       items.push(toStripItem(asset));
@@ -122,24 +148,27 @@
     nextAsset: undefined,
   });
   let nearbyLoadToken = 0;
+  let lastNearbyLoadId = $state<string | undefined>();
 
   const loadCloseAssets = async (currentAsset: AssetResponseDto) => {
     const token = ++nearbyLoadToken;
 
-    // Giữ strip đầy đủ trong lúc tải lại — tránh fallback chỉ prev/current/next (3 ảnh).
-    const interimNearby = buildNearbyAssets(
-      currentAsset,
-      assetCursor.nextAsset,
-      assetCursor.previousAsset,
-      baseLaterItems,
-      baseEarlierItems,
-    );
-    if (interimNearby.length > 1) {
-      assetCursor = {
-        ...assetCursor,
-        current: currentAsset,
-        nearbyAssets: interimNearby,
-      };
+    // Chỉ giữ strip cũ khi refresh cùng asset — tránh lẫn neighbor của ảnh trước.
+    if (assetCursor.current.id === currentAsset.id) {
+      const interimNearby = buildNearbyAssets(
+        currentAsset,
+        assetCursor.nextAsset,
+        assetCursor.previousAsset,
+        baseLaterItems,
+        baseEarlierItems,
+      );
+      if (interimNearby.length > 1) {
+        assetCursor = {
+          ...assetCursor,
+          current: currentAsset,
+          nearbyAssets: interimNearby,
+        };
+      }
     }
 
     extraLaterItems = [];
@@ -147,8 +176,8 @@
     const [nextAsset, previousAsset, laterItems, earlierItems] = await Promise.all([
       getNextAsset(currentAsset),
       getPreviousAsset(currentAsset),
-      collectStripSide(currentAsset.id, 'later', new Set()),
-      collectStripSide(currentAsset.id, 'earlier', new Set()),
+      collectStripSide(currentAsset, 'later', new Set()),
+      collectStripSide(currentAsset, 'earlier', new Set()),
     ]);
 
     if (token !== nearbyLoadToken) {
@@ -179,8 +208,7 @@
         : (assetCursor.nearbyAssets?.at(-1)?.id ?? currentAsset.id);
 
     const batch: PreviewStripItem[] = [];
-    const start = { id: anchorId } as TimelineAsset;
-    for await (const asset of timelineManager.assetsIterator({ startAsset: start, direction })) {
+    for await (const asset of iterateTimelineFromAsset({ id: anchorId }, direction)) {
       if (existingIds.has(asset.id)) {
         continue;
       }
@@ -218,9 +246,11 @@
   //TODO: replace this with async derived in svelte 6
   $effect(() => {
     const asset = assetViewerManager.asset;
-    if (asset) {
-      handlePromiseError(loadCloseAssets(asset));
+    if (!asset || !assetViewerManager.isViewing || asset.id === lastNearbyLoadId) {
+      return;
     }
+    lastNearbyLoadId = asset.id;
+    handlePromiseError(loadCloseAssets(asset));
   });
 
   const handleRandom = async () => {
@@ -235,7 +265,6 @@
 
   const handleClose = async (assetId: string) => {
     invisible = true;
-    assetViewerManager.showAssetViewer(false);
     assetViewerManager.gridScrollTarget = { at: assetId };
     try {
       await navigate({
@@ -375,6 +404,8 @@
   });
 
   onDestroy(() => {
+    nearbyLoadToken += 1;
+    lastNearbyLoadId = undefined;
     assetCacheManager.invalidate();
   });
 </script>
