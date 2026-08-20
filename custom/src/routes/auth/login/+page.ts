@@ -1,6 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
-import { COOK_PATH } from '$custom/utils/cook-route';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
 import { Route } from '$lib/route';
@@ -10,7 +9,7 @@ import type { PageLoad } from './$types';
 export const load = (async ({ parent, url }) => {
   await parent();
 
-  const continueUrl = Route.continue(url.searchParams.get('continue'), COOK_PATH);
+  const continueUrl = Route.continue(url.searchParams.get('continue'), Route.photos());
   const uiDevMode = isUiDevMode();
 
   if (authManager.authenticated) {

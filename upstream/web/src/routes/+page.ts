@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit';
-import { COOK_PATH } from '$custom/utils/cook-route';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
 import { Route } from '$lib/route';
@@ -20,10 +19,11 @@ export const load = (async ({ fetch }) => {
 
     await authManager.load();
     if (authManager.authenticated) {
-      redirect(307, COOK_PATH);
+      redirect(307, Route.photos());
     }
 
     if (serverConfigManager.value.isInitialized) {
+      // Redirect to login page if there exists an admin account (i.e. server is initialized)
       redirect(307, Route.login());
     }
 
