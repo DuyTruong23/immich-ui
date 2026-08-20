@@ -8,7 +8,6 @@
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import { can, isMobileShell } from '$custom/utils/capabilities.svelte';
-  import { isCookRoute } from '$custom/utils/cook-route';
 
   const LEGACY_DISMISS_KEY = 'pg_feature_update_pin_dismissed_version';
 
@@ -26,19 +25,13 @@
     dismissedThisSession = false;
   });
 
-  const onCookPage = $derived(isCookRoute(page.url.pathname));
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
   const canUpload = $derived(can('upload'));
   const showUpload = $derived(
-    !onCookPage &&
-      canUpload &&
-      !viewingAsset &&
-      !featureUpdateModalOpen &&
-      (isMobileShell() || !authManager.user.isAdmin),
+    canUpload && !viewingAsset && !featureUpdateModalOpen && (isMobileShell() || !authManager.user.isAdmin),
   );
   const showWhatsNew = $derived(
-    !onCookPage &&
-      authManager.authenticated &&
+    authManager.authenticated &&
       !authManager.user.isAdmin &&
       !viewingAsset &&
       !dismissedThisSession &&
