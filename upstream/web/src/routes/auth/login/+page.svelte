@@ -109,6 +109,16 @@
       });
   };
 
+  const syncAuthState = async (accessToken: string) => {
+    storeAccessToken(accessToken);
+
+    try {
+      await authManager.refresh();
+    } catch (error) {
+      console.warn('[login] auth refresh failed after login', error);
+    }
+  };
+
   const onSuccess = async (user: LoginResponseDto) => {
     // Check if user is blocked before proceeding
     try {
@@ -122,7 +132,7 @@
 
       const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
       if (blockedResult.ok && blockedResult.blocked) {
-        // User is blocked, redirect to blocked page
+        await syncAuthState(user.accessToken);
         await goto('/blocked');
         return;
       }
@@ -131,16 +141,14 @@
       // Continue with login if check fails
     }
 
-    storeAccessToken(user.accessToken);
+    await syncAuthState(user.accessToken);
 
     if (user.isAdmin) {
       enableAdminSessionPersistence();
-      await authManager.refresh();
     } else {
       markSessionExpiry();
       if (publicEnv.sessionOnlyAuth) {
         markSessionActive();
-        await authManager.refresh();
       }
     }
 
@@ -187,6 +195,7 @@
 
           const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
           if (blockedResult.ok && blockedResult.blocked) {
+            await syncAuthState(user.accessToken);
             await goto('/blocked');
             return;
           }
