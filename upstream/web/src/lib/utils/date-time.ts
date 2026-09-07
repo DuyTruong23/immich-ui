@@ -2,7 +2,12 @@ import { DateTime } from 'luxon';
 import { get } from 'svelte/store';
 import { dateFormats } from '$lib/constants';
 import { locale } from '$lib/stores/preferences.store';
-import { formatDate, formatMonthYearParts, isVietnameseLocale, resolveFormatLocale } from '$lib/utils/date-format';
+import {
+  formatDate,
+  formatMonthYearParts,
+  isVietnameseLocale,
+  resolveFormatLocale,
+} from '$lib/utils/date-format';
 
 export function parseUtcDate(date: string) {
   return DateTime.fromISO(date, { zone: 'UTC' }).toUTC();

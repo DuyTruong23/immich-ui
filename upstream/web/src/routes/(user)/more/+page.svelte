@@ -57,12 +57,7 @@
       can('folders') && { id: 'folders', href: Route.folders(), title: $t('folders'), icon: mdiFolderOutline },
       can('tags') && { id: 'tags', href: Route.tags(), title: $t('tags'), icon: mdiTagMultipleOutline },
       can('utilities') && { id: 'utilities', href: Route.utilities(), title: $t('utilities'), icon: mdiToolboxOutline },
-      can('archive') && {
-        id: 'archive',
-        href: Route.archive(),
-        title: $t('archive'),
-        icon: mdiArchiveArrowDownOutline,
-      },
+      can('archive') && { id: 'archive', href: Route.archive(), title: $t('archive'), icon: mdiArchiveArrowDownOutline },
       can('lockedFolder') && { id: 'locked', href: Route.locked(), title: $t('locked_folder'), icon: mdiLockOutline },
       can('trash') && { id: 'trash', href: Route.trash(), title: $t('trash'), icon: mdiTrashCanOutline },
     ].filter((item): item is MoreItem => Boolean(item));
@@ -74,12 +69,7 @@
     const adminItems = [
       can('dashboard') && { id: 'dashboard', href: '/dashboard', title: 'Dashboard', icon: mdiViewDashboardOutline },
       can('admin') && { id: 'users', href: Route.users(), title: $t('users'), icon: mdiAccountOutline },
-      can('admin') && {
-        id: 'system',
-        href: Route.systemSettings(),
-        title: $t('admin.system_settings'),
-        icon: mdiCogOutline,
-      },
+      can('admin') && { id: 'system', href: Route.systemSettings(), title: $t('admin.system_settings'), icon: mdiCogOutline },
       can('admin') && {
         id: 'feature-updates',
         href: '/admin/feature-updates',

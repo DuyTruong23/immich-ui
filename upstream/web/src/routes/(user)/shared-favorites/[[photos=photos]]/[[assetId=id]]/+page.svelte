@@ -16,14 +16,7 @@
   import { handleError } from '$lib/utils/handle-error';
   import { navigate } from '$lib/utils/navigation';
   import { toTimelineAsset, type TimelineDateTime } from '$lib/utils/timeline-util';
-  import {
-    AssetTypeEnum,
-    AssetVisibility,
-    getAssetInfo,
-    updateAssets,
-    UserAvatarColor,
-    type AssetResponseDto,
-  } from '@immich/sdk';
+  import { AssetTypeEnum, AssetVisibility, getAssetInfo, updateAssets, UserAvatarColor, type AssetResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiClose } from '@mdi/js';
   import { DateTime } from 'luxon';
@@ -299,17 +292,14 @@
           resolveFirstBucket();
         });
         void partnerFavoritesStore
-          .loadFavoriteBuckets(
-            (assets) => {
-              if (cancelled) {
-                return;
-              }
-              mergeAssets(assets);
-              revealGrid();
-              resolveFirstBucket();
-            },
-            { withPartners: true },
-          )
+          .loadFavoriteBuckets((assets) => {
+            if (cancelled) {
+              return;
+            }
+            mergeAssets(assets);
+            revealGrid();
+            resolveFirstBucket();
+          }, { withPartners: true })
           .then(() => resolveFirstBucket())
           .catch((error) => {
             console.warn('[shared-favorites] partner buckets failed', error);
@@ -465,20 +455,16 @@
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div
-      class="pg-photo-grid grid gap-2 {isMobileGrid
-        ? ''
-        : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}"
-      style:grid-template-columns={isMobileGrid ? `repeat(${gridDensityManager.columns}, minmax(0, 1fr))` : undefined}
+      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}"
+      style:grid-template-columns={isMobileGrid
+        ? `repeat(${gridDensityManager.columns}, minmax(0, 1fr))`
+        : undefined}
       use:measureThumbCell
       use:pinchGrid
     >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetForItem(item)}
-        <div
-          class="relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId)
-            ? 'opacity-60'
-            : ''}"
-        >
+        <div class="relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
           <Thumbnail
             {asset}
             thumbnailSize={thumbSize || undefined}

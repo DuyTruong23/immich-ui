@@ -1,13 +1,17 @@
-import type { AssetResponseDto } from '@immich/sdk';
 import { browser } from '$app/environment';
-import { shouldPreloadAdjacentAssets } from '$lib/utils/mobile-performance.svelte';
 import {
   getBufferedAhead,
   isPreloadReady,
   PRELOAD_MIN_SECONDS,
   PRELOAD_TARGET_SECONDS,
 } from '$lib/utils/video-buffer-utils';
-import { isVideoAsset, resolveVideoSource, type ResolvedVideoSource } from '$lib/utils/video-playback-resolver';
+import {
+  isVideoAsset,
+  resolveVideoSource,
+  type ResolvedVideoSource,
+} from '$lib/utils/video-playback-resolver';
+import { shouldPreloadAdjacentAssets } from '$lib/utils/mobile-performance.svelte';
+import type { AssetResponseDto } from '@immich/sdk';
 
 export type PreloadTier = 'buffer' | 'metadata';
 
@@ -47,7 +51,8 @@ export class VideoPreloadManager {
     const el = document.createElement('div');
     el.id = HIDDEN_CONTAINER_ID;
     el.setAttribute('aria-hidden', 'true');
-    el.style.cssText = 'position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-1';
+    el.style.cssText =
+      'position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-1';
     document.body.appendChild(el);
     this.container = el;
     return el;
@@ -124,29 +129,26 @@ export class VideoPreloadManager {
         'loadeddata',
         () => {
           if (video.paused && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-            void video
-              .play()
-              .then(() => {
-                const target = Math.min(PRELOAD_TARGET_SECONDS, video.duration || PRELOAD_TARGET_SECONDS);
-                const checkBuffer = () => {
-                  const buffered = video.buffered;
-                  if (buffered.length > 0 && buffered.end(buffered.length - 1) >= target) {
-                    video.pause();
-                    video.currentTime = 0;
-                    return;
-                  }
-                  if (getBufferedAhead(video) >= PRELOAD_MIN_SECONDS) {
-                    video.pause();
-                    video.currentTime = 0;
-                    return;
-                  }
-                  requestAnimationFrame(checkBuffer);
-                };
-                checkBuffer();
-              })
-              .catch(() => {
-                // Autoplay blocked on hidden element — metadata + partial buffer still helps via preload=auto
-              });
+            void video.play().then(() => {
+              const target = Math.min(PRELOAD_TARGET_SECONDS, video.duration || PRELOAD_TARGET_SECONDS);
+              const checkBuffer = () => {
+                const buffered = video.buffered;
+                if (buffered.length > 0 && buffered.end(buffered.length - 1) >= target) {
+                  video.pause();
+                  video.currentTime = 0;
+                  return;
+                }
+                if (getBufferedAhead(video) >= PRELOAD_MIN_SECONDS) {
+                  video.pause();
+                  video.currentTime = 0;
+                  return;
+                }
+                requestAnimationFrame(checkBuffer);
+              };
+              checkBuffer();
+            }).catch(() => {
+              // Autoplay blocked on hidden element — metadata + partial buffer still helps via preload=auto
+            });
           }
         },
         { once: true },
@@ -184,7 +186,11 @@ export class VideoPreloadManager {
     return this.slots.get(assetId)?.source;
   }
 
-  syncWithCursor(cursor: AssetCursor, playOriginalVideo: boolean, isMobileDevice: boolean) {
+  syncWithCursor(
+    cursor: AssetCursor,
+    playOriginalVideo: boolean,
+    isMobileDevice: boolean,
+  ) {
     if (!browser || !shouldPreloadAdjacentAssets()) {
       return;
     }

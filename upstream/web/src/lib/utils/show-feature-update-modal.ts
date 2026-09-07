@@ -1,7 +1,6 @@
-import { modalManager } from '@immich/ui';
 import { getStoredAccessToken } from '$custom/hooks/access-token';
-import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { fetchFeatureUpdatesConfig, peekFeatureUpdatesConfig } from '$custom/services/feature-updates.service';
+import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import {
   coerceFeatureUpdateItems,
   upsertFeatureUpdateRelease,
@@ -9,8 +8,9 @@ import {
   type FeatureUpdateItem,
   type FeatureUpdateRelease,
 } from '$custom/utils/feature-update-items';
-import { authManager } from '$lib/managers/auth-manager.svelte';
 import FeatureUpdateModal from '../../routes/FeatureUpdateModal.svelte';
+import { authManager } from '$lib/managers/auth-manager.svelte';
+import { modalManager } from '@immich/ui';
 
 type ShowFeatureUpdateModalOptions = {
   accessToken?: string;

@@ -179,7 +179,8 @@ export const getPagesProvider = ($t: MessageFormatter) => {
       title: $t('trash'),
       icon: mdiTrashCanOutline,
       onAction: () => goto(Route.trash()),
-      $if: () => authManager.authenticated && authManager.user.isAdmin && featureFlagsManager.value.trash,
+      $if: () =>
+        authManager.authenticated && authManager.user.isAdmin && featureFlagsManager.value.trash,
     },
     {
       title: $t('admin.user_settings'),

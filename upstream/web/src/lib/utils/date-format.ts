@@ -1,6 +1,6 @@
-import { get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { lang } from '$lib/stores/preferences.store';
+import { get } from 'svelte/store';
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
 
@@ -139,8 +139,10 @@ export const formatDateTime = (date: Date, stored?: string | null): string =>
 export const formatMonthYear = (date: Date, stored?: string | null): string =>
   formatMonthYearParts({ year: date.getFullYear(), month: date.getMonth() + 1 }, stored);
 
-const ISO_INPUT_RE = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/;
-const DISPLAY_INPUT_RE = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
+const ISO_INPUT_RE =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/;
+const DISPLAY_INPUT_RE =
+  /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
 
 const isValidYmd = (year: number, month: number, day: number) => {
   const date = new Date(year, month - 1, day);

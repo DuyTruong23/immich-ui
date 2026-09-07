@@ -1,7 +1,7 @@
+import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
+import { reloadPreservingSession } from '$custom/hooks/session-auth';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
 import type { HandleClientError } from '@sveltejs/kit';
-import { reloadPreservingSession } from '$custom/hooks/session-auth';
-import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
 
 const STALE_CHUNK_RELOAD_KEY = 'pg-stale-chunk-reload';
 const STALE_CHUNK_RELOAD_WINDOW_MS = 10_000;

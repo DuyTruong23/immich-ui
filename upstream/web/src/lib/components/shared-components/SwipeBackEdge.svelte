@@ -10,7 +10,11 @@
 </script>
 
 {#if enabled}
-  <div class="pg-swipe-back-edge" aria-hidden="true" use:swipeBack={{ onBack, enabled: () => enabled }}></div>
+  <div
+    class="pg-swipe-back-edge"
+    aria-hidden="true"
+    use:swipeBack={{ onBack, enabled: () => enabled }}
+  ></div>
 {/if}
 
 <style>

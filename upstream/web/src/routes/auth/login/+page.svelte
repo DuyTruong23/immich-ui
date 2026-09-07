@@ -118,7 +118,6 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.accessToken}`,
         },
-        body: JSON.stringify({ userId: user.id }),
       });
 
       const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
@@ -183,7 +182,7 @@
               'Content-Type': 'application/json',
               Authorization: `Bearer ${user.accessToken}`,
             },
-            body: JSON.stringify({ userId: user.id }),
+            body: JSON.stringify({ userId: user.userId }),
           });
 
           const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };

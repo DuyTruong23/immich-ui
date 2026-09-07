@@ -74,7 +74,9 @@
       }
       uploadAssetsStore.reset();
     }}
-    class="fixed z-60 {isMobilePanel ? 'pg-upload-panel-mobile inset-x-3' : 'inset-e-16 bottom-6'}"
+    class="fixed z-60 {isMobilePanel
+      ? 'pg-upload-panel-mobile inset-x-3'
+      : 'inset-e-16 bottom-6'}"
   >
     {#if showDetail}
       <div

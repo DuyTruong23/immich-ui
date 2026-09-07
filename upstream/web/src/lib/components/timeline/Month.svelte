@@ -47,7 +47,11 @@
   let hoveredTimelineDay = $state<string | null>(null);
 
   const transitionDuration = $derived(
-    timelineMonth.timelineManager.suspendTransitions && !$isUploading ? 0 : shouldUseTimelineTransitions() ? 150 : 0,
+    timelineMonth.timelineManager.suspendTransitions && !$isUploading
+      ? 0
+      : shouldUseTimelineTransitions()
+        ? 150
+        : 0,
   );
 
   const getTimelineDayFullDate = (timelineDay: TimelineDay): string => {

@@ -1,7 +1,7 @@
-import { AssetMediaSize, AssetTypeEnum, type AssetResponseDto } from '@immich/sdk';
 import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
 import { getAssetHlsUrl, getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
 import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
+import { AssetMediaSize, AssetTypeEnum, type AssetResponseDto } from '@immich/sdk';
 
 export type VideoSourceKind = 'hls' | 'original' | 'playback';
 
@@ -46,4 +46,5 @@ export const resolveVideoSource = (options: ResolveVideoSourceOptions): Resolved
   };
 };
 
-export const isVideoAsset = (asset: AssetResponseDto | undefined): boolean => asset?.type === AssetTypeEnum.Video;
+export const isVideoAsset = (asset: AssetResponseDto | undefined): boolean =>
+  asset?.type === AssetTypeEnum.Video;

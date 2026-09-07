@@ -121,142 +121,142 @@
       </div>
     </div>
   {:else}
-    <div
-      class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
-        ? ''
-        : 'border-b'}"
-    >
-      <div class="mx-4 flex flex-row items-center gap-1">
-        <IconButton
-          id={menuButtonId}
-          shape="round"
-          color="secondary"
-          variant="ghost"
-          size="medium"
-          aria-label={$t('main_menu')}
-          icon={mdiMenu}
-          onclick={() => {
-            sidebarStore.toggle();
-          }}
-          onmousedown={(event: MouseEvent) => {
-            if (sidebarStore.isOpen) {
-              event.stopPropagation();
-            }
-          }}
-          class="sidebar:hidden"
-        />
-        <a data-sveltekit-preload-data="hover" href={Route.photos()}>
-          <BrandLogo variant={mediaQueryManager.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
-        </a>
+  <div
+    class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
+      ? ''
+      : 'border-b'}"
+  >
+    <div class="mx-4 flex flex-row items-center gap-1">
+      <IconButton
+        id={menuButtonId}
+        shape="round"
+        color="secondary"
+        variant="ghost"
+        size="medium"
+        aria-label={$t('main_menu')}
+        icon={mdiMenu}
+        onclick={() => {
+          sidebarStore.toggle();
+        }}
+        onmousedown={(event: MouseEvent) => {
+          if (sidebarStore.isOpen) {
+            event.stopPropagation();
+          }
+        }}
+        class="sidebar:hidden"
+      />
+      <a data-sveltekit-preload-data="hover" href={Route.photos()}>
+        <BrandLogo variant={mediaQueryManager.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
+      </a>
+    </div>
+    <div class="flex justify-between gap-4 pe-6 lg:gap-8">
+      <div class="hidden w-full max-w-5xl flex-1 sm:block tall:ps-0">
+        {#if featureFlagsManager.value.search}
+          <SearchBar grayTheme={true} />
+        {/if}
       </div>
-      <div class="flex justify-between gap-4 pe-6 lg:gap-8">
-        <div class="hidden w-full max-w-5xl flex-1 sm:block tall:ps-0">
-          {#if featureFlagsManager.value.search}
-            <SearchBar grayTheme={true} />
-          {/if}
-        </div>
 
-        <section class="flex w-full place-items-center justify-end gap-1 sm:w-auto md:gap-2">
-          {#if featureFlagsManager.value.search}
+      <section class="flex w-full place-items-center justify-end gap-1 sm:w-auto md:gap-2">
+        {#if featureFlagsManager.value.search}
+          <IconButton
+            color="secondary"
+            shape="round"
+            variant="ghost"
+            size="medium"
+            icon={mdiMagnify}
+            href={Route.search()}
+            id="search-button"
+            class="sm:hidden"
+            aria-label={$t('go_to_search')}
+          />
+        {/if}
+
+        {#if !page.url.pathname.includes('/admin') && onUploadClick}
+          <Button
+            leadingIcon={mdiTrayArrowUp}
+            onclick={onUploadClick}
+            class="hidden lg:flex"
+            variant="ghost"
+            size="medium"
+            color="secondary"
+            >{$t('upload')}
+          </Button>
+          {#if authManager.user.isAdmin}
             <IconButton
               color="secondary"
               shape="round"
               variant="ghost"
               size="medium"
-              icon={mdiMagnify}
-              href={Route.search()}
-              id="search-button"
-              class="sm:hidden"
-              aria-label={$t('go_to_search')}
+              onclick={onUploadClick}
+              title={$t('upload')}
+              aria-label={$t('upload')}
+              icon={mdiTrayArrowUp}
+              class="lg:hidden"
             />
           {/if}
+        {/if}
 
-          {#if !page.url.pathname.includes('/admin') && onUploadClick}
-            <Button
-              leadingIcon={mdiTrayArrowUp}
-              onclick={onUploadClick}
-              class="hidden lg:flex"
-              variant="ghost"
-              size="medium"
-              color="secondary"
-              >{$t('upload')}
-            </Button>
-            {#if authManager.user.isAdmin}
-              <IconButton
-                color="secondary"
-                shape="round"
-                variant="ghost"
-                size="medium"
-                onclick={onUploadClick}
-                title={$t('upload')}
-                aria-label={$t('upload')}
-                icon={mdiTrayArrowUp}
-                class="lg:hidden"
-              />
-            {/if}
-          {/if}
+        <ThemeButton />
 
-          <ThemeButton />
-
-          {#if showNotifications}
-            <div
-              use:clickOutside={{
-                onOutclick: () => (shouldShowNotificationPanel = false),
-                onEscape: () => (shouldShowNotificationPanel = false),
-              }}
-            >
-              <div class="relative">
-                <IconButton
-                  shape="round"
-                  color={hasUnreadNotifications ? 'primary' : 'secondary'}
-                  variant="ghost"
-                  size="medium"
-                  icon={hasUnreadNotifications ? mdiBellBadge : mdiBellOutline}
-                  onclick={() => (shouldShowNotificationPanel = !shouldShowNotificationPanel)}
-                  aria-label={$t('notifications')}
-                />
-
-                {#if hasUnreadNotifications}
-                  <div
-                    class="pointer-events-none absolute top-0 right-1 flex size-5 items-center justify-center rounded-full border bg-primary text-[10px] font-bold text-light"
-                  >
-                    {notificationManager.notifications.length}
-                  </div>
-                {/if}
-              </div>
-
-              {#if shouldShowNotificationPanel}
-                <NotificationPanel />
-              {/if}
-            </div>
-          {/if}
-
-          <ActionButton action={Cast} />
-
+        {#if showNotifications}
           <div
-            class="relative"
             use:clickOutside={{
-              onOutclick: () => (shouldShowAccountInfoPanel = false),
-              onEscape: () => (shouldShowAccountInfoPanel = false),
+              onOutclick: () => (shouldShowNotificationPanel = false),
+              onEscape: () => (shouldShowNotificationPanel = false),
             }}
           >
-            <button
-              type="button"
-              class="flex ps-2"
-              onclick={() => (shouldShowAccountInfoPanel = !shouldShowAccountInfoPanel)}
-              title="{authManager.user.name} ({authManager.user.email})"
-            >
-              {#key authManager.user}
-                <UserAvatar user={authManager.user} size="md" noTitle interactive />
-              {/key}
-            </button>
+            <div class="relative">
+              <IconButton
+                shape="round"
+                color={hasUnreadNotifications ? 'primary' : 'secondary'}
+                variant="ghost"
+                size="medium"
+                icon={hasUnreadNotifications ? mdiBellBadge : mdiBellOutline}
+                onclick={() => (shouldShowNotificationPanel = !shouldShowNotificationPanel)}
+                aria-label={$t('notifications')}
+              />
 
-            {#if shouldShowAccountInfoPanel}
-              <AccountInfoPanel onClose={() => (shouldShowAccountInfoPanel = false)} />
+              {#if hasUnreadNotifications}
+                <div
+                  class="pointer-events-none absolute top-0 right-1 flex size-5 items-center justify-center rounded-full border bg-primary text-[10px] font-bold text-light"
+                >
+                  {notificationManager.notifications.length}
+                </div>
+              {/if}
+            </div>
+
+            {#if shouldShowNotificationPanel}
+              <NotificationPanel />
             {/if}
           </div>
-        </section>
-      </div>
+        {/if}
+
+        <ActionButton action={Cast} />
+
+        <div
+          class="relative"
+          use:clickOutside={{
+            onOutclick: () => (shouldShowAccountInfoPanel = false),
+            onEscape: () => (shouldShowAccountInfoPanel = false),
+          }}
+        >
+          <button
+            type="button"
+            class="flex ps-2"
+            onclick={() => (shouldShowAccountInfoPanel = !shouldShowAccountInfoPanel)}
+            title="{authManager.user.name} ({authManager.user.email})"
+          >
+            {#key authManager.user}
+              <UserAvatar user={authManager.user} size="md" noTitle interactive />
+            {/key}
+          </button>
+
+          {#if shouldShowAccountInfoPanel}
+            <AccountInfoPanel onClose={() => (shouldShowAccountInfoPanel = false)} />
+          {/if}
+        </div>
+      </section>
     </div>
+  </div>
   {/if}
 </nav>

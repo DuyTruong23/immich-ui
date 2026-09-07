@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { DEFAULT_FEATURE_UPDATE_ITEMS, DEFAULT_FEATURE_UPDATE_VERSION } from '$custom/constants/feature-updates';
+  import {
+    DEFAULT_FEATURE_UPDATE_ITEMS,
+    DEFAULT_FEATURE_UPDATE_VERSION,
+  } from '$custom/constants/feature-updates';
   import {
     clearStoredNotifyEmail,
     fetchMyNotifyEmail,
@@ -20,20 +23,7 @@
     type FeatureUpdateItem,
     type FeatureUpdateRelease,
   } from '$custom/utils/feature-update-items';
-  import {
-    Field,
-    Button,
-    HStack,
-    Icon,
-    IconButton,
-    Input,
-    Modal,
-    ModalBody,
-    ModalFooter,
-    Text,
-    Textarea,
-    toastManager,
-  } from '@immich/ui';
+  import { Field, Button, HStack, Icon, IconButton, Input, Modal, ModalBody, ModalFooter, Text, Textarea, toastManager } from '@immich/ui';
   import { mdiCheckCircleOutline, mdiChevronDown, mdiClose } from '@mdi/js';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
@@ -121,7 +111,8 @@
     expandedItems = next;
   };
 
-  const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const setTransformOrigin = () => {
     const card = document.querySelector<HTMLElement>(`.${MODAL_CLASS}`);
@@ -184,7 +175,9 @@
       return true;
     } catch (error) {
       console.error('[feature-update-modal] subscribe failed', error);
-      toastManager.danger(error instanceof Error ? error.message : get(t)('feature_updates_notify_email_failed'));
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('feature_updates_notify_email_failed'),
+      );
       return false;
     } finally {
       savingNotifyEmail = false;
@@ -214,7 +207,9 @@
       return true;
     } catch (error) {
       console.error('[feature-update-modal] unsubscribe failed', error);
-      toastManager.danger(error instanceof Error ? error.message : get(t)('feature_updates_notify_email_clear_failed'));
+      toastManager.danger(
+        error instanceof Error ? error.message : get(t)('feature_updates_notify_email_clear_failed'),
+      );
       return false;
     } finally {
       savingNotifyEmail = false;
@@ -340,10 +335,7 @@
       </Text>
     </div>
 
-    <section
-      class="feature-updates-section feature-updates-section--scroll"
-      aria-label={$t('feature_updates_items_aria')}
-    >
+    <section class="feature-updates-section feature-updates-section--scroll" aria-label={$t('feature_updates_items_aria')}>
       {#each displayReleases as release, releaseIndex (release.version)}
         {#if releaseIndex > 0}
           <hr class="feature-updates-release__divider" />
@@ -465,19 +457,19 @@
   <ModalFooter class="feature-update-footer">
     <div class="feature-update-footer__inner">
       <HStack fullWidth gap={3}>
-        <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={showSubmitOverlay}>
-          {$t('close')}
-        </Button>
-        <Button
-          shape="round"
-          fullWidth
-          type="button"
-          onclick={handleSendFeedback}
-          disabled={!canSubmit || showSubmitOverlay}
-        >
-          {showSubmitOverlay ? $t('feature_updates_notify_email_saving') : submitLabel}
-        </Button>
-      </HStack>
+      <Button shape="round" color="secondary" fullWidth onclick={handleDismiss} disabled={showSubmitOverlay}>
+        {$t('close')}
+      </Button>
+      <Button
+        shape="round"
+        fullWidth
+        type="button"
+        onclick={handleSendFeedback}
+        disabled={!canSubmit || showSubmitOverlay}
+      >
+        {showSubmitOverlay ? $t('feature_updates_notify_email_saving') : submitLabel}
+      </Button>
+    </HStack>
     </div>
   </ModalFooter>
 
@@ -716,7 +708,8 @@
       transition:
         background-color var(--md-motion-duration-short, 200ms)
           var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)),
-        border-color var(--md-motion-duration-short, 200ms) var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1));
+        border-color var(--md-motion-duration-short, 200ms)
+          var(--md-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1));
     }
 
     .feature-updates-item--expanded {

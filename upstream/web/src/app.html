@@ -33,7 +33,8 @@
           }
         }
         const prefersDark = globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
-        const useDark = preference === 'dark' || ((preference === 'system' || preference == null) && prefersDark);
+        const useDark =
+          preference === 'dark' || ((preference === 'system' || preference == null) && prefersDark);
         document.documentElement.classList.add(useDark ? 'dark' : 'light');
         const lang = localStorage.getItem('lang');
         if (lang) {

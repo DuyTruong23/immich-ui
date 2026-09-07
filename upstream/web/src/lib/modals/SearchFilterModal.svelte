@@ -186,7 +186,13 @@
   });
 </script>
 
-<Modal icon={mdiTune} size="giant" title={$t('search_options')} class="ant-search-filter-modal" {onClose}>
+<Modal
+  icon={mdiTune}
+  size="giant"
+  title={$t('search_options')}
+  class="ant-search-filter-modal"
+  {onClose}
+>
   <ModalBody class="ant-search-filter-modal__body pg-search-filter-modal__scroll">
     <form id={formId} autocomplete="off" class="ant-search-filter-modal__form" {onsubmit} {onreset}>
       <div class="ant-search-filter-modal__sections" tabindex="-1">

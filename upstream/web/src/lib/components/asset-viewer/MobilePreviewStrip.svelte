@@ -113,6 +113,30 @@
   });
 </script>
 
+<style>
+  .mobile-preview-strip__thumb-skeleton {
+    animation: filmstrip-thumb-pulse 1.35s ease-in-out infinite;
+  }
+
+  @keyframes filmstrip-thumb-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+
+    50% {
+      opacity: 0.85;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-preview-strip__thumb-skeleton {
+      animation: none;
+      opacity: 0.65;
+    }
+  }
+</style>
+
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <nav
   bind:this={scroller}
@@ -151,16 +175,10 @@
             heightStyle="{THUMB_SIZE}px"
             circle
             class="size-full object-cover"
-            preload={isCurrent ||
-              Math.abs(
-                assets.findIndex((entry) => entry.id === asset.id) -
-                  assets.findIndex((entry) => entry.id === currentId),
-              ) <= 2}
+            preload={isCurrent || Math.abs(assets.findIndex((entry) => entry.id === asset.id) - assets.findIndex((entry) => entry.id === currentId)) <= 2}
           />
         {:else}
-          <span
-            class="mobile-preview-strip__thumb-skeleton absolute inset-0 rounded-full bg-white/15"
-            aria-hidden="true"
+          <span class="mobile-preview-strip__thumb-skeleton absolute inset-0 rounded-full bg-white/15" aria-hidden="true"
           ></span>
         {/if}
 
@@ -179,27 +197,3 @@
     {/each}
   </div>
 </nav>
-
-<style>
-  .mobile-preview-strip__thumb-skeleton {
-    animation: filmstrip-thumb-pulse 1.35s ease-in-out infinite;
-  }
-
-  @keyframes filmstrip-thumb-pulse {
-    0%,
-    100% {
-      opacity: 0.45;
-    }
-
-    50% {
-      opacity: 0.85;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mobile-preview-strip__thumb-skeleton {
-      animation: none;
-      opacity: 0.65;
-    }
-  }
-</style>

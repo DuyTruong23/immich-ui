@@ -11,9 +11,9 @@ import {
 import { io, type Socket } from 'socket.io-client';
 import { get, writable } from 'svelte/store';
 import { page } from '$app/state';
-import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { PUBLIC_IMMICH_WS_URL } from '$env/static/public';
 import { authManager } from '$lib/managers/auth-manager.svelte';
+import { isUiDevMode } from '$custom/hooks/ui-dev-mode';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 import { Route } from '$lib/route';
 import { maintenanceStore } from '$lib/stores/maintenance.store';

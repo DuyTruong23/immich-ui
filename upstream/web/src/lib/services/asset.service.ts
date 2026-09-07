@@ -36,11 +36,9 @@ import {
   mdiTagPlusOutline,
   mdiTune,
 } from '@mdi/js';
-import { getAppConfig } from '@photo-gallery/config';
 import type { MessageFormatter } from 'svelte-i18n';
+import { getAppConfig } from '@photo-gallery/config';
 import { goto } from '$app/navigation';
-import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
-import { can, canForAsset } from '$custom/utils/capabilities.svelte';
 import { ProjectionType } from '$lib/constants';
 import { assetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
 import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
@@ -57,6 +55,8 @@ import { getAssetMediaUrl, getSharedLink, sleep } from '$lib/utils';
 import { downloadUrl } from '$lib/utils';
 import { handleError } from '$lib/utils/handle-error';
 import { getFormatter } from '$lib/utils/i18n';
+import { partnerFavoritesStore } from '$custom/stores/partner-favorites.svelte';
+import { can, canForAsset } from '$custom/utils/capabilities.svelte';
 
 export const getAssetBulkActions = ($t: MessageFormatter) => {
   const ownedAssets = assetMultiSelectManager.ownedAssets;

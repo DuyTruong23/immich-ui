@@ -1,9 +1,9 @@
-import { themeManager, ThemePreference } from '@immich/ui';
-import { getAppConfig } from '@photo-gallery/config';
 import { browser } from '$app/environment';
 import { PUBLIC_DEFAULT_LANGUAGE } from '$env/static/public';
 import { defaultLang } from '$lib/constants';
 import { convertBCP47, getPreferredLocale, langCodes } from '$lib/utils/i18n';
+import { getAppConfig } from '@photo-gallery/config';
+import { themeManager, ThemePreference } from '@immich/ui';
 
 /** Map `vi-VN` / `en-US` / env code → locale file Immich có sẵn (`vi`, `en`, …). */
 export const resolveAvailableLanguage = (code: string | undefined): string | undefined => {

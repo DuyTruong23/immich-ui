@@ -178,8 +178,9 @@
           <div class="space-y-2 text-sm text-(--pg-text-muted)">
             <p class="font-medium text-(--pg-text)">Giới hạn theo dõi của WeGallery</p>
             <p>
-              WeGallery <strong>không</strong> lưu thống kê thời gian làm việc trong từng phiên hay danh sách ảnh đã xem của
-              người dùng. API chỉ cung cấp phiên đăng nhập (thiết bị, lần hoạt động cuối) và lịch sử upload như trên.
+              WeGallery <strong>không</strong> lưu thống kê thời gian làm việc trong từng phiên hay danh sách ảnh đã xem
+              của người dùng. API chỉ cung cấp phiên đăng nhập (thiết bị, lần hoạt động cuối) và lịch sử upload như
+              trên.
             </p>
             <p>
               Để theo dõi chi tiết hơn (ảnh đã xem, thời lượng phiên), cần tích hợp riêng — ví dụ ghi log phía client
