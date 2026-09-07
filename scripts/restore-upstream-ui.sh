@@ -4,6 +4,14 @@ restore_upstream_ui() {
   local root="$1"
   local ref="${UPSTREAM_UI_REF:-cb26ab31b^}"
 
+  local PYTHON_CMD="python3"
+  if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+    PYTHON_CMD="python.exe"
+  fi
+  if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+    PYTHON_CMD="python"
+  fi
+
   restore_file() {
     local git_path="$1"
     local dest="$root/$2"
@@ -25,7 +33,7 @@ restore_upstream_ui() {
     upstream/web/src/lib/components/pages/SharedLinkPage.svelte
   restore_file upstream/web/src/app.html upstream/web/src/app.html
 
-  python - "$root/upstream/web/src/lib/components/shared-components/navigation-bar/AccountInfoPanel.svelte" <<'PY'
+  $PYTHON_CMD - "$root/upstream/web/src/lib/components/shared-components/navigation-bar/AccountInfoPanel.svelte" <<'PY'
 import pathlib
 import re
 import sys
@@ -43,7 +51,7 @@ path.write_text(text, encoding="utf-8")
 PY
 
   # Keep document titles on WeGallery after upstream restore
-  python - "$root/upstream/web/src/routes/+layout.svelte" <<'PY'
+  $PYTHON_CMD - "$root/upstream/web/src/routes/+layout.svelte" <<'PY'
 import pathlib
 import re
 import sys
@@ -72,7 +80,7 @@ text = re.sub(
 path.write_text(text, encoding="utf-8")
 PY
 
-  python - "$root/upstream/web/src/lib/components/pages/SharedLinkPage.svelte" <<'PY'
+  $PYTHON_CMD - "$root/upstream/web/src/lib/components/pages/SharedLinkPage.svelte" <<'PY'
 import pathlib
 import sys
 
@@ -85,7 +93,7 @@ text = text.replace(' + " - Immich"', ' + " - WeGallery"')
 path.write_text(text, encoding="utf-8")
 PY
 
-  python - "$root/upstream/web/src/app.html" <<'PY'
+  $PYTHON_CMD - "$root/upstream/web/src/app.html" <<'PY'
 import pathlib
 import sys
 

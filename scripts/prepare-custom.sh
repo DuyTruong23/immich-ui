@@ -4,6 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+PYTHON_CMD="python3"
+if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+  PYTHON_CMD="python.exe"
+fi
+if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+  PYTHON_CMD="python"
+fi
+
 bash "$ROOT/scripts/sync-web-env.sh"
 
 copy_merge() {
@@ -54,13 +62,13 @@ source "$ROOT/scripts/restore-upstream-ui.sh"
 restore_upstream_ui "$ROOT"
 
 echo "==> Patch media URL routing (PUBLIC_IMMICH_MEDIA_URL)"
-python "$ROOT/scripts/patch-utils-media-url.py" "$ROOT"
+"$PYTHON_CMD" "$ROOT/scripts/patch-utils-media-url.py" "$ROOT"
 
 echo "==> Patch feature update modal into +layout.svelte"
-python "$ROOT/scripts/patch-layout-feature-modal.py" "$ROOT"
+"$PYTHON_CMD" "$ROOT/scripts/patch-layout-feature-modal.py" "$ROOT"
 
 echo "==> Patch mobile performance (timeline, thumbnails, viewport, network)"
-python "$ROOT/scripts/patch-mobile-performance.py" "$ROOT"
+"$PYTHON_CMD" "$ROOT/scripts/patch-mobile-performance.py" "$ROOT"
 
 if [ -f "$ROOT/custom/src/service-worker/index.ts" ]; then
   echo "==> Apply custom service worker (cross-origin thumbnail cache)"

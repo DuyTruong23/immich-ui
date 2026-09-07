@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@immich/sdk": "workspace:*",
+    "@immich/ui": "^0.83.0",
+    "@mdi/js": "^7.4.47",
     "@photo-gallery/config": "workspace:*"
   }
 }
