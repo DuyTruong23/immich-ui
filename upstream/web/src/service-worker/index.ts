@@ -50,7 +50,9 @@ const handleActivate = (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== THUMB_CACHE && key.startsWith('pg-thumbs-')).map((key) => caches.delete(key)));
+      await Promise.all(
+        keys.filter((key) => key !== THUMB_CACHE && key.startsWith('pg-thumbs-')).map((key) => caches.delete(key)),
+      );
       await sw.clients.claim();
     })(),
   );
@@ -64,9 +66,12 @@ const cacheKeyFor = (request: Request) => {
   const url = new URL(request.url);
   const size = url.searchParams.get('size') ?? '';
   const cacheBust = url.searchParams.get('c') ?? '';
-  return new Request(`${url.origin}${url.pathname}?size=${encodeURIComponent(size)}&c=${encodeURIComponent(cacheBust)}`, {
-    method: 'GET',
-  });
+  return new Request(
+    `${url.origin}${url.pathname}?size=${encodeURIComponent(size)}&c=${encodeURIComponent(cacheBust)}`,
+    {
+      method: 'GET',
+    },
+  );
 };
 
 const pruneCache = async (cache: Cache) => {

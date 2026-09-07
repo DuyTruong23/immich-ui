@@ -8,6 +8,10 @@ import {
   type UserPreferencesResponseDto,
 } from '@immich/sdk';
 import { getAppConfig } from '@photo-gallery/config';
+import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
+import { page } from '$app/state';
+import { clearStoredAccessToken } from '$custom/hooks/access-token';
 import {
   beginBrowserSession,
   clearAdminPersistentSession,
@@ -16,21 +20,13 @@ import {
   isAdminPersistentSession,
 } from '$custom/hooks/session-auth';
 import {
-  clearDevSession,
-  isUiDevMode,
-  restoreDevSession,
-} from '$custom/hooks/ui-dev-mode';
-import { clearStoredAccessToken } from '$custom/hooks/access-token';
-import {
   clearSessionExpiry,
   clearSessionNoExpiry,
   enableAdminSessionPersistence,
   isSessionExpired,
   watchSessionExpiry,
 } from '$custom/hooks/session-expiry';
-import { browser } from '$app/environment';
-import { goto } from '$app/navigation';
-import { page } from '$app/state';
+import { clearDevSession, isUiDevMode, restoreDevSession } from '$custom/hooks/ui-dev-mode';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 import { Route } from '$lib/route';
 import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';

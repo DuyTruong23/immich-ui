@@ -23,10 +23,7 @@
   let numberOfPeople = $state(1);
 
   function orderBySelectedPeopleFirst(people: PersonResponseDto[]) {
-    return [
-      ...people.filter((p) => selectedPeople.has(p.id)),
-      ...people.filter((p) => !selectedPeople.has(p.id)),
-    ];
+    return [...people.filter((p) => selectedPeople.has(p.id)), ...people.filter((p) => !selectedPeople.has(p.id))];
   }
 
   async function getPeople() {

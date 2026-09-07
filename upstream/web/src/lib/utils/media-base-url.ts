@@ -1,5 +1,5 @@
-import { browser } from '$app/environment';
 import { getBaseUrl } from '@immich/sdk';
+import { browser } from '$app/environment';
 import { env } from '$env/dynamic/public';
 
 /** Base URL cho media (ảnh/video) — bỏ qua Vercel proxy khi set PUBLIC_IMMICH_MEDIA_URL */

@@ -58,7 +58,11 @@
   import SlideshowMetadataOverlay from './SlideshowMetadataOverlay.svelte';
   import SwipeBackEdge from '$lib/components/shared-components/SwipeBackEdge.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
-  import { lockViewerPageScroll, resetViewerPageScrollLock, unlockViewerPageScroll } from '$lib/utils/viewer-scroll-lock';
+  import {
+    lockViewerPageScroll,
+    resetViewerPageScrollLock,
+    unlockViewerPageScroll,
+  } from '$lib/utils/viewer-scroll-lock';
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
   import MobilePreviewStripSkeleton from './MobilePreviewStripSkeleton.svelte';
   import { type PreviewStripItem } from './preview-layout';

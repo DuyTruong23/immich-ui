@@ -56,7 +56,9 @@ describe('Image component', () => {
   });
 
   it('does not cancel thumbnail requests on unmount', () => {
-    const { unmount } = render(Image, { src: '/api/assets/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/thumbnail?size=thumbnail' });
+    const { unmount } = render(Image, {
+      src: '/api/assets/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/thumbnail?size=thumbnail',
+    });
     unmount();
     expect(cancelImageUrl).not.toHaveBeenCalled();
   });

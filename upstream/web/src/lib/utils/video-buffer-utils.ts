@@ -22,12 +22,10 @@ export const getBufferedAhead = (video: HTMLVideoElement): number => {
 };
 
 export const isPreloadReady = (video: HTMLVideoElement): boolean =>
-  video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA ||
-  getBufferedAhead(video) >= PRELOAD_MIN_SECONDS;
+  video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA || getBufferedAhead(video) >= PRELOAD_MIN_SECONDS;
 
 export const isInstantPlayReady = (video: HTMLVideoElement): boolean =>
-  video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA ||
-  getBufferedAhead(video) >= BUFFER_MIN_SECONDS;
+  video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA || getBufferedAhead(video) >= BUFFER_MIN_SECONDS;
 
 export type VideoDiagnostics = {
   assetId: string;

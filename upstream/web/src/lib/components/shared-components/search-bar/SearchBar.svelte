@@ -284,7 +284,9 @@
         {showClearIcon ? 'max-md:pe-12 pe-22.5' : 'max-md:pe-4 pe-14'}
         {grayTheme ? 'dark:bg-immich-dark-gray' : 'dark:bg-immich-dark-bg'}
         {showSuggestions && isSearchSuggestions ? 'rounded-t-3xl' : 'rounded-3xl bg-gray-200'}
-        {searchStore.isSearchEnabled ? 'border-gray-200 bg-white dark:border-gray-700 dark:bg-immich-dark-gray' : 'border-transparent'}"
+        {searchStore.isSearchEnabled
+          ? 'border-gray-200 bg-white dark:border-gray-700 dark:bg-immich-dark-gray'
+          : 'border-transparent'}"
         placeholder={$t('search_your_photos')}
         required
         pattern="^(?!m:$).*$"

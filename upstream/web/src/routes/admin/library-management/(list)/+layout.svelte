@@ -147,11 +147,7 @@
     position: relative;
     overflow: hidden;
     border-radius: 4px;
-    background-color: color-mix(
-      in srgb,
-      var(--md-sys-color-on-surface-variant, #938f99) 24%,
-      transparent
-    );
+    background-color: color-mix(in srgb, var(--md-sys-color-on-surface-variant, #938f99) 24%, transparent);
   }
 
   .skeleton-loader::after {

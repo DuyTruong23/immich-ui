@@ -14,6 +14,8 @@
   let dismissedThisSession = $state(false);
   let pinUserId = $state('');
   let featureUpdateModalOpen = $state(false);
+  let userBlocked = $state(false);
+  let blockedCheckLoading = $state(false);
 
   $effect(() => {
     const userId = authManager.authenticated ? authManager.user.id : '';
@@ -23,7 +25,28 @@
 
     pinUserId = userId;
     dismissedThisSession = false;
+    userBlocked = false;
+    if (userId) {
+      checkBlocked(userId);
+    }
   });
+
+  async function checkBlocked(userId: string) {
+    blockedCheckLoading = true;
+    try {
+      const response = await fetch('/api/check-blocked', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const result = (await response.json()) as { ok?: boolean; blocked?: boolean };
+      userBlocked = result.ok && result.blocked;
+    } catch (error) {
+      console.error('[FeatureUpdatePin] check blocked failed', error);
+    } finally {
+      blockedCheckLoading = false;
+    }
+  }
 
   const viewingAsset = $derived(Boolean(page.params.assetId) || assetViewerManager.isViewing);
   const canUpload = $derived(can('upload'));
@@ -35,7 +58,9 @@
       !authManager.user.isAdmin &&
       !viewingAsset &&
       !dismissedThisSession &&
-      !featureUpdateModalOpen,
+      !featureUpdateModalOpen &&
+      !userBlocked &&
+      !blockedCheckLoading,
   );
   const showCluster = $derived(showUpload || showWhatsNew);
 
