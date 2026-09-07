@@ -281,9 +281,7 @@ export class TimelineManager extends VirtualScrollManager {
     const scrollTop = this.scrollTop;
     const keepTop = scrollTop < 80;
     const anchor = this.viewportTopMonthIntersection;
-    const anchorKey = anchor?.month
-      ? `${anchor.month.yearMonth.year}-${anchor.month.yearMonth.month}`
-      : undefined;
+    const anchorKey = anchor?.month ? `${anchor.month.yearMonth.year}-${anchor.month.yearMonth.month}` : undefined;
     const anchorRatio = anchor?.viewportTopRatioInMonth ?? 0;
 
     this.suspendTransitions = true;

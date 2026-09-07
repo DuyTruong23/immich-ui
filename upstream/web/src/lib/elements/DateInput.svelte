@@ -99,13 +99,7 @@
       }}
     />
     {#if !rest.readonly && !rest.disabled}
-      <button
-        type="button"
-        class="pg-date-input__picker"
-        tabindex="-1"
-        aria-label="Chọn ngày"
-        onclick={openPicker}
-      >
+      <button type="button" class="pg-date-input__picker" tabindex="-1" aria-label="Chọn ngày" onclick={openPicker}>
         <Icon icon={mdiCalendar} size="20" />
       </button>
     {/if}

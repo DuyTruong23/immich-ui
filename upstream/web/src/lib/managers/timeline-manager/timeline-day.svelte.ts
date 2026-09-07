@@ -2,8 +2,13 @@ import { AssetOrder, AssetOrderBy } from '@immich/sdk';
 import { SvelteSet } from 'svelte/reactivity';
 import type { CommonLayoutOptions, CommonPosition } from '$lib/utils/layout-utils';
 import { getJustifiedLayoutFromAssets } from '$lib/utils/layout-utils';
-import { formatGroupTitle, fromTimelinePlainDate, getOrderingDate, plainDateTimeCompare } from '$lib/utils/timeline-util';
 import { getTimelineIntersectionExpand } from '$lib/utils/mobile-performance.svelte';
+import {
+  formatGroupTitle,
+  fromTimelinePlainDate,
+  getOrderingDate,
+  plainDateTimeCompare,
+} from '$lib/utils/timeline-util';
 import type { TimelineMonth } from './timeline-month.svelte';
 import type { Direction, MoveAsset, TimelineAsset } from './types';
 import { ViewerAsset } from './viewer-asset.svelte';

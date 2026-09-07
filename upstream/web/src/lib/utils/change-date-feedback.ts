@@ -1,10 +1,10 @@
+import { getAssetInfo, type AssetResponseDto } from '@immich/sdk';
+import { toastManager } from '@immich/ui';
+import { locale, t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 import { waitForWebsocketEvent } from '$lib/stores/websocket';
-import { getAssetInfo, type AssetResponseDto } from '@immich/sdk';
-import { toastManager } from '@immich/ui';
-import { get } from 'svelte/store';
-import { locale, t } from 'svelte-i18n';
 
 const WS_REFRESH_TIMEOUT_MS = 4000;
 
@@ -64,9 +64,7 @@ export async function refreshAssetsAfterDateUpdate(assetIds: string[]): Promise<
   }
 
   const refreshed = new Map<string, AssetResponseDto>();
-  const results = await Promise.allSettled(
-    assetIds.map((id) => getAssetInfo({ ...authManager.params, id })),
-  );
+  const results = await Promise.allSettled(assetIds.map((id) => getAssetInfo({ ...authManager.params, id })));
 
   for (const result of results) {
     if (result.status === 'fulfilled') {
@@ -79,7 +77,11 @@ export async function refreshAssetsAfterDateUpdate(assetIds: string[]): Promise<
   await Promise.all(
     pendingIds.map(async (id) => {
       try {
-        const [asset] = await waitForWebsocketEvent('on_asset_update', (candidate) => candidate.id === id, WS_REFRESH_TIMEOUT_MS);
+        const [asset] = await waitForWebsocketEvent(
+          'on_asset_update',
+          (candidate) => candidate.id === id,
+          WS_REFRESH_TIMEOUT_MS,
+        );
         refreshed.set(asset.id, asset);
         eventManager.emit('AssetUpdate', asset);
       } catch {

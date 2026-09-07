@@ -1,5 +1,5 @@
-import { goto } from '$app/navigation';
 import type { BeforeNavigate } from '@sveltejs/kit';
+import { goto } from '$app/navigation';
 import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
 import { navigate } from '$lib/utils/navigation';
 

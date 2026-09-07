@@ -1,9 +1,3 @@
-import { getHeatmapRange } from '$lib';
-import { getAlbumStatistics } from '$custom/api/albums';
-import { getServerStatistics, getServerVersion, getStorage, pingServer } from '$custom/api/system';
-import { enforceAdminRoute } from '$custom/hooks/admin-guard';
-import { getMockDashboardData, isUiDevMode } from '$custom/hooks/ui-dev-mode';
-import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
 import {
   CalendarHeatmapType,
   getUserCalendarHeatmapAdmin,
@@ -13,6 +7,12 @@ import {
   type SessionResponseDto,
   type UserAdminResponseDto,
 } from '@immich/sdk';
+import { getAlbumStatistics } from '$custom/api/albums';
+import { getServerStatistics, getServerVersion, getStorage, pingServer } from '$custom/api/system';
+import { enforceAdminRoute } from '$custom/hooks/admin-guard';
+import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
+import { getMockDashboardData, isUiDevMode } from '$custom/hooks/ui-dev-mode';
+import { getHeatmapRange } from '$lib';
 import type { PageLoad } from './$types';
 
 const formatGiB = (bytes: number): string => `${(bytes / 1024 ** 3).toFixed(1)} GiB`;
@@ -86,7 +86,9 @@ export const load = (async ({ url }) => {
     ),
   ]);
 
-  const uploadHistory = aggregateHeatmaps(uploadHeatmaps.filter((heatmap): heatmap is CalendarHeatmapResponseDto => heatmap !== null));
+  const uploadHistory = aggregateHeatmaps(
+    uploadHeatmaps.filter((heatmap): heatmap is CalendarHeatmapResponseDto => heatmap !== null),
+  );
   const totalSessions = userDeviceGroups.reduce((sum, group) => sum + group.sessions.length, 0);
   const albumCount = albums.owned + albums.shared + albums.notShared;
   const storageUsed = storage.diskUseRaw;

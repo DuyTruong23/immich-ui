@@ -74,54 +74,54 @@
       {hideNavbar ? 'pt-(--navbar-height) max-md:pt-(--navbar-height-md)' : ''}
       {mobileShell ? 'pg-mobile-shell-main' : ''}"
   >
-  {#if showSidebar}
-    {#if sidebar}
-      {@render sidebar()}
-    {:else}
-      <UserSidebar />
+    {#if showSidebar}
+      {#if sidebar}
+        {@render sidebar()}
+      {:else}
+        <UserSidebar />
+      {/if}
     {/if}
-  {/if}
 
-  <main class="relative z-0 isolate">
-    <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" use:useActions={use}>
-      {@render children?.()}
-    </div>
+    <main class="relative z-0 isolate">
+      <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" use:useActions={use}>
+        {@render children?.()}
+      </div>
 
-    {#if showToolbar}
-      <div class="absolute flex h-16 w-full place-items-center justify-between border-b p-2 text-dark">
-        <div class="flex items-center gap-2">
-          {#if showPageTitle}
-            <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>
-          {/if}
-          {#if description}
-            <p class="text-sm text-(--md-sys-color-on-surface-variant)">{description}</p>
-          {/if}
-        </div>
-
-        {@render buttons?.()}
-
-        {#if enabledActions.length > 0}
-          <div class="hidden md:block">
-            <HStack gap={0}>
-              {#each enabledActions as action, i (i)}
-                <Button
-                  variant="ghost"
-                  size="small"
-                  color={action.color ?? 'secondary'}
-                  leadingIcon={action.icon}
-                  onclick={() => action.onAction(action)}
-                  title={action.data?.title}
-                >
-                  {action.title}
-                </Button>
-              {/each}
-            </HStack>
+      {#if showToolbar}
+        <div class="absolute flex h-16 w-full place-items-center justify-between border-b p-2 text-dark">
+          <div class="flex items-center gap-2">
+            {#if showPageTitle}
+              <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>
+            {/if}
+            {#if description}
+              <p class="text-sm text-(--md-sys-color-on-surface-variant)">{description}</p>
+            {/if}
           </div>
 
-          <ContextMenuButton aria-label={$t('open')} items={actions} class="md:hidden" />
-        {/if}
-      </div>
-    {/if}
-  </main>
+          {@render buttons?.()}
+
+          {#if enabledActions.length > 0}
+            <div class="hidden md:block">
+              <HStack gap={0}>
+                {#each enabledActions as action, i (i)}
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    color={action.color ?? 'secondary'}
+                    leadingIcon={action.icon}
+                    onclick={() => action.onAction(action)}
+                    title={action.data?.title}
+                  >
+                    {action.title}
+                  </Button>
+                {/each}
+              </HStack>
+            </div>
+
+            <ContextMenuButton aria-label={$t('open')} items={actions} class="md:hidden" />
+          {/if}
+        </div>
+      {/if}
+    </main>
   </div>
 </div>
