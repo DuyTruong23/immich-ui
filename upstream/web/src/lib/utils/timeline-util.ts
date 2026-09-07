@@ -5,12 +5,7 @@ import { get } from 'svelte/store';
 import type { AssetDescriptor, TimelineAsset, ViewportTopMonth } from '$lib/managers/timeline-manager/types';
 import { locale } from '$lib/stores/preferences.store';
 import { getAssetRatio } from '$lib/utils/asset-utils';
-import {
-  formatDateParts,
-  formatMonthYearParts,
-  isVietnameseLocale,
-  resolveFormatLocale,
-} from '$lib/utils/date-format';
+import { formatDateParts, formatMonthYearParts, isVietnameseLocale, resolveFormatLocale } from '$lib/utils/date-format';
 
 const luxonLocale = () => resolveFormatLocale(get(locale));
 

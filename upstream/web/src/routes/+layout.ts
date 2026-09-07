@@ -1,6 +1,10 @@
 import { commandPaletteManager } from '@immich/ui';
+import { getAppConfig } from '@photo-gallery/config';
 import { goto } from '$app/navigation';
-import '$lib/branding/icloud-logos';
+import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
+import { bootstrapAppConfig } from '$custom/providers/app-config';
+import { createServerConnectionError, isServerConnectionError } from '$custom/utils/server-connection-error';
+import { env as publicEnvDynamic } from '$env/dynamic/public';
 import {
   PUBLIC_APP_NAME,
   PUBLIC_COMPANY_NAME,
@@ -29,11 +33,7 @@ import {
   PUBLIC_SESSION_ONLY_AUTH,
   PUBLIC_THEME,
 } from '$env/static/public';
-import { env as publicEnvDynamic } from '$env/dynamic/public';
-import { getAppConfig } from '@photo-gallery/config';
-import { bootstrapAppConfig } from '$custom/providers/app-config';
-import { enforceFeatureRoute } from '$custom/hooks/feature-guard';
-import { createServerConnectionError, isServerConnectionError } from '$custom/utils/server-connection-error';
+import '$lib/branding/icloud-logos';
 import { languageManager } from '$lib/managers/language-manager.svelte';
 import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
 import { maintenanceCreateUrl, maintenanceReturnUrl, maintenanceShouldRedirect } from '$lib/utils/maintenance';

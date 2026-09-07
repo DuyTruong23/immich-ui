@@ -132,7 +132,6 @@ if (browser) {
   localStorage.setItem('always-load-original-video', 'false');
 }
 
-
 export const alwaysLoadOriginalFile = persisted<boolean>('always-load-original-file', false, {});
 
 export const playVideoThumbnailOnHover = persisted<boolean>('play-video-thumbnail-on-hover', true, {});

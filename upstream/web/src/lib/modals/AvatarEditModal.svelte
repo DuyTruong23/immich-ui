@@ -83,13 +83,17 @@
       context.drawImage(img, sx, sy, side, side, 0, 0, output, output);
 
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((result) => {
-          if (result) {
-            resolve(result);
-            return;
-          }
-          reject(new Error('Could not create profile image.'));
-        }, 'image/jpeg', 0.9);
+        canvas.toBlob(
+          (result) => {
+            if (result) {
+              resolve(result);
+              return;
+            }
+            reject(new Error('Could not create profile image.'));
+          },
+          'image/jpeg',
+          0.9,
+        );
       });
 
       return new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });
@@ -162,13 +166,7 @@
       </div>
     </div>
 
-    <input
-      bind:this={fileInput}
-      type="file"
-      accept="image/*"
-      class="hidden"
-      onchange={onFileSelected}
-    />
+    <input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={onFileSelected} />
 
     <Button
       shape="round"

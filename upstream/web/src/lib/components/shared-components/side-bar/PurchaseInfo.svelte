@@ -69,41 +69,6 @@
   });
 </script>
 
-<div class="license-status ps-4 text-sm">
-  {#if authManager.isPurchased && authManager.preferences.purchase.showSupportBadge}
-    <button
-      onclick={() => goto(Route.userSettings({ isOpen: OpenQueryParam.PURCHASE_SETTINGS }))}
-      class="mt-2 w-full"
-      type="button"
-    >
-      <SupporterBadge size="small" effect="always" />
-    </button>
-  {:else if !authManager.isPurchased && showBuyButton && getAccountAge() > 14}
-    <button
-      type="button"
-      onclick={openPurchaseModal}
-      onmouseover={onButtonHover}
-      onmouseleave={() => (hoverButton = false)}
-      onfocus={onButtonHover}
-      onblur={() => (hoverButton = false)}
-      class="mt-2 flex w-full min-w-52 place-content-center place-items-center justify-between rounded-lg border border-immich-primary/20 p-2 shadow-md dark:border-immich-dark-primary/10 dark:bg-immich-dark-primary/10"
-    >
-      <div class="flex w-full place-content-center place-items-center justify-between">
-        <div class="flex place-content-center place-items-center gap-1">
-          <Logo variant="icon" size="tiny" />
-          <p class="flex font-medium text-primary">
-            {$t('purchase_button_buy_immich')}
-          </p>
-        </div>
-
-        <div>
-          <Icon icon={mdiInformationOutline} class="hidden font-medium text-primary sidebar:flex" size="18" />
-        </div>
-      </div>
-    </button>
-  {/if}
-</div>
-
 <Portal target="body">
   {#if showMessage}
     <dialog

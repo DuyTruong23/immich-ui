@@ -74,7 +74,7 @@
     const isBlocked = blockedUserIds.includes(user.id);
     const { Block, Unblock } = getUserAdminActionsOverride($t, user, () => {
       if (isBlocked) {
-        blockedUserIds = blockedUserIds.filter((id) => id !== user.id);
+        blockedUserIds = blockedUserIds.filter(id => id !== user.id);
       } else {
         blockedUserIds = [...blockedUserIds, user.id];
       }

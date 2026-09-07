@@ -2,12 +2,7 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import AssetChangeDateModal from '$lib/modals/AssetChangeDateModal.svelte';
   import { locale } from '$lib/stores/preferences.store';
-  import {
-    formatDateParts,
-    formatTimeParts,
-    isVietnameseLocale,
-    resolveFormatLocale,
-  } from '$lib/utils/date-format';
+  import { formatDateParts, formatTimeParts, isVietnameseLocale, resolveFormatLocale } from '$lib/utils/date-format';
   import { fromISODateTime, fromISODateTimeUTC, toTimelineAsset } from '$lib/utils/timeline-util';
   import { type AssetResponseDto } from '@immich/sdk';
   import { Icon, modalManager } from '@immich/ui';
@@ -37,7 +32,10 @@
 
   const timeLabel = $derived(
     isVietnameseLocale($locale)
-      ? [formatTimeParts({ hour: dateTime.hour, minute: dateTime.minute, second: dateTime.second }, $locale), timeZone ? dateTime.toFormat('ZZZZ') : '']
+      ? [
+          formatTimeParts({ hour: dateTime.hour, minute: dateTime.minute, second: dateTime.second }, $locale),
+          timeZone ? dateTime.toFormat('ZZZZ') : '',
+        ]
           .filter(Boolean)
           .join(' ')
       : dateTime.toLocaleString(

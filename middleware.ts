@@ -9,6 +9,8 @@ const LOCAL_API_PATHS = new Set([
   '/api/feature-update-email',
   '/api/feature-update-notify',
   '/api/partner-favorites',
+  '/api/admin-block-user',
+  '/api/check-blocked',
 ]);
 
 const getUpstreamBase = (): string => {

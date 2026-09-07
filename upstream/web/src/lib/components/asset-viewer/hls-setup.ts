@@ -1,5 +1,5 @@
-import { authManager } from '$lib/managers/auth-manager.svelte';
 import Hls, { AbrController, Events, type FragLoadedData, type FragLoadingData, type HlsConfig } from 'hls.js';
+import { authManager } from '$lib/managers/auth-manager.svelte';
 
 class NoAbandonAbrController extends AbrController {
   private switchTarget = -1;

@@ -298,7 +298,11 @@
       {#if thumbnailUrl}
         <ImageThumbnail
           class={['absolute group-focus-visible:rounded-lg', { 'rounded-xl': selected }, imageClass]}
-          brokenAssetClass={['z-1 absolute group-focus-visible:rounded-lg', selected && 'rounded-2xl', brokenAssetClass]}
+          brokenAssetClass={[
+            'z-1 absolute group-focus-visible:rounded-lg',
+            selected && 'rounded-2xl',
+            brokenAssetClass,
+          ]}
           url={thumbnailUrl}
           altText={$getAltText(asset)}
           widthStyle="{width}px"

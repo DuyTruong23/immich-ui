@@ -110,6 +110,27 @@
   };
 
   const onSuccess = async (user: LoginResponseDto) => {
+    // Check if user is blocked before proceeding
+    try {
+      const blockedResponse = await fetch('/api/check-blocked', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+      });
+
+      const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
+      if (blockedResult.ok && blockedResult.blocked) {
+        // User is blocked, redirect to blocked page
+        await goto('/blocked');
+        return;
+      }
+    } catch (error) {
+      console.error('[login] check blocked failed', error);
+      // Continue with login if check fails
+    }
+
     storeAccessToken(user.accessToken);
 
     if (user.isAdmin) {
@@ -151,6 +172,26 @@
         if (!user.isOnboarded) {
           await onOnboarding();
           return;
+        }
+
+        // Check if user is blocked for OAuth login
+        try {
+          const blockedResponse = await fetch('/api/check-blocked', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+            body: JSON.stringify({ userId: user.userId }),
+          });
+
+          const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
+          if (blockedResult.ok && blockedResult.blocked) {
+            await goto('/blocked');
+            return;
+          }
+        } catch (error) {
+          console.error('[login] oauth check blocked failed', error);
         }
 
         await onSuccess(user);

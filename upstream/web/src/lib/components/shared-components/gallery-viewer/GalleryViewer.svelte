@@ -370,8 +370,7 @@
       currentViewerIndex >= 0
         ? buildFilmstrip({
             current: toFilmstripItem(navigationAssets[currentViewerIndex]),
-            previous:
-              currentViewerIndex > 0 ? toFilmstripItem(navigationAssets[currentViewerIndex - 1]) : undefined,
+            previous: currentViewerIndex > 0 ? toFilmstripItem(navigationAssets[currentViewerIndex - 1]) : undefined,
             next:
               currentViewerIndex < navigationAssets.length - 1
                 ? toFilmstripItem(navigationAssets[currentViewerIndex + 1])

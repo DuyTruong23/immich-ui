@@ -204,7 +204,7 @@
 
     const anchorId =
       direction === 'later'
-        ? assetCursor.nearbyAssets?.[0]?.id ?? currentAsset.id
+        ? (assetCursor.nearbyAssets?.[0]?.id ?? currentAsset.id)
         : (assetCursor.nearbyAssets?.at(-1)?.id ?? currentAsset.id);
 
     const batch: PreviewStripItem[] = [];

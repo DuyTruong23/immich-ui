@@ -109,9 +109,7 @@
       void loadSubscribers();
     } catch (error) {
       console.error('[feature-updates-admin] notify failed', error);
-      toastManager.danger(
-        error instanceof Error ? error.message : get(t)('admin.feature_updates_send_email_failed'),
-      );
+      toastManager.danger(error instanceof Error ? error.message : get(t)('admin.feature_updates_send_email_failed'));
     } finally {
       sending = false;
     }
@@ -186,7 +184,11 @@
             description={$t('admin.feature_updates_subscribers_need_blob')}
           />
         {:else if subscribersError}
-          <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')} description={subscribersError} />
+          <Alert
+            color="danger"
+            title={$t('admin.feature_updates_subscribers_load_failed')}
+            description={subscribersError}
+          />
         {:else if loadingSubscribers && subscriberEmails.length === 0}
           <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
             {$t('admin.feature_updates_subscribers_loading')}
