@@ -132,6 +132,7 @@
 
       const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
       if (blockedResult.ok && blockedResult.blocked) {
+        await notifyAdminOnLogin(user.accessToken);
         await syncAuthState(user.accessToken);
         await goto('/blocked');
         return;
@@ -195,6 +196,7 @@
 
           const blockedResult = (await blockedResponse.json()) as { ok?: boolean; blocked?: boolean };
           if (blockedResult.ok && blockedResult.blocked) {
+            await notifyAdminOnLogin(user.accessToken);
             await syncAuthState(user.accessToken);
             await goto('/blocked');
             return;
