@@ -95,7 +95,12 @@
     ).filter((item): item is FavoriteChoice => Boolean(item)),
   );
 
-  const showNav = $derived(isMobileShell() && items.length > 0 && !assetViewerManager.isViewing);
+  const showNav = $derived(
+    isMobileShell() &&
+      items.length > 0 &&
+      !assetViewerManager.isViewing &&
+      !page.url.pathname.startsWith('/blocked'),
+  );
 
   $effect(() => {
     const active = isMobileShell();
