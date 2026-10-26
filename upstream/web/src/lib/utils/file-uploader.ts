@@ -17,7 +17,14 @@ import { UploadState } from '$lib/types';
 import { uploadRequest } from '$lib/utils';
 import { ExecutorQueue } from '$lib/utils/executor-queue';
 import { getMediaBaseUrl, isCrossOriginMediaBase } from '$lib/utils/media-base-url';
-import { isCoarsePointer, isNarrowViewport } from '$lib/utils/mobile-performance.svelte';
+import { getNetworkQuality, isCoarsePointer, isNarrowViewport } from '$lib/utils/mobile-performance.svelte';
+import {
+  buildPickerAccept,
+  cloneFileForUpload,
+  getHashConcurrency,
+  getUploadConcurrency,
+  isPayloadTooLarge,
+} from '$lib/utils/upload-strategy';
 import { handleError } from './handle-error';
 
 const MIME_TO_EXTENSIONS: Record<string, string[]> = {
@@ -70,13 +77,6 @@ export const isSupportedUploadFile = (file: File, extensions: string[]): boolean
   return false;
 };
 
-const pickerAccept = (extensions: string[]) => {
-  if (isMobilePicker()) {
-    return ['image/*', 'video/*', ...extensions].join(',');
-  }
-  return extensions.join(',');
-};
-
 const uploadQueryString = (params: { slug?: string; key?: string; sessionKey?: string }) => {
   const search = new URLSearchParams();
   if (params.slug) {
@@ -112,7 +112,15 @@ export const addDummyItems = () => {
 
 // addDummyItems();
 
-export const uploadExecutionQueue = new ExecutorQueue({ concurrency: 2 });
+/** Hàng đợi mạng — UploadPanel.svelte đọc/ghi `.concurrency`. */
+export const uploadExecutionQueue = new ExecutorQueue({
+  concurrency: getUploadConcurrency(getNetworkQuality(), isCoarsePointer()),
+});
+
+/** Hàng đợi CPU — băm SHA-1 file kế tiếp trong lúc file trước đang upload. */
+export const hashExecutionQueue = new ExecutorQueue({
+  concurrency: getHashConcurrency(typeof navigator === 'undefined' ? undefined : navigator.hardwareConcurrency),
+});
 
 type FilePickerParam = { multiple?: boolean; extensions?: string[] };
 type FileUploadParam = { multiple?: boolean; albumId?: string };
@@ -128,7 +136,7 @@ export const openFilePicker = async (options: FilePickerParam = {}) => {
       fileSelector.multiple = multiple;
 
       if (extensions) {
-        fileSelector.accept = pickerAccept(extensions);
+        fileSelector.accept = buildPickerAccept(extensions, isMobilePicker());
       }
 
       fileSelector.addEventListener(
@@ -186,9 +194,8 @@ export const fileUploadHandler = async ({
     if (isSupportedUploadFile(file, extensions)) {
       const deviceAssetId = getDeviceAssetId(file);
       uploadAssetsStore.addItem({ id: deviceAssetId, file, albumId });
-      promises.push(
-        uploadExecutionQueue.addTask(() => fileUploader({ deviceAssetId, assetFile: file, albumId, isLockedAssets })),
-      );
+      // fileUploader tự xếp hàng từng giai đoạn (băm → upload) nên không bọc thêm queue ở đây.
+      promises.push(fileUploader({ deviceAssetId, assetFile: file, albumId, isLockedAssets }));
     } else {
       toastManager.warning(get(t)('unsupported_file_type', { values: { file: file.name, type: file.type } }), {
         timeout: 10_000,
@@ -237,6 +244,94 @@ type FileUploaderParams = {
   deviceAssetId: string;
 };
 
+type UploadResult = { id: string; status: AssetMediaStatus; isTrashed?: boolean };
+
+/** Giai đoạn 1 (CPU): băm SHA-1 trong Worker rồi hỏi server đã có file chưa. */
+async function checkDuplicate(assetFile: File, deviceAssetId: string): Promise<UploadResult | undefined> {
+  const $t = get(t);
+  uploadAssetsStore.markStarted(deviceAssetId);
+  uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_hashing') });
+  await tick();
+
+  try {
+    const checksum = await hashFile(assetFile);
+
+    const {
+      results: [checkUploadResult],
+    } = await checkBulkUpload({ assetBulkUploadCheckDto: { assets: [{ id: assetFile.name, checksum }] } });
+    if (checkUploadResult.action === AssetUploadAction.Reject && checkUploadResult.assetId) {
+      return {
+        status: AssetMediaStatus.Duplicate,
+        id: checkUploadResult.assetId,
+        isTrashed: checkUploadResult.isTrashed,
+      };
+    }
+  } catch (error) {
+    console.error(`Error calculating sha1 file=${assetFile.name})`, error);
+  }
+
+  return undefined;
+}
+
+type UploadFileParams = {
+  assetFile: File;
+  deviceAssetId: string;
+  isLockedAssets: boolean;
+  /** true khi không có giai đoạn băm (shared link) — đánh dấu STARTED ở đây. */
+  markStarted: boolean;
+};
+
+/** Giai đoạn 2 (mạng): POST multipart tới media origin (bypass Vercel), byte gốc không chỉnh sửa. */
+async function uploadFile({
+  assetFile,
+  deviceAssetId,
+  isLockedAssets,
+  markStarted,
+}: UploadFileParams): Promise<UploadResult> {
+  const $t = get(t);
+  if (markStarted) {
+    uploadAssetsStore.markStarted(deviceAssetId);
+  }
+
+  const formData = new FormData();
+  for (const [key, value] of Object.entries({
+    fileCreatedAt: new Date(assetFile.lastModified).toISOString(),
+    fileModifiedAt: new Date(assetFile.lastModified).toISOString(),
+    isFavorite: 'false',
+    assetData: cloneFileForUpload(assetFile),
+  })) {
+    formData.append(key, value);
+  }
+
+  if (isLockedAssets) {
+    formData.append('visibility', AssetVisibility.Locked);
+  }
+
+  if (isCrossOriginMediaBase()) {
+    await authManager.ensureMediaSessionKey();
+  }
+
+  const queryParams = uploadQueryString(authManager.params);
+  const uploadHeaders: Record<string, string> = {};
+  if ('sessionKey' in authManager.params && authManager.params.sessionKey) {
+    uploadHeaders.Authorization = `Bearer ${authManager.params.sessionKey}`;
+  }
+
+  uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_uploading') });
+  const response = await uploadRequest<AssetMediaResponseDto>({
+    url: getMediaBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
+    data: formData,
+    headers: uploadHeaders,
+    onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
+  });
+
+  if (![200, 201].includes(response.status)) {
+    throw new Error($t('errors.unable_to_upload_file'));
+  }
+
+  return response.data;
+}
+
 // TODO: should probably use the @api SDK
 async function fileUploader({
   assetFile,
@@ -244,73 +339,21 @@ async function fileUploader({
   albumId,
   isLockedAssets = false,
 }: FileUploaderParams): Promise<string | undefined> {
-  const fileCreatedAt = new Date(assetFile.lastModified).toISOString();
   const $t = get(t);
   const wasInitiallyLoggedIn = !!authManager.authenticated;
 
-  uploadAssetsStore.markStarted(deviceAssetId);
-
   try {
-    const formData = new FormData();
-    for (const [key, value] of Object.entries({
-      fileCreatedAt,
-      fileModifiedAt: new Date(assetFile.lastModified).toISOString(),
-      isFavorite: 'false',
-      assetData: new File([assetFile], assetFile.name),
-    })) {
-      formData.append(key, value);
-    }
+    let responseData: UploadResult | undefined;
+    const skipHashing = authManager.isSharedLink;
 
-    if (isLockedAssets) {
-      formData.append('visibility', AssetVisibility.Locked);
-    }
-
-    let responseData: { id: string; status: AssetMediaStatus; isTrashed?: boolean } | undefined;
-    if (!authManager.isSharedLink) {
-      uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_hashing') });
-      await tick();
-      try {
-        const checksum = await hashFile(assetFile);
-
-        const {
-          results: [checkUploadResult],
-        } = await checkBulkUpload({ assetBulkUploadCheckDto: { assets: [{ id: assetFile.name, checksum }] } });
-        if (checkUploadResult.action === AssetUploadAction.Reject && checkUploadResult.assetId) {
-          responseData = {
-            status: AssetMediaStatus.Duplicate,
-            id: checkUploadResult.assetId,
-            isTrashed: checkUploadResult.isTrashed,
-          };
-        }
-      } catch (error) {
-        console.error(`Error calculating sha1 file=${assetFile.name})`, error);
-      }
+    if (!skipHashing) {
+      responseData = await hashExecutionQueue.addTask(() => checkDuplicate(assetFile, deviceAssetId));
     }
 
     if (!responseData) {
-      if (isCrossOriginMediaBase()) {
-        await authManager.ensureMediaSessionKey();
-      }
-
-      const queryParams = uploadQueryString(authManager.params);
-      const uploadHeaders: Record<string, string> = {};
-      if ('sessionKey' in authManager.params && authManager.params.sessionKey) {
-        uploadHeaders.Authorization = `Bearer ${authManager.params.sessionKey}`;
-      }
-
-      uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_uploading') });
-      const response = await uploadRequest<AssetMediaResponseDto>({
-        url: getMediaBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
-        data: formData,
-        headers: uploadHeaders,
-        onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
-      });
-
-      if (![200, 201].includes(response.status)) {
-        throw new Error($t('errors.unable_to_upload_file'));
-      }
-
-      responseData = response.data;
+      responseData = await uploadExecutionQueue.addTask(() =>
+        uploadFile({ assetFile, deviceAssetId, isLockedAssets, markStarted: skipHashing }),
+      );
     }
 
     if (responseData.status === AssetMediaStatus.Duplicate) {
@@ -345,7 +388,10 @@ async function fileUploader({
       return;
     }
 
-    const errorMessage = handleError(error, $t('errors.unable_to_upload_file'));
+    const fallbackMessage = isPayloadTooLarge(error)
+      ? $t('errors.upload_file_too_large')
+      : $t('errors.unable_to_upload_file');
+    const errorMessage = handleError(error, fallbackMessage);
     uploadAssetsStore.track('error');
     uploadAssetsStore.updateItem(deviceAssetId, { state: UploadState.ERROR, error: errorMessage });
     return;

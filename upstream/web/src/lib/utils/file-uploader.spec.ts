@@ -81,6 +81,28 @@ describe('fileUploader error handling', () => {
     expect(items.length).toBe(1);
     expect(utils.uploadRequest).toHaveBeenCalled();
   });
+
+  it('giữ nguyên MIME type của file khi gửi multipart', async () => {
+    const spy = vi.spyOn(utils, 'uploadRequest').mockResolvedValue({ status: 200, data: mockUploadResponse });
+
+    await fileUploadHandler({ files: [mockFile] });
+
+    const formData = spy.mock.calls[0][0].data as FormData;
+    const sent = formData.get('assetData') as File;
+    expect(sent.name).toBe('test.jpg');
+    expect(sent.type).toBe('image/jpeg');
+  });
+
+  it('báo lỗi tệp quá lớn khi upload trả 413', async () => {
+    const tooLarge = Object.assign(new Error('Payload Too Large'), { statusCode: 413 });
+    vi.spyOn(utils, 'uploadRequest').mockRejectedValue(tooLarge);
+
+    await fileUploadHandler({ files: [mockFile] });
+
+    const items = get(uploadAssetsStore);
+    expect(items[0].state).toBe(UploadState.ERROR);
+    expect(String(items[0].error)).toContain('upload_file_too_large');
+  });
 });
 
 describe('isSupportedUploadFile', () => {
