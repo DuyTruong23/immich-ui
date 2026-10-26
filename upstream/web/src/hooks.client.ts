@@ -1,5 +1,5 @@
 import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
-import { reloadPreservingSession } from '$custom/hooks/session-auth';
+import { reloadApp } from '$custom/hooks/app-reload';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
 import type { HandleClientError } from '@sveltejs/kit';
 
@@ -18,7 +18,7 @@ function reloadOnceForStaleChunk(): boolean {
     // sessionStorage unavailable — still try a one-shot reload
   }
 
-  reloadPreservingSession();
+  reloadApp();
   return true;
 }
 

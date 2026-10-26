@@ -1,5 +1,3 @@
-import { markAdminPersistentSession } from '$custom/hooks/session-auth';
-
 const SESSION_EXPIRY_KEY = 'pg_session_expires_at';
 const SESSION_NO_EXPIRY_KEY = 'pg_session_no_expiry';
 
@@ -14,12 +12,6 @@ export const markSessionExpiry = (): void => {
 
   clearSessionNoExpiry();
   sessionStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
-};
-
-/** Admin — không giới hạn thời gian phiên và giữ session qua reload tab */
-export const enableAdminSessionPersistence = (): void => {
-  markSessionNoExpiry();
-  markAdminPersistentSession();
 };
 
 export const markSessionNoExpiry = (): void => {
