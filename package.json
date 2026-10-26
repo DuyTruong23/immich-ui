@@ -27,6 +27,7 @@
     "branch": "bash scripts/create-branch.sh",
     "check:range": "bash scripts/check-video-range.sh",
     "check:version": "node scripts/check-immich-version.mjs",
+    "perf:audit": "node scripts/perf-audit.mjs",
     "test:scripts": "node --test \"scripts/**/*.test.mjs\"",
     "postinstall": "pnpm --filter @immich/sdk build"
   }
