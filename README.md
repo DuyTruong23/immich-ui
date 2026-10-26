@@ -38,6 +38,7 @@ Frontend: http://localhost:5283 — cần Immich Server tại http://localhost:2
 | `pnpm build` | Production build |
 | `pnpm prepare:custom` | Sync routes + branding assets |
 | `pnpm sync:upstream` | Đồng bộ Immich upstream |
+| `pnpm check:version` | So version Immich web/SDK trong repo với server và release mới nhất |
 
 ## Git Remotes
 
