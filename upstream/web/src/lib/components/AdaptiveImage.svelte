@@ -58,6 +58,8 @@
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { getAssetUrls } from '$lib/utils';
   import { AdaptiveImageLoader, type QualityList } from '$lib/utils/adaptive-image-loader.svelte';
+  import { shouldUpgradeToOriginal } from '$lib/utils/image-quality';
+  import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
   import { scaleToCover, scaleToFit, type Size } from '$lib/utils/container-utils';
   import { getAltText } from '$lib/utils/thumbnail-util';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
@@ -94,6 +96,10 @@
     overlays,
   }: Props = $props();
 
+  let thumbnailElement = $state<HTMLImageElement>();
+  let previewElement = $state<HTMLImageElement>();
+  let originalElement = $state<HTMLImageElement>();
+
   const afterThumbnail = (loader: AdaptiveImageLoader) => {
     if (assetViewerManager.zoom > 1) {
       loader.trigger('original');
@@ -102,8 +108,28 @@
     }
   };
 
+  // Sau khi preview hiện: nâng lên ảnh gốc nếu màn hình này cần (mạng nhanh, preview chưa đủ nét). Zoom vẫn tải gốc như cũ.
   const buildQualityList = () => {
     const assetUrls = getAssetUrls(asset, sharedLink);
+    const afterPreview = (loader: AdaptiveImageLoader) => {
+      if (assetUrls.preview === assetUrls.original) {
+        return;
+      }
+      const previewSize =
+        previewElement && previewElement.naturalWidth > 0
+          ? { width: previewElement.naturalWidth, height: previewElement.naturalHeight }
+          : undefined;
+      const upgrade = shouldUpgradeToOriginal({
+        network: getNetworkQuality(),
+        preview: previewSize,
+        display: fitSize,
+        devicePixelRatio: globalThis.devicePixelRatio || 1,
+        original: { width: asset.width, height: asset.height },
+      });
+      if (upgrade) {
+        loader.trigger('original');
+      }
+    };
     const qualityList: QualityList = [
       {
         quality: 'thumbnail',
@@ -114,6 +140,7 @@
       {
         quality: 'preview',
         url: assetUrls.preview,
+        onAfterLoad: afterPreview,
         onAfterError: (loader) => loader.trigger('original'),
       },
       { quality: 'original', url: assetUrls.original },
@@ -150,10 +177,11 @@
     return { width: 1, height: 1 };
   });
 
+  const fitSize = $derived((objectFit === 'cover' ? scaleToCover : scaleToFit)(imageDimensions, container));
+
   const { insetInlineStart, top, displayWidth, displayHeight, rasterWidth, rasterHeight, rasterScale } = $derived.by(
     () => {
-      const scaleFn = objectFit === 'cover' ? scaleToCover : scaleToFit;
-      const { width, height } = scaleFn(imageDimensions, container);
+      const { width, height } = fitSize;
       if (maxRasterPixels === 0) {
         return {
           insetInlineStart: (container.width - width) / 2 + 'px',
@@ -205,10 +233,6 @@
       untrack(() => void adaptiveImageLoader.trigger('original'));
     }
   });
-
-  let thumbnailElement = $state<HTMLImageElement>();
-  let previewElement = $state<HTMLImageElement>();
-  let originalElement = $state<HTMLImageElement>();
 
   $effect(() => {
     const quality = status.quality;

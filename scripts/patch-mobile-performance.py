@@ -566,52 +566,6 @@ def patch_image_thumbnail_reset(path: pathlib.Path) -> None:
     path.write_text(text, encoding='utf-8')
 
 
-def patch_force_compressed_media(web: pathlib.Path) -> None:
-    preferences = web / 'src/lib/stores/preferences.store.ts'
-    text = preferences.read_text(encoding='utf-8')
-    text = insert_after(
-        text,
-        "export const showDeleteModal = persisted<boolean>('delete-confirm-dialog', true, {});\n",
-        """
-if (browser) {
-  localStorage.setItem('always-load-original-file', 'false');
-  localStorage.setItem('always-load-original-video', 'false');
-}
-
-""",
-        'preferences force original media off',
-    )
-    preferences.write_text(text, encoding='utf-8')
-
-    navbar = web / 'src/lib/components/asset-viewer/AssetViewerNavBar.svelte'
-    text = navbar.read_text(encoding='utf-8')
-    text = replace_once(
-        text,
-        """  const PlayOriginalVideo: ActionItem = $derived({
-    title: isPlayingOriginalVideo ? $t('play_transcoded_video') : $t('play_original_video'),
-    icon: mdiVideoOutline,
-    $if: () => asset.type === AssetTypeEnum.Video,
-""",
-        """  const PlayOriginalVideo: ActionItem = $derived({
-    title: isPlayingOriginalVideo ? $t('play_transcoded_video') : $t('play_original_video'),
-    icon: mdiVideoOutline,
-    $if: () => false,
-""",
-        'hide play original video action',
-    )
-    navbar.write_text(text, encoding='utf-8')
-
-    viewer = web / 'src/lib/components/asset-viewer/AssetViewer.svelte'
-    text = viewer.read_text(encoding='utf-8')
-    text = replace_once(
-        text,
-        '  let isPlayingOriginalVideo = $state($alwaysLoadOriginalVideo);\n',
-        '  let isPlayingOriginalVideo = $state(false);\n',
-        'AssetViewer force transcoded video',
-    )
-    viewer.write_text(text, encoding='utf-8')
-
-
 def patch_auth_manager_media_session(path: pathlib.Path) -> None:
     text = path.read_text(encoding='utf-8')
     text = remove_once(
@@ -919,7 +873,6 @@ def main() -> None:
     else:
         patch_timeline_day(web / 'src/lib/managers/timeline-manager/timeline-day.svelte.ts')
     patch_utils_target_size(web / 'src/lib/utils.ts')
-    patch_force_compressed_media(web)
     if override_exists(root, 'stores/preferences.store.ts'):
         print('==> Skip preferences.store language patch (override present)')
     else:

@@ -1,6 +1,23 @@
 {
   "releases": [
     {
+      "version": "v2.1.0",
+      "items": [
+        {
+          "title": "Không còn bị đăng xuất khi tải lại trang (F5)",
+          "detail": "Phiên đăng nhập giữ nguyên khi bấm F5 hoặc mở lại tab. Tài khoản thường vẫn tự hết hạn sau 30 phút."
+        },
+        {
+          "title": "Xem ảnh nét hơn, vẫn nhanh",
+          "detail": "Ảnh hiện bản xem nhanh trước, rồi tự nâng lên ảnh gốc khi mạng nhanh và màn hình cần độ phân giải cao hơn. Trong Cài đặt có thể bật 'Hiển thị ảnh gốc' và 'Phát video gốc'."
+        },
+        {
+          "title": "Tải ảnh/video lên nhanh hơn",
+          "detail": "Băm và tải lên chạy song song; số tệp tải cùng lúc tự điều chỉnh theo mạng. Tệp quá lớn sẽ báo lỗi rõ ràng."
+        }
+      ]
+    },
+    {
       "version": "v2.0.0",
       "items": [
 

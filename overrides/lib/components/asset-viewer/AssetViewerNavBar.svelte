@@ -82,7 +82,7 @@
   const PlayOriginalVideo: ActionItem = $derived({
     title: isPlayingOriginalVideo ? $t('play_transcoded_video') : $t('play_original_video'),
     icon: mdiVideoOutline,
-    $if: () => false,
+    $if: () => asset.type === AssetTypeEnum.Video,
     onAction: () => setPlayOriginalVideo(!isPlayingOriginalVideo),
   });
 
