@@ -122,6 +122,9 @@ export const hashExecutionQueue = new ExecutorQueue({
   concurrency: getHashConcurrency(typeof navigator === 'undefined' ? undefined : navigator.hardwareConcurrency),
 });
 
+/** Hàng đợi REST kiểm tra trùng — đi qua proxy (độ trễ cao), chạy song song vừa phải, không bắn N request cùng lúc. */
+export const checkExecutionQueue = new ExecutorQueue({ concurrency: 4 });
+
 type FilePickerParam = { multiple?: boolean; extensions?: string[] };
 type FileUploadParam = { multiple?: boolean; albumId?: string };
 
@@ -246,16 +249,25 @@ type FileUploaderParams = {
 
 type UploadResult = { id: string; status: AssetMediaStatus; isTrashed?: boolean };
 
-/** Giai đoạn 1 (CPU): băm SHA-1 trong Worker rồi hỏi server đã có file chưa. */
-async function checkDuplicate(assetFile: File, deviceAssetId: string): Promise<UploadResult | undefined> {
+/** Giai đoạn 1a (CPU): băm SHA-1 trong Worker. Lỗi băm trả undefined để file vẫn được upload. */
+async function hashForUpload(assetFile: File, deviceAssetId: string): Promise<string | undefined> {
   const $t = get(t);
   uploadAssetsStore.markStarted(deviceAssetId);
   uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_hashing') });
   await tick();
 
   try {
-    const checksum = await hashFile(assetFile);
+    return await hashFile(assetFile);
+  } catch (error) {
+    console.error(`Error calculating sha1 file=${assetFile.name})`, error);
+  }
 
+  return undefined;
+}
+
+/** Giai đoạn 1b (REST): hỏi server đã có file có checksum này chưa — không giữ slot của hàng đợi băm. */
+async function checkDuplicate(assetFile: File, checksum: string): Promise<UploadResult | undefined> {
+  try {
     const {
       results: [checkUploadResult],
     } = await checkBulkUpload({ assetBulkUploadCheckDto: { assets: [{ id: assetFile.name, checksum }] } });
@@ -267,7 +279,7 @@ async function checkDuplicate(assetFile: File, deviceAssetId: string): Promise<U
       };
     }
   } catch (error) {
-    console.error(`Error calculating sha1 file=${assetFile.name})`, error);
+    console.error(`Error checking duplicate file=${assetFile.name})`, error);
   }
 
   return undefined;
@@ -339,7 +351,12 @@ async function fileUploader({
     const skipHashing = authManager.isSharedLink;
 
     if (!skipHashing) {
-      responseData = await hashExecutionQueue.addTask(() => checkDuplicate(assetFile, deviceAssetId));
+      // Hai giai đoạn nối tiếp ở đây (không lồng trong một task) để task băm nhả slot CPU trước khi gọi REST.
+      const checksum = await hashExecutionQueue.addTask(() => hashForUpload(assetFile, deviceAssetId));
+      if (checksum) {
+        responseData = await checkExecutionQueue.addTask(() => checkDuplicate(assetFile, checksum));
+      }
+
       if (!responseData) {
         // Băm xong, chưa trùng: quay lại trạng thái chờ cho tới khi có slot upload.
         uploadAssetsStore.updateItem(deviceAssetId, { state: UploadState.PENDING, message: undefined });
