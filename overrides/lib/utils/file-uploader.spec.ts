@@ -7,7 +7,7 @@ import { uploadAssetsStore } from '$lib/stores/upload';
 import { UploadState } from '$lib/types';
 import * as utils from '$lib/utils';
 import { preferencesFactory } from '@test-data/factories/preferences-factory';
-import { fileUploadHandler, isSupportedUploadFile } from './file-uploader';
+import { fileUploadHandler, isSupportedUploadFile, uploadExecutionQueue } from './file-uploader';
 
 describe('fileUploader error handling', () => {
   const mockFile = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
@@ -102,6 +102,57 @@ describe('fileUploader error handling', () => {
     const items = get(uploadAssetsStore);
     expect(items[0].state).toBe(UploadState.ERROR);
     expect(String(items[0].error)).toContain('upload_file_too_large');
+  });
+
+  it('đưa file đã băm xong về trạng thái chờ cho tới khi có slot upload', async () => {
+    const previousConcurrency = uploadExecutionQueue.concurrency;
+    uploadExecutionQueue.concurrency = 1;
+
+    const hashedIds = new Set<string>();
+    const unsubscribe = uploadAssetsStore.subscribe((items) => {
+      for (const item of items) {
+        if (item.message === 'asset_hashing') {
+          hashedIds.add(item.id);
+        }
+      }
+    });
+
+    try {
+      const first = new File(['one'], 'first.jpg', { type: 'image/jpeg', lastModified: 1 });
+      const second = new File(['two'], 'second.jpg', { type: 'image/jpeg', lastModified: 2 });
+      let releaseFirst: () => void = () => {};
+      const spy = vi
+        .spyOn(utils, 'uploadRequest')
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              releaseFirst = () => resolve({ status: 200, data: mockUploadResponse });
+            }),
+        )
+        .mockResolvedValue({ status: 200, data: { ...mockUploadResponse, id: 'mock-id-2' } });
+
+      const done = fileUploadHandler({ files: [first, second] });
+
+      // Upload đầu đang treo giữ slot duy nhất; file thứ hai đã băm xong và đang chờ slot.
+      await vi.waitFor(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(hashedIds.has('web-second.jpg-2')).toBe(true);
+      });
+
+      const waiting = get(uploadAssetsStore).find((item) => item.file.name === 'second.jpg');
+      expect(waiting?.state).toBe(UploadState.PENDING);
+      expect(waiting?.message).not.toBe('asset_hashing');
+
+      releaseFirst();
+      await done;
+
+      const items = get(uploadAssetsStore);
+      expect(items.length).toBe(2);
+      expect(items.map((item) => item.state)).toEqual([UploadState.DONE, UploadState.DONE]);
+    } finally {
+      unsubscribe();
+      uploadExecutionQueue.concurrency = previousConcurrency;
+    }
   });
 });
 

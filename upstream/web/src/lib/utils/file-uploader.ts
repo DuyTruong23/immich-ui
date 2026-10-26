@@ -277,21 +277,13 @@ type UploadFileParams = {
   assetFile: File;
   deviceAssetId: string;
   isLockedAssets: boolean;
-  /** true khi không có giai đoạn băm (shared link) — đánh dấu STARTED ở đây. */
-  markStarted: boolean;
 };
 
 /** Giai đoạn 2 (mạng): POST multipart tới media origin (bypass Vercel), byte gốc không chỉnh sửa. */
-async function uploadFile({
-  assetFile,
-  deviceAssetId,
-  isLockedAssets,
-  markStarted,
-}: UploadFileParams): Promise<UploadResult> {
+async function uploadFile({ assetFile, deviceAssetId, isLockedAssets }: UploadFileParams): Promise<UploadResult> {
   const $t = get(t);
-  if (markStarted) {
-    uploadAssetsStore.markStarted(deviceAssetId);
-  }
+  // Đánh dấu STARTED khi đã có slot upload để tốc độ/ETA chỉ tính thời gian truyền, không tính thời gian chờ slot.
+  uploadAssetsStore.markStarted(deviceAssetId);
 
   const formData = new FormData();
   for (const [key, value] of Object.entries({
@@ -348,12 +340,14 @@ async function fileUploader({
 
     if (!skipHashing) {
       responseData = await hashExecutionQueue.addTask(() => checkDuplicate(assetFile, deviceAssetId));
+      if (!responseData) {
+        // Băm xong, chưa trùng: quay lại trạng thái chờ cho tới khi có slot upload.
+        uploadAssetsStore.updateItem(deviceAssetId, { state: UploadState.PENDING, message: undefined });
+      }
     }
 
     if (!responseData) {
-      responseData = await uploadExecutionQueue.addTask(() =>
-        uploadFile({ assetFile, deviceAssetId, isLockedAssets, markStarted: skipHashing }),
-      );
+      responseData = await uploadExecutionQueue.addTask(() => uploadFile({ assetFile, deviceAssetId, isLockedAssets }));
     }
 
     if (responseData.status === AssetMediaStatus.Duplicate) {
