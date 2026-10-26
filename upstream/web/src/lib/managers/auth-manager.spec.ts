@@ -1,5 +1,5 @@
 import { getMyPreferences, getMyUser } from '@immich/sdk';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { preferencesFactory } from '@test-data/factories/preferences-factory';
 import { userAdminFactory } from '@test-data/factories/user-factory';
@@ -30,6 +30,10 @@ describe('authManager.load — F5 / reload giữ phiên', () => {
     authManager.reset();
     vi.mocked(getMyUser).mockResolvedValue(userAdminFactory.build({ isAdmin: false }));
     vi.mocked(getMyPreferences).mockResolvedValue(preferencesFactory.build());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('khôi phục phiên từ cookie dù sessionStorage trống (sau F5)', async () => {
@@ -68,5 +72,24 @@ describe('authManager.load — F5 / reload giữ phiên', () => {
     await authManager.load();
 
     expect(sessionStorage.getItem('pg_session_no_expiry')).toBe('1');
+  });
+
+  it('user thường restore ở tab mới: ghi mốc hết hạn 30 phút', async () => {
+    setAuthCookie(true);
+
+    await authManager.load();
+
+    const expiresAt = Number(sessionStorage.getItem('pg_session_expires_at'));
+    expect(Math.abs(expiresAt - (Date.now() + 30 * 60 * 1000))).toBeLessThanOrEqual(5000);
+  });
+
+  it('F5 trong cùng tab giữ nguyên mốc hết hạn cũ', async () => {
+    setAuthCookie(true);
+    const existing = String(Date.now() + 10 * 60 * 1000);
+    sessionStorage.setItem('pg_session_expires_at', existing);
+
+    await authManager.load();
+
+    expect(sessionStorage.getItem('pg_session_expires_at')).toBe(existing);
   });
 });

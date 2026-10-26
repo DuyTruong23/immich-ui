@@ -12,7 +12,9 @@ import { clearStoredAccessToken } from '$custom/hooks/access-token';
 import {
   clearSessionExpiry,
   clearSessionNoExpiry,
+  hasSessionExpiry,
   isSessionExpired,
+  markSessionExpiry,
   markSessionNoExpiry,
   watchSessionExpiry,
 } from '$custom/hooks/session-expiry';
@@ -121,6 +123,9 @@ class AuthManager {
 
       if (user.isAdmin) {
         markSessionNoExpiry();
+      } else if (!hasSessionExpiry()) {
+        // Restore ở tab mới (sessionStorage trống): phiên 30 phút tính lại từ lúc mở tab.
+        markSessionExpiry();
       }
 
       if (user.license?.activatedAt) {

@@ -31,6 +31,15 @@ export const clearSessionNoExpiry = (): void => {
   sessionStorage.removeItem(SESSION_NO_EXPIRY_KEY);
 };
 
+/** Đã có mốc hết hạn trong tab này chưa (login hoặc restore trước đó). */
+export const hasSessionExpiry = (): boolean => {
+  if (typeof sessionStorage === 'undefined') {
+    return false;
+  }
+
+  return sessionStorage.getItem(SESSION_EXPIRY_KEY) !== null;
+};
+
 export const isSessionNoExpiry = (): boolean => {
   if (typeof sessionStorage === 'undefined') {
     return false;
