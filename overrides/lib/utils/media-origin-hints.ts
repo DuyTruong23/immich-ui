@@ -15,5 +15,11 @@ export const buildMediaOriginHints = (mediaUrl: string | undefined): string => {
     return '';
   }
 
+  // Origin được chèn thẳng vào attribute HTML: chỉ nhận http(s)://host[:port].
+  // URL.origin giữ nguyên dấu ", scheme lạ cho ra "null" — cả hai đều không được lọt vào <head>.
+  if (!/^https?:\/\/[A-Za-z0-9.-]+(?::\d+)?$/.test(origin)) {
+    return '';
+  }
+
   return `<link rel="preconnect" href="${origin}" />\n    <link rel="dns-prefetch" href="${origin}" />`;
 };

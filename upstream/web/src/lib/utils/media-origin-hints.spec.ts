@@ -18,4 +18,14 @@ describe('buildMediaOriginHints', () => {
       'href="https://api.gallery-app.pp.ua"',
     );
   });
+
+  it('rỗng khi origin chứa ký tự có thể phá attribute HTML hoặc không phải http(s)', () => {
+    expect(buildMediaOriginHints('https://a"onerror=alert(1)')).toBe('');
+    expect(buildMediaOriginHints('javascript:alert(1)')).toBe('');
+    expect(buildMediaOriginHints('ftp://files.example.com')).toBe('');
+  });
+
+  it('giữ origin http có port (môi trường dev)', () => {
+    expect(buildMediaOriginHints('http://localhost:2283')).toContain('href="http://localhost:2283"');
+  });
 });
