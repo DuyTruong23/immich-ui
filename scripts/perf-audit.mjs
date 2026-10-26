@@ -186,7 +186,7 @@ const runBundle = () => {
   const dir = resolve(root, 'upstream/web/build/_app/immutable');
   if (!existsSync(dir)) {
     console.error('Chưa có build — chạy `pnpm build` trước.');
-    // Dùng exitCode thay vì process.exit(): trên Windows, exit ngay sau fetch lỗi gây assertion của libuv (exit 127).
+    // Dùng exitCode (không gọi process.exit()) cho đồng bộ với phần còn lại của script.
     process.exitCode = 1;
     return;
   }
@@ -227,6 +227,7 @@ const isMain = Boolean(process.argv[1]) && resolve(process.argv[1]) === fileURLT
 if (isMain) {
   main().catch((error) => {
     console.error(error);
+    // Dùng exitCode thay vì process.exit(): trên Windows, exit ngay sau fetch lỗi gây assertion của libuv (exit 127).
     process.exitCode = 1;
   });
 }
