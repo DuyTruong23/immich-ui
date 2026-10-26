@@ -1,5 +1,4 @@
 import { persisted } from 'svelte-persisted-store';
-import { browser } from '$app/environment';
 import { convertBCP47 } from '$lib/utils/i18n';
 import { resolveDefaultLanguage } from '$lib/utils/system-defaults';
 

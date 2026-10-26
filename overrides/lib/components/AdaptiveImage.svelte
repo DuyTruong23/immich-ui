@@ -58,7 +58,7 @@
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { getAssetUrls } from '$lib/utils';
   import { AdaptiveImageLoader, type QualityList } from '$lib/utils/adaptive-image-loader.svelte';
-  import { shouldUpgradeToOriginal } from '$lib/utils/image-quality';
+  import { isImageBroken, shouldUpgradeToOriginal } from '$lib/utils/image-quality';
   import { getNetworkQuality } from '$lib/utils/mobile-performance.svelte';
   import { scaleToCover, scaleToFit, type Size } from '$lib/utils/container-utils';
   import { getAltText } from '$lib/utils/thumbnail-util';
@@ -212,11 +212,12 @@
   const alt = $derived(status.urls.preview ? $getAltText(toTimelineAsset(asset)) : '');
 
   const show = $derived.by(() => {
-    const { quality, started, hasError, urls } = status;
+    const { quality, started, urls } = status;
+    const brokenAsset = isImageBroken(status);
     return {
-      alphaBackground: !hasError && started,
+      alphaBackground: started && !brokenAsset,
       spinner: !asset.thumbhash && !started,
-      brokenAsset: hasError,
+      brokenAsset,
       thumbhash: quality.thumbnail !== 'success' && quality.preview !== 'success' && quality.original !== 'success',
       thumbnail: quality.thumbnail !== 'error' && quality.preview !== 'success' && quality.original !== 'success',
       preview: quality.preview !== 'error' && quality.original !== 'success',

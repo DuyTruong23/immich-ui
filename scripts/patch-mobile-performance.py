@@ -370,6 +370,8 @@ def patch_preferences_system_language(path: pathlib.Path) -> None:
         "export const lang = persisted<string>('lang', resolveDefaultLanguage(), {\n",
         'preferences.store default language',
     )
+    # `browser` chỉ còn được dùng bởi dòng preferredLocale đã bị thay ở trên — bỏ import để không dư (eslint no-unused-vars).
+    text = remove_once(text, "import { browser } from '$app/environment';\n")
     path.write_text(text, encoding='utf-8')
 
 
