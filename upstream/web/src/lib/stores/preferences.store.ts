@@ -1,5 +1,4 @@
 import { persisted } from 'svelte-persisted-store';
-import { browser } from '$app/environment';
 import { convertBCP47 } from '$lib/utils/i18n';
 import { resolveDefaultLanguage } from '$lib/utils/system-defaults';
 
@@ -126,11 +125,6 @@ export const placesViewSettings = persisted<PlacesViewSettings>('places-view-set
 });
 
 export const showDeleteModal = persisted<boolean>('delete-confirm-dialog', true, {});
-
-if (browser) {
-  localStorage.setItem('always-load-original-file', 'false');
-  localStorage.setItem('always-load-original-video', 'false');
-}
 
 export const alwaysLoadOriginalFile = persisted<boolean>('always-load-original-file', false, {});
 

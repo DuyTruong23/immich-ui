@@ -5,8 +5,7 @@
   import { loadFeatureUpdatesForDisplay } from '$custom/constants/feature-updates';
   import FeatureUpdateModal from '../../FeatureUpdateModal.svelte';
   import { notifyAdminOnLogin } from '$custom/hooks/login-notify';
-  import { markSessionActive } from '$custom/hooks/session-auth';
-  import { enableAdminSessionPersistence, markSessionExpiry } from '$custom/hooks/session-expiry';
+  import { markSessionExpiry, markSessionNoExpiry } from '$custom/hooks/session-expiry';
   import { goto } from '$app/navigation';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -86,7 +85,7 @@
     loadingRole = role;
     applyDevRole(role);
     if (role === 'admin') {
-      enableAdminSessionPersistence();
+      markSessionNoExpiry();
     }
     await goto(data.continueUrl, { invalidateAll: true });
     eventManager.emit('AuthLogin', {
@@ -145,12 +144,9 @@
     await syncAuthState(user.accessToken);
 
     if (user.isAdmin) {
-      enableAdminSessionPersistence();
+      markSessionNoExpiry();
     } else {
       markSessionExpiry();
-      if (publicEnv.sessionOnlyAuth) {
-        markSessionActive();
-      }
     }
 
     stripPasswordManagerSignals();

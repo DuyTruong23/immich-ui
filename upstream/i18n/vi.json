@@ -1135,6 +1135,7 @@
     "unable_to_update_user": "Không thể cập nhật người dùng",
     "unable_to_update_workflow": "Không thể cập nhật workflow",
     "unable_to_upload_file": "Không thể tải tệp lên",
+    "upload_file_too_large": "Tệp quá lớn, đường tải lên từ chối (HTTP 413). Hãy thử tệp nhỏ hơn hoặc tải từ ứng dụng di động.",
     "unable_to_block_user": "Không thể khóa tài khoản",
     "unable_to_unblock_user": "Không thể mở khóa tài khoản"
   },

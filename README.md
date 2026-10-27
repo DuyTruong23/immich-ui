@@ -38,6 +38,8 @@ Frontend: http://localhost:5283 — cần Immich Server tại http://localhost:2
 | `pnpm build` | Production build |
 | `pnpm prepare:custom` | Sync routes + branding assets |
 | `pnpm sync:upstream` | Đồng bộ Immich upstream |
+| `pnpm check:version` | So version Immich web/SDK trong repo với server và release mới nhất |
+| `pnpm perf:audit` | Đo TTFB production, `--bundle` phân tích build |
 
 ## Git Remotes
 
@@ -69,6 +71,7 @@ Code trên `develop`. Push `main` để Vercel deploy. Changelog modal sửa tay
 | [Upgrade](docs/Upgrade.md) | Nâng cấp Immich |
 | [GitWorkflow](docs/GitWorkflow.md) | Branch strategy |
 | [FEAT-READ](feature-updates/FEAT-READ.md) | Checklist tự cập nhật changelog / i18n / env |
+| [Performance](docs/Performance.md) | Số đo TTFB / Lighthouse / bundle và khuyến nghị |
 
 ## License
 

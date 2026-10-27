@@ -7,25 +7,15 @@ import {
   type UserAdminResponseDto,
   type UserPreferencesResponseDto,
 } from '@immich/sdk';
-import { getAppConfig } from '@photo-gallery/config';
-import {
-  beginBrowserSession,
-  clearAdminPersistentSession,
-  clearSessionActive,
-  isActiveBrowserSession,
-  isAdminPersistentSession,
-} from '$custom/hooks/session-auth';
-import {
-  clearDevSession,
-  isUiDevMode,
-  restoreDevSession,
-} from '$custom/hooks/ui-dev-mode';
+import { clearDevSession, isUiDevMode, restoreDevSession } from '$custom/hooks/ui-dev-mode';
 import { clearStoredAccessToken } from '$custom/hooks/access-token';
 import {
   clearSessionExpiry,
   clearSessionNoExpiry,
-  enableAdminSessionPersistence,
+  hasSessionExpiry,
   isSessionExpired,
+  markSessionExpiry,
+  markSessionNoExpiry,
   watchSessionExpiry,
 } from '$custom/hooks/session-expiry';
 import { browser } from '$app/environment';
@@ -96,6 +86,7 @@ class AuthManager {
     });
   }
 
+  /** Mỗi lần load trang (kể cả F5): có cookie Immich là khôi phục phiên — không phụ thuộc sessionStorage. */
   async load() {
     if (this.#checkSessionExpiry()) {
       return;
@@ -110,13 +101,6 @@ class AuthManager {
     if (isUiDevMode()) {
       restoreDevSession();
       return;
-    }
-
-    if (this.#isSessionOnlyAuth()) {
-      beginBrowserSession();
-      if (!isActiveBrowserSession() && !isAdminPersistentSession()) {
-        return this.#restoreAdminFromCookie();
-      }
     }
 
     if (!this.#hasAuthCookie()) {
@@ -138,9 +122,10 @@ class AuthManager {
       this.#user = user;
 
       if (user.isAdmin) {
-        enableAdminSessionPersistence();
-      } else {
-        clearAdminPersistentSession();
+        markSessionNoExpiry();
+      } else if (!hasSessionExpiry()) {
+        // Restore ở tab mới (sessionStorage trống): phiên 30 phút tính lại từ lúc mở tab.
+        markSessionExpiry();
       }
 
       if (user.license?.activatedAt) {
@@ -263,26 +248,6 @@ class AuthManager {
     clearStoredAccessToken();
     clearSessionExpiry();
     clearSessionNoExpiry();
-    clearAdminPersistentSession();
-
-    if (this.#isSessionOnlyAuth()) {
-      clearSessionActive();
-    }
-  }
-
-  /** Đóng tab xóa sessionStorage — cookie Immich vẫn còn. Chỉ restore nếu đúng admin. */
-  async #restoreAdminFromCookie() {
-    if (!this.#hasAuthCookie()) {
-      return;
-    }
-
-    await this.refresh();
-
-    if (this.#user?.isAdmin) {
-      return;
-    }
-
-    this.reset();
   }
 
   #checkSessionExpiry(): boolean {
@@ -313,14 +278,6 @@ class AuthManager {
   #stopSessionExpiryWatcher() {
     this.#expiryWatcherCleanup?.();
     this.#expiryWatcherCleanup = undefined;
-  }
-
-  #isSessionOnlyAuth() {
-    try {
-      return getAppConfig().publicEnv.sessionOnlyAuth;
-    } catch {
-      return false;
-    }
   }
 
   #hasAuthCookie() {

@@ -26,7 +26,6 @@ import {
   PUBLIC_ENABLE_UTILITIES,
   PUBLIC_ENABLE_WORKFLOWS,
   PUBLIC_IMMICH_SERVER_URL,
-  PUBLIC_SESSION_ONLY_AUTH,
   PUBLIC_THEME,
 } from '$env/static/public';
 import { env as publicEnvDynamic } from '$env/dynamic/public';
@@ -54,7 +53,6 @@ export const load = (async ({ fetch, url }) => {
     PUBLIC_ENABLE_ANALYTICS,
     PUBLIC_ENABLE_ADMIN,
     PUBLIC_ENABLE_EXPERIMENTAL,
-    PUBLIC_SESSION_ONLY_AUTH,
     PUBLIC_ENABLE_LOGIN_NOTIFY,
     PUBLIC_UI_DEV_MODE: publicEnvDynamic.PUBLIC_UI_DEV_MODE ?? 'false',
     PUBLIC_ENABLE_MEMORIES,

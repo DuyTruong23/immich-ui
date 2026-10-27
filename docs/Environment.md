@@ -271,6 +271,6 @@ IMMICH_SERVER_URL=https://immich.gallery-app.pp.ua
 PUBLIC_APP_NAME=WeGallery
 ```
 
-Tối ưu mobile / ép tắt video-ảnh gốc **không thêm biến mới**. Video trên điện thoại phụ thuộc `PUBLIC_IMMICH_MEDIA_URL` (đã có trên Vercel).
+Tối ưu mobile **không thêm biến mới**. Ảnh tự nâng lên bản gốc sau preview khi mạng nhanh và màn hình cần; video gốc theo tuỳ chọn người dùng (Cài đặt → "Phát video gốc", hoặc nút trên thanh viewer). `PUBLIC_IMMICH_MEDIA_URL` còn được dùng để chèn `<link rel="preconnect">` vào `<head>` lúc build.
 
 **Không set** `PUBLIC_IMMICH_SERVER_URL` cross-origin — Immich không hỗ trợ CORS; REST qua `/api` proxy same-origin.

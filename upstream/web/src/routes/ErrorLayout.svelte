@@ -1,7 +1,7 @@
 <script lang="ts">
   import MaintenancePage from '$custom/components/MaintenancePage.svelte';
   import { isStaleChunkError } from '$custom/utils/server-connection-error';
-  import { reloadPreservingSession } from '$custom/hooks/session-auth';
+  import { reloadApp } from '$custom/hooks/app-reload';
   import { onMount } from 'svelte';
 
   interface Props {
@@ -24,7 +24,7 @@
     }
 
     const timer = window.setTimeout(() => {
-      reloadPreservingSession();
+      reloadApp();
     }, 250);
 
     return () => window.clearTimeout(timer);
@@ -38,7 +38,7 @@
       <p class="pg-maintenance__description">
         Ứng dụng vừa được cập nhật. Trang sẽ tải lại — bạn không phải đăng nhập lại.
       </p>
-      <button type="button" class="pg-stale-chunk-reload" onclick={() => reloadPreservingSession()}>Tải lại</button>
+      <button type="button" class="pg-stale-chunk-reload" onclick={() => reloadApp()}>Tải lại</button>
     </div>
   </div>
 {:else}

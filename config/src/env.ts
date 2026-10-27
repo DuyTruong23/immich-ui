@@ -12,7 +12,6 @@ export interface PublicEnv {
   enableAnalytics: boolean;
   enableAdmin: boolean;
   enableExperimental: boolean;
-  sessionOnlyAuth: boolean;
   enableLoginNotify: boolean;
   uiDevMode: boolean;
 }
@@ -42,7 +41,6 @@ export const createPublicEnv = (env: Record<string, string | undefined>): Public
   enableAnalytics: readBool(env.PUBLIC_ENABLE_ANALYTICS, false),
   enableAdmin: readBool(env.PUBLIC_ENABLE_ADMIN, true),
   enableExperimental: readBool(env.PUBLIC_ENABLE_EXPERIMENTAL, false),
-  sessionOnlyAuth: readBool(env.PUBLIC_SESSION_ONLY_AUTH, false),
   enableLoginNotify: readBool(env.PUBLIC_ENABLE_LOGIN_NOTIFY, false),
   uiDevMode: readBool(env.PUBLIC_UI_DEV_MODE, false),
 });

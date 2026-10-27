@@ -5,6 +5,8 @@
   import { fallbackLocale, locales } from '$lib/constants';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import {
+    alwaysLoadOriginalFile,
+    alwaysLoadOriginalVideo,
     autoPlayVideo,
     locale,
     loopVideo,
@@ -89,6 +91,10 @@
         />
       {/if}
 
+      <Field label={$t('display_original_photos')} description={$t('display_original_photos_setting_description')}>
+        <Switch bind:checked={$alwaysLoadOriginalFile} />
+      </Field>
+
       <Field label={$t('video_hover_setting')} description={$t('video_hover_setting_description')}>
         <Switch bind:checked={$playVideoThumbnailOnHover} />
         {#if isMobile}
@@ -107,6 +113,10 @@
 
       <Field label={$t('loop_videos')} description={$t('loop_videos_description')}>
         <Switch bind:checked={$loopVideo} />
+      </Field>
+
+      <Field label={$t('play_original_video')} description={$t('play_original_video_setting_description')}>
+        <Switch bind:checked={$alwaysLoadOriginalVideo} />
       </Field>
 
       <Field label={$t('permanent_deletion_warning')} description={$t('permanent_deletion_warning_setting_description')}
