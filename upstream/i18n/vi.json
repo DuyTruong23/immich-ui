@@ -2204,6 +2204,7 @@
   "time_based_memories": "Kỷ niệm dựa trên thời gian",
   "time_based_memories_duration": "Số giây hiển thị mỗi ảnh.",
   "timeline": "Dòng thời gian",
+  "timeline_select_day": "Chọn tất cả ảnh ngày {date}",
   "timezone": "Múi giờ",
   "to_archive": "Lưu trữ",
   "to_change_password": "Đổi mật khẩu",

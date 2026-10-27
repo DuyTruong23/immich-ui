@@ -2205,6 +2205,7 @@
   "time_based_memories": "Time-based memories",
   "time_based_memories_duration": "Number of seconds to display each image.",
   "timeline": "Timeline",
+  "timeline_select_day": "Select all photos from {date}",
   "timezone": "Timezone",
   "to_archive": "Archive",
   "to_change_password": "Change password",

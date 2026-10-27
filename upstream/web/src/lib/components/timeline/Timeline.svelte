@@ -688,6 +688,7 @@
                 onPreview={isSelectionMode || assetInteraction.selectionActive
                   ? (asset) => void navigate({ targetRoute: 'current', assetId: asset.id })
                   : undefined}
+                selectionMode={isSelectionMode || assetInteraction.selectionActive}
                 selected={isAssetSelected}
                 selectionCandidate={isAssetSelectionCandidate}
                 disabled={isAssetDisabled}

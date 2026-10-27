@@ -31,6 +31,7 @@
   } from '@mdi/js';
   import { onMount } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
+  import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
   import Thumbhash from '$lib/components/Thumbhash.svelte';
   import ImageThumbnail from './ImageThumbnail.svelte';
@@ -46,6 +47,8 @@
     disabled?: boolean;
     disableLinkMouseOver?: boolean;
     readonly?: boolean;
+    /** Đang ở chế độ chọn (đã chọn ≥1 ảnh): luôn hiện nút chọn — màn cảm ứng không có hover */
+    selectionMode?: boolean;
     showArchiveIcon?: boolean;
     showStackedIcon?: boolean;
     imageClass?: ClassValue;
@@ -69,6 +72,7 @@
     disabled = false,
     disableLinkMouseOver = false,
     readonly = false,
+    selectionMode = false,
     showArchiveIcon = false,
     showStackedIcon = true,
     albumUsers = [],
@@ -127,6 +131,8 @@
 
   let element: HTMLElement | undefined = $state();
   let mouseOver = $state(false);
+  // Focus bàn phím (:focus-visible) cũng hiện nút chọn/preview như khi hover
+  let keyboardFocused = $state(false);
   let loaded = $state(false);
   let thumbError = $state(false);
   let skipFade = $state(false);
@@ -175,6 +181,28 @@
     mouseOver = false;
     onMouseEvent?.({ isMouseOver: false, selectedGroupIndex: groupIndex });
   };
+
+  const onFocus = () => {
+    try {
+      keyboardFocused = element?.matches(':focus-visible') ?? false;
+    } catch {
+      keyboardFocused = false;
+    }
+  };
+
+  const onBlur = (event: FocusEvent) => {
+    // Giữ nút khi focus chuyển sang nút con bên trong thumbnail
+    if (event.relatedTarget instanceof Node && element?.contains(event.relatedTarget)) {
+      return;
+    }
+    keyboardFocused = false;
+  };
+
+  const showSelectButton = $derived(
+    !readonly && (mouseOver || selected || selectionCandidate || selectionMode || keyboardFocused),
+  );
+  // onPreview chỉ được truyền khi đang chọn ảnh; trên màn cảm ứng đây là cách duy nhất để mở ảnh lúc đang chọn
+  const showPreviewButton = $derived(!!onPreview && (mouseOver || usingMobileDevice || keyboardFocused));
 
   let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -262,6 +290,8 @@
   style:height="{height}px"
   onmouseenter={onMouseEnter}
   onmouseleave={onMouseLeave}
+  onfocus={onFocus}
+  onblur={onBlur}
   use:longPress={{ onLongPress: () => onSelect?.($state.snapshot(asset)) }}
   onkeydown={(evt) => {
     if (evt.key === 'Enter') {
@@ -447,7 +477,7 @@
           href={currentUrlReplaceAssetId(asset.id)}
           onclick={(evt) => evt.preventDefault()}
           tabindex={-1}
-          aria-label="Thumbnail URL"
+          aria-label={$getAltText(asset)}
         >
         </a>
       {/if}
@@ -462,14 +492,15 @@
     {/if}
 
     <!-- Select asset button  -->
-    {#if !readonly && (mouseOver || selected || selectionCandidate)}
+    {#if showSelectButton}
       <button
         type="button"
         onclick={onIconClickedHandler}
-        class={['absolute z-2 p-2 focus:outline-none', { 'cursor-not-allowed': disabled }]}
+        class={['absolute z-2 p-2 focus:outline-none pointer-coarse:p-2.5', { 'cursor-not-allowed': disabled }]}
         role="checkbox"
         tabindex={-1}
         aria-checked={selected}
+        aria-label={$t('select')}
         {disabled}
       >
         {#if disabled}
@@ -484,8 +515,8 @@
       </button>
     {/if}
 
-    <!-- Preview asset button (visible on hover when any asset is selected) -->
-    {#if mouseOver && onPreview}
+    <!-- Preview asset button (khi đang chọn ảnh: hover, focus bàn phím, hoặc luôn hiện trên màn cảm ứng) -->
+    {#if showPreviewButton}
       <button
         type="button"
         onclick={(e) => {
@@ -493,10 +524,10 @@
           e.preventDefault();
           onPreview?.($state.snapshot(asset));
         }}
-        class="absolute inset-e-1 bottom-1 z-2 rounded-full bg-black/25 p-1.5 transition-colors hover:bg-black/50 focus:outline-none"
+        class="pg-touch-target absolute inset-e-1.5 bottom-1.5 z-2 rounded-full bg-black/25 p-1.5 transition-colors hover:bg-black/50 focus:outline-none"
         in:fade={{ duration: 100 }}
         tabindex={-1}
-        aria-label="Preview asset"
+        aria-label={$t('preview')}
       >
         <Icon icon={mdiMagnifyPlusOutline} size="20" class="text-white" />
       </button>
