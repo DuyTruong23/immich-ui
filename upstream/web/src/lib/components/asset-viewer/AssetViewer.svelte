@@ -44,6 +44,7 @@
   import { onDestroy, onMount, untrack } from 'svelte';
   import type { SwipeCustomEvent } from 'svelte-gestures';
   import { t } from 'svelte-i18n';
+  import { motionDuration } from '$lib/utils/mobile-performance.svelte';
   import { fly } from 'svelte/transition';
   import Thumbnail from '../assets/thumbnail/Thumbnail.svelte';
   import ActivityStatus from './ActivityStatus.svelte';
@@ -793,7 +794,7 @@
 
   {#if showDetailPanel || assetViewerManager.isShowEditor}
     <div
-      transition:fly={{ duration: 150 }}
+      transition:fly={{ duration: motionDuration(150) }}
       id="detail-panel"
       class={[
         'overflow-y-auto bg-light transition-all dark:border-l dark:border-s-immich-dark-gray',
@@ -872,7 +873,7 @@
 
   {#if isShared && album && assetViewerManager.isShowActivityPanel && authManager.authenticated}
     <div
-      transition:fly={{ duration: 150 }}
+      transition:fly={{ duration: motionDuration(150) }}
       id="activity-panel"
       class={[
         'overflow-y-auto transition-all dark:border-l dark:border-s-immich-dark-gray',

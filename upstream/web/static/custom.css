@@ -50,10 +50,12 @@ body {
   color: var(--md-sys-color-on-surface);
 }
 
+/* Chỉ áp cho CSS animation/transition. Transition Svelte 5 (element.animate) và scroll bằng JS
+   tự kiểm tra qua motionDuration() / prefersReducedMotion() trong $lib/utils/mobile-performance.svelte */
 @media (prefers-reduced-motion: reduce) {
-  html:not(.immich-allow-motion) *,
-  html:not(.immich-allow-motion) *::before,
-  html:not(.immich-allow-motion) *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

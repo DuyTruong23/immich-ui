@@ -7,6 +7,7 @@
   import { getAssetMediaUrl, getAssetPlaybackUrl } from '$lib/utils';
   import { isCrossOriginMediaBase } from '$lib/utils/media-base-url';
   import {
+    motionDuration,
     networkManager,
     shouldLazyLoadThumbnails,
     shouldLoadAnimatedPreview,
@@ -486,8 +487,8 @@
     {#if selectionCandidate}
       <div
         class={['absolute top-0 z-2 size-full bg-immich-primary opacity-40', { 'rounded-xl': selected }]}
-        in:fade={{ duration: 100 }}
-        out:fade={{ duration: 100 }}
+        in:fade={{ duration: motionDuration(100) }}
+        out:fade={{ duration: motionDuration(100) }}
       ></div>
     {/if}
 
@@ -525,7 +526,7 @@
           onPreview?.($state.snapshot(asset));
         }}
         class="pg-touch-target absolute inset-e-1.5 bottom-1.5 z-2 rounded-full bg-black/25 p-1.5 transition-colors hover:bg-black/50 focus:outline-none"
-        in:fade={{ duration: 100 }}
+        in:fade={{ duration: motionDuration(100) }}
         tabindex={-1}
         aria-label={$t('preview')}
       >

@@ -24,7 +24,7 @@
   import { pinchGrid } from '$lib/actions/pinch-grid.svelte';
   import { gridDensityManager } from '$lib/stores/grid-density.svelte';
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
-  import { getTimelineLayoutOptions, networkManager } from '$lib/utils/mobile-performance.svelte';
+  import { getTimelineLayoutOptions, networkManager, prefersReducedMotion } from '$lib/utils/mobile-performance.svelte';
   import { isAssetViewerRoute, navigate } from '$lib/utils/navigation';
   import { getTimes, type ScrubberListener } from '$lib/utils/timeline-util';
   import { type AlbumResponseDto, type PersonResponseDto, type UserResponseDto } from '@immich/sdk';
@@ -589,10 +589,10 @@
       if (evt.key === 'ArrowUp') {
         amount = -amount;
         if (keyboardManager.shift) {
-          scrollableElement?.scrollBy({ top: amount, behavior: 'smooth' });
+          scrollableElement?.scrollBy({ top: amount, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
         }
       } else if (evt.key === 'ArrowDown') {
-        scrollableElement?.scrollBy({ top: amount, behavior: 'smooth' });
+        scrollableElement?.scrollBy({ top: amount, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
       }
     }}
   />

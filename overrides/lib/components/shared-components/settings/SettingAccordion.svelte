@@ -1,5 +1,6 @@
 <script lang="ts">
   import { accordionManager } from '$lib/managers/accordion-manager.svelte';
+  import { motionDuration, prefersReducedMotion } from '$lib/utils/mobile-performance.svelte';
   import { Icon } from '@immich/ui';
   import { onDestroy, type Snippet } from 'svelte';
   import { slide } from 'svelte/transition';
@@ -41,7 +42,7 @@
       if (autoScrollTo) {
         setTimeout(() => {
           accordionElement?.scrollIntoView({
-            behavior: 'smooth',
+            behavior: prefersReducedMotion() ? 'auto' : 'smooth',
             block: 'start',
           });
         }, 200);
@@ -100,7 +101,7 @@
   </button>
 
   {#if isOpen}
-    <ul transition:slide={{ duration: 150 }} class="ms-4 mb-2">
+    <ul transition:slide={{ duration: motionDuration(150) }} class="ms-4 mb-2">
       {@render children?.()}
     </ul>
   {/if}

@@ -3,6 +3,7 @@
   import { FILMSTRIP_THUMB_SIZE, type PreviewStripItem } from '$lib/components/asset-viewer/preview-layout';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getAssetMediaUrl } from '$lib/utils';
+  import { prefersReducedMotion } from '$lib/utils/mobile-performance.svelte';
   import { AssetMediaSize } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiPlayCircleOutline } from '@mdi/js';
@@ -49,7 +50,7 @@
       return;
     }
     programmaticScroll = true;
-    el.scrollIntoView({ inline: 'center', block: 'nearest', behavior });
+    el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : behavior });
     requestAnimationFrame(() => {
       programmaticScroll = false;
     });
