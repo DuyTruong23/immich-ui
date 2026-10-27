@@ -24,6 +24,10 @@ def patch_utils(utils_path: pathlib.Path) -> None:
     elif new not in text:
         raise SystemExit(f"Cannot find createUrl return in {utils_path}")
 
+    # createUrl là chỗ duy nhất dùng getBaseUrl; sau khi đổi sang getMediaBaseUrl thì bỏ import thừa.
+    if 'getBaseUrl(' not in text:
+        text = text.replace('  getBaseUrl,\n', '', 1)
+
     old_profile = (
         'createUrl(getUserProfileImagePath(user.id), { updatedAt: user.profileChangedAt });'
     )

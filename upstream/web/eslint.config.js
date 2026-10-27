@@ -74,6 +74,8 @@ export default typescriptEslint.config(
       'tailwind.config.js',
       'coverage',
       'vite.config.ts',
+      // bản copy gitignore của branding/src do prepare-custom tạo, không thuộc tsconfig
+      'static/branding',
     ],
   },
   typescriptEslint.configs.recommended,

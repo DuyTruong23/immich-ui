@@ -44,7 +44,7 @@ if not path.is_file():
 text = path.read_text(encoding="utf-8")
 text = re.sub(
     r'class="absolute inset-e-6 top-19 z-1 w-\[min\(360px,100vw-50px\)\]',
-    'class="absolute end-0 top-full z-50 mt-2 w-[min(360px,100vw-50px)]',
+    'class="absolute inset-e-0 top-full z-50 mt-2 w-[min(360px,100vw-50px)]',
     text,
 )
 path.write_text(text, encoding="utf-8")
