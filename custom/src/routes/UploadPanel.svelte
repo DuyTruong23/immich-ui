@@ -75,14 +75,15 @@
       uploadAssetsStore.reset();
     }}
     class="fixed z-60 {isMobilePanel
-      ? 'pg-upload-panel-mobile inset-x-3'
-      : 'inset-e-16 bottom-6'}"
+      ? 'pg-upload-panel-mobile inset-x-3 md:inset-s-auto md:w-96'
+      : 'pg-upload-panel-desktop inset-e-16'}"
   >
     {#if showDetail}
+      <!-- Mobile/tablet/landscape: flex-col + max-h để list tự co, không tràn khỏi viewport thấp -->
       <div
         in:scale={{ duration: 250, easing: quartInOut }}
-        class="rounded-xl border border-gray-200 bg-subtle p-3 text-sm shadow-xs max-md:max-h-[min(70dvh,32rem)] max-md:overflow-hidden dark:border-subtle {isMobilePanel
-          ? 'w-full max-w-full'
+        class="rounded-xl border border-gray-200 bg-subtle p-3 text-sm shadow-xs dark:border-subtle {isMobilePanel
+          ? 'flex max-h-[min(70dvh,32rem)] w-full max-w-full flex-col overflow-hidden'
           : 'w-81 p-4'}"
       >
         <div class="place-item-center mb-3 flex justify-between gap-2 md:mb-4">
@@ -171,12 +172,13 @@
         </div>
       </div>
     {:else}
-      <div class="rounded-full {isMobilePanel ? 'ms-auto w-fit' : ''}">
+      <!-- relative: badge neo vào bubble, không neo vào div fixed full-width trên mobile -->
+      <div class="relative rounded-full {isMobilePanel ? 'ms-auto w-fit' : ''}">
         <button
           type="button"
           in:scale={{ duration: 250, easing: quartInOut }}
           onclick={() => (showDetail = true)}
-          class="absolute -inset-s-4 -top-4 flex size-10 place-content-center place-items-center rounded-full bg-primary p-5 text-xs text-light"
+          class="absolute -inset-s-4 -top-4 grid size-10 place-items-center rounded-full bg-primary text-xs text-light"
         >
           {$remainingUploads.toLocaleString($locale)}
         </button>
@@ -185,7 +187,7 @@
             type="button"
             in:scale={{ duration: 250, easing: quartInOut }}
             onclick={() => (showDetail = true)}
-            class="absolute -inset-e-4 -top-4 flex size-10 place-content-center place-items-center rounded-full bg-danger p-5 text-xs text-light"
+            class="absolute -inset-e-4 -top-4 grid size-10 place-items-center rounded-full bg-danger text-xs text-light"
           >
             {$stats.errors.toLocaleString($locale)}
           </button>

@@ -6,6 +6,9 @@
 :root {
   --mobile-bottom-nav-height: 0px;
   --mobile-bottom-nav-offset: 0px;
+  /* Hàng FAB gallery (FeatureUpdatePin ghi đè bằng chiều cao đo được khi hiện) */
+  --pg-gallery-fabs-height: 2.75rem;
+  --pg-gallery-fabs-gap: 0.75rem;
 }
 
 html[data-mobile-shell],
@@ -133,8 +136,27 @@ html[data-mobile-shell] .pg-gallery-fabs {
   bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
+.pg-upload-panel-desktop {
+  bottom: 1.5rem;
+}
+
 html[data-mobile-shell] .pg-upload-panel-mobile {
   bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
+}
+
+/*
+ * Cụm FAB đang hiện (html[data-gallery-fabs], set bởi FeatureUpdatePin): đặt upload panel/bubble
+ * ngay trên hàng FAB thay vì cùng mốc bottom — FAB z-80 từng che panel z-60.
+ */
+html[data-gallery-fabs] .pg-upload-panel-mobile,
+html[data-gallery-fabs] .pg-upload-panel-desktop {
+  bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px)) + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap));
+}
+
+html[data-mobile-shell][data-gallery-fabs] .pg-upload-panel-mobile {
+  bottom: calc(
+    var(--mobile-bottom-nav-offset) + 0.75rem + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap)
+  );
 }
 
 html[data-feature-update-modal] .pg-mobile-bottom-nav,

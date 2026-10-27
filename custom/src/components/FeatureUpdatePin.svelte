@@ -63,6 +63,22 @@
       !blockedCheckLoading,
   );
   const showCluster = $derived(showUpload || showWhatsNew);
+  let clusterHeight = $state(0);
+
+  // Báo cho UploadPanel (mobile-shell.css) cụm FAB đang hiện + chiều cao thật (pointer coarse ép button 44px)
+  // để đặt panel/bubble ngay trên hàng FAB, không bị FAB z-80 che.
+  $effect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute('data-gallery-fabs', showCluster);
+    if (showCluster && clusterHeight > 0) {
+      root.style.setProperty('--pg-gallery-fabs-height', `${clusterHeight}px`);
+    }
+
+    return () => {
+      root.removeAttribute('data-gallery-fabs');
+      root.style.removeProperty('--pg-gallery-fabs-height');
+    };
+  });
 
   onMount(() => {
     try {
@@ -104,7 +120,7 @@
 
 {#if showCluster}
   <Portal target="body">
-    <div class="pg-gallery-fabs" role="group" aria-label={$t('upload')}>
+    <div class="pg-gallery-fabs" bind:offsetHeight={clusterHeight}>
       {#if showUpload}
         <button
           type="button"
@@ -158,7 +174,7 @@
 
   .pg-gallery-fabs {
     position: fixed;
-    right: max(1rem, env(safe-area-inset-right, 0px));
+    inset-inline-end: max(1rem, env(safe-area-inset-right, 0px));
     bottom: max(1rem, env(safe-area-inset-bottom, 0px));
     z-index: 80;
     display: flex;
@@ -166,7 +182,13 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.5rem;
-    max-width: calc(100vw - 2rem);
+    /* 100% của khối fixed = viewport không gồm scrollbar; trừ cả hai mép safe-area (landscape) */
+    max-width: calc(100% - max(1rem, env(safe-area-inset-left, 0px)) - max(1rem, env(safe-area-inset-right, 0px)));
+  }
+
+  /* RTL: cụm nằm mép trái → dùng inset trái */
+  :global(body[dir='rtl']) .pg-gallery-fabs {
+    inset-inline-end: max(1rem, env(safe-area-inset-left, 0px));
   }
 
   .pg-upload-fab {
