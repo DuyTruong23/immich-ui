@@ -21,7 +21,7 @@
     groupOptionsMetadata,
     sortOptionsMetadata,
   } from '$lib/utils/album-utils';
-  import { Button, Text } from '@immich/ui';
+  import { Button } from '@immich/ui';
   import {
     mdiArrowDownThin,
     mdiArrowUpThin,
@@ -134,7 +134,7 @@
     variant="ghost"
     color="secondary"
   >
-    <p class="hidden md:block">{$t('create_album')}</p>
+    <span class="max-md:sr-only">{$t('create_album')}</span>
   </Button>
 {/if}
 
@@ -179,7 +179,7 @@
     variant="ghost"
     color="secondary"
   >
-    <Text class="hidden md:block">{$t('covers')}</Text>
+    <span class="max-md:sr-only">{$t('covers')}</span>
   </Button>
 {:else}
   <Button
@@ -189,6 +189,6 @@
     variant="ghost"
     color="secondary"
   >
-    <Text class="hidden md:block">{$t('list')}</Text>
+    <span class="max-md:sr-only">{$t('list')}</span>
   </Button>
 {/if}

@@ -91,9 +91,11 @@
           <button
             type="button"
             class={styles({ selected: selectedPeople.has(person.id) })}
+            aria-pressed={selectedPeople.has(person.id)}
             onclick={() => togglePersonSelection(person.id)}
           >
-            <ImageThumbnail circle shadow url={getPeopleThumbnailUrl(person)} altText={person.name} widthStyle="100%" />
+            <!-- Tên đã hiển thị bên dưới — alt rỗng để không đọc hai lần -->
+            <ImageThumbnail circle shadow url={getPeopleThumbnailUrl(person)} altText="" widthStyle="100%" />
             <p class="mt-2 line-clamp-2 text-sm font-medium dark:text-white">{person.name}</p>
           </button>
         {/each}
