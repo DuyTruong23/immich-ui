@@ -29,8 +29,8 @@ describe('TimelineDaySelectToggle', () => {
     expect(onSelect).toHaveBeenCalledOnce();
   });
 
-  it('drops the global 44px min-height on touch so the hit area stays inside the day header row', () => {
+  it('carries the pg-day-select-toggle hook that responsive.css uses to cap the touch height at the header row', () => {
     render(TimelineDaySelectToggle, { selected: false, visible: true, label: 'Select day 5', onSelect: vi.fn() });
-    expect(screen.getByRole('button', { name: 'Select day 5' })).toHaveClass('pointer-coarse:min-h-0', 'pointer-coarse:h-6');
+    expect(screen.getByRole('button', { name: 'Select day 5' })).toHaveClass('pg-day-select-toggle', 'pointer-coarse:h-6');
   });
 });

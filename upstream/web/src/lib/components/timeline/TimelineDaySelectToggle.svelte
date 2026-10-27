@@ -16,7 +16,7 @@
 <button
   type="button"
   class={[
-    'flex shrink-0 items-center overflow-hidden transition-all duration-200 ease-out hover:cursor-pointer focus-visible:w-8 pointer-coarse:h-6 pointer-coarse:min-h-0 pointer-coarse:focus-visible:w-11',
+    'pg-day-select-toggle flex shrink-0 items-center overflow-hidden transition-all duration-200 ease-out hover:cursor-pointer focus-visible:w-8 pointer-coarse:h-6 pointer-coarse:focus-visible:w-11',
     visible ? 'w-8 pointer-coarse:w-11' : 'w-0',
   ]}
   aria-label={label}

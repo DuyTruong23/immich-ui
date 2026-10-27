@@ -26,7 +26,7 @@
         [class*='size-6'],
         [class*='size-8'],
         [class*='size-10']
-      ):not([disabled], .pg-touch-target) {
+      ):not([disabled], .pg-touch-target, .pg-day-select-toggle) {
       min-width: 44px;
       min-height: 44px;
     }
@@ -38,6 +38,15 @@
      */
     :is(button, a, [role='button']).pg-touch-target:not([disabled]) {
       min-width: 0;
+      min-height: 0;
+    }
+
+    /*
+     * Toggle chọn theo ngày (TimelineDaySelectToggle): chiều cao hàng tiêu đề ngày do layout timeline ảo cố định,
+     * nên không được kéo lên 44px (sẽ tràn xuống hàng thumbnail đầu và chặn nút chọn). Chỉ giữ rộng 44px.
+     * button.pg-day-select-toggle:not([disabled]) = (0,2,1) > button:not([disabled]) = (0,1,1) cùng layer utilities.
+     */
+    button.pg-day-select-toggle:not([disabled]) {
       min-height: 0;
     }
 
