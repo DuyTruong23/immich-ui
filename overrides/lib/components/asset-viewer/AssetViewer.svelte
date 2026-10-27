@@ -62,6 +62,7 @@
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
   import MobilePreviewStripSkeleton from './MobilePreviewStripSkeleton.svelte';
   import { type PreviewStripItem } from './preview-layout';
+  import { getViewerPanelLayoutClass, isSwipeBackEnabled } from './viewer-panel-layout';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
@@ -513,6 +514,9 @@
       assetViewerManager.isShowDetailPanel &&
       !assetViewerManager.isShowEditor,
   );
+  const isViewerPanelOpen = $derived(
+    showDetailPanel || assetViewerManager.isShowEditor || assetViewerManager.isShowActivityPanel,
+  );
 
   const GESTURE_WAIT_TIMEOUT_MS = 8000;
   const waitsForGestureMediaReady = (kind: typeof viewerKind) =>
@@ -626,9 +630,13 @@
 >
   <SwipeBackEdge
     onBack={closeViewer}
-    enabled={$slideshowState === SlideshowState.None &&
-      !assetViewerManager.isShowEditor &&
-      !assetViewerManager.isFaceEditMode}
+    enabled={isSwipeBackEnabled({
+      isMobileViewer,
+      slideshowIdle: $slideshowState === SlideshowState.None,
+      isShowEditor: assetViewerManager.isShowEditor,
+      isFaceEditMode: assetViewerManager.isFaceEditMode,
+      isPanelOpen: isViewerPanelOpen,
+    })}
   />
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
@@ -777,8 +785,8 @@
       transition:fly={{ duration: 150 }}
       id="detail-panel"
       class={[
-        'row-span-4 row-start-1 overflow-y-auto bg-light transition-all dark:border-l dark:border-s-immich-dark-gray',
-        showDetailPanel ? 'w-90' : 'w-100',
+        'overflow-y-auto bg-light transition-all dark:border-l dark:border-s-immich-dark-gray',
+        getViewerPanelLayoutClass(showDetailPanel ? 'detail' : 'editor', isMobileViewer),
       ]}
       translate="yes"
     >
@@ -857,7 +865,10 @@
     <div
       transition:fly={{ duration: 150 }}
       id="activity-panel"
-      class="row-span-5 row-start-1 w-90 overflow-y-auto transition-all md:w-115 dark:border-l dark:border-s-immich-dark-gray"
+      class={[
+        'overflow-y-auto transition-all dark:border-l dark:border-s-immich-dark-gray',
+        getViewerPanelLayoutClass('activity', isMobileViewer),
+      ]}
       translate="yes"
     >
       <ActivityViewer
@@ -919,6 +930,24 @@
   :global(.mobile-preview-strip-host) {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
+  }
+
+  /* Panel info/editor/activity trên mobile viewer (xem viewer-panel-layout.ts) */
+  :global(.asset-viewer-sheet) {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    box-shadow: 0 -8px 24px rgb(0 0 0 / 35%);
+    overscroll-behavior: contain;
+  }
+
+  /* Tablet: drawer cao hết màn → chừa status bar; mép đầu (start) không chạm notch */
+  @media (min-width: 768px) {
+    :global(.asset-viewer-sheet) {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-left: 0;
+      box-shadow: -8px 0 24px rgb(0 0 0 / 35%);
+    }
   }
 
   @media (orientation: landscape) and (max-height: 500px) {
