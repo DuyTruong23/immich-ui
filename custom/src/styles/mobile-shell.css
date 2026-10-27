@@ -19,16 +19,13 @@ html[data-mobile-shell],
 }
 
 /*
- * Focus bàn phím / scrollIntoView không nằm dưới thanh cố định (WCAG 2.2 SC 2.4.11):
- * header mobile (safe-area + hàng 44px + padding), bottom nav, và cụm FAB khi đang hiện.
+ * Focus bàn phím / scrollIntoView không nằm dưới cụm FAB (WCAG 2.2 SC 2.4.11).
+ * Chỉ pad chiều cao FAB: header và bottom nav nằm ngoài vùng cuộn (.pg-mobile-content, #asset-grid),
+ * pad thêm sẽ tính đôi; cụm FAB là thanh cố định duy nhất đè lên nội dung cuộn.
  */
-html[data-mobile-shell] {
-  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-  scroll-padding-bottom: var(--mobile-bottom-nav-offset);
-}
-
-html[data-mobile-shell][data-gallery-fabs] {
-  scroll-padding-bottom: calc(var(--mobile-bottom-nav-offset) + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap));
+html[data-gallery-fabs] .pg-mobile-content,
+html[data-gallery-fabs] #asset-grid {
+  scroll-padding-bottom: calc(var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap));
 }
 
 html[data-mobile-shell] #dashboard-navbar {
