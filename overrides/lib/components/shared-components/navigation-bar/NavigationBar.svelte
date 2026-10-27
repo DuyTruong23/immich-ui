@@ -111,7 +111,12 @@
         <button
           type="button"
           class="pg-mobile-header__lang"
-          aria-label={$t('language')}
+          aria-label={$t('pg_language_toggle', {
+            values: {
+              current: isVietnamese ? 'Tiếng Việt' : 'English',
+              next: isVietnamese ? 'English' : 'Tiếng Việt',
+            },
+          })}
           onclick={() => void toggleLanguage()}
         >
           <span class:pg-mobile-header__lang-part--active={isVietnamese}>VN</span>

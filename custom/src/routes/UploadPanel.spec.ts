@@ -64,4 +64,28 @@ describe('UploadPanel', () => {
     expect(badge).not.toHaveClass('p-5');
     expect(badge?.parentElement).toHaveClass('relative', 'ms-auto', 'w-fit');
   });
+
+  it('mỗi nút bubble thu gọn có tên truy cập (assert theo key i18n)', async () => {
+    mediaQuery.maxMd = true;
+    addUpload();
+    uploadAssetsStore.track('error');
+    const { getByLabelText } = renderWithTooltips(UploadPanel, {});
+
+    await fireEvent.click(getByLabelText('minimize'));
+
+    expect(getByLabelText('pg_upload_show_details')).toBeInTheDocument();
+    expect(getByLabelText('upload_progress')).toBeInTheDocument();
+    expect(getByLabelText('pg_upload_errors_count')).toBeInTheDocument();
+  });
+
+  it('ô concurrency chỉ được đặt tên qua <label>, không có aria-labelledby trỏ id không tồn tại', async () => {
+    addUpload();
+    const { getByLabelText } = renderWithTooltips(UploadPanel, {});
+
+    await fireEvent.click(getByLabelText('toggle_settings'));
+
+    const input = document.querySelector('#upload-concurrency');
+    expect(input).toBeInTheDocument();
+    expect(input).not.toHaveAttribute('aria-labelledby');
+  });
 });

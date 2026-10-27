@@ -149,7 +149,6 @@
             </div>
             <input
               class="immich-form-input w-full"
-              aria-labelledby={$t('upload_concurrency')}
               id="upload-concurrency"
               name={$t('upload_concurrency')}
               type="number"
@@ -178,6 +177,13 @@
           type="button"
           in:scale={{ duration: 250, easing: quartInOut }}
           onclick={() => (showDetail = true)}
+          aria-label={$t('upload_progress', {
+            values: {
+              remaining: $remainingUploads,
+              processed: $stats.total - $remainingUploads,
+              total: $stats.total,
+            },
+          })}
           class="absolute -inset-s-4 -top-4 grid size-10 place-items-center rounded-full bg-primary text-xs text-light"
         >
           {$remainingUploads.toLocaleString($locale)}
@@ -187,6 +193,7 @@
             type="button"
             in:scale={{ duration: 250, easing: quartInOut }}
             onclick={() => (showDetail = true)}
+            aria-label={$t('pg_upload_errors_count', { values: { count: $stats.errors } })}
             class="absolute -inset-e-4 -top-4 grid size-10 place-items-center rounded-full bg-danger text-xs text-light"
           >
             {$stats.errors.toLocaleString($locale)}
@@ -196,6 +203,7 @@
           type="button"
           in:scale={{ duration: 250, easing: quartInOut }}
           onclick={() => (showDetail = true)}
+          aria-label={$t('pg_upload_show_details')}
           class="flex size-16 place-content-center place-items-center rounded-full bg-subtle p-5 text-sm text-primary shadow-lg"
         >
           <div class="animate-pulse">

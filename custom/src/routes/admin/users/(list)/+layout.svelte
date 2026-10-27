@@ -41,9 +41,11 @@
 
   onMount(async () => {
     try {
-      const response = await fetch('/api/admin-block-user?list=1&accessToken=' + (getStoredAccessToken() || ''), {
+      // Token đi qua header, không nằm trong URL (tránh lộ ở log/proxy/lịch sử)
+      const accessToken = getStoredAccessToken();
+      const response = await fetch('/api/admin-block-user?list=1', {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       const result = await response.json();
       if (result.ok) {

@@ -1010,6 +1010,9 @@
   "error_title": "Lỗi - Có điều gì đó không đúng",
   "pg_maintenance_title": "Chúng tôi sẽ sớm quay lại",
   "pg_maintenance_description": "Hệ thống đang được cập nhật, chúng tôi sẽ trở lại vào {date} lúc {time}.",
+  "pg_language_toggle": "Ngôn ngữ: {current} (VN / EN). Chuyển sang {next}",
+  "pg_upload_errors_count": "{count, number} lỗi tải lên",
+  "pg_upload_show_details": "Xem chi tiết tải lên",
   "error_while_navigating": "Không thể điều hướng đến tài nguyên",
   "errors": {
     "cannot_navigate_next_asset": "Không thể chuyển đến tài nguyên tiếp theo",
