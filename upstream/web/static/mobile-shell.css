@@ -165,7 +165,21 @@ html[data-mobile-shell] .pg-gallery-fabs {
 }
 
 .pg-upload-panel-mobile {
-  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  --pg-upload-panel-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  bottom: var(--pg-upload-panel-bottom);
+}
+
+/*
+ * Panel con tự co theo khoảng trống thật còn lại phía trên mốc bottom (nav + FAB xếp chồng) —
+ * nếu chỉ dùng 70dvh thì landscape thấp (~340px) đẩy header panel ra ngoài viewport.
+ * Rule không thuộc layer nên đè utility max-h-[min(70dvh,32rem)] trên phần tử.
+ */
+.pg-upload-panel-mobile > div {
+  max-height: min(
+    70dvh,
+    32rem,
+    calc(100dvh - var(--pg-upload-panel-bottom) - max(0.75rem, env(safe-area-inset-top, 0px)))
+  );
 }
 
 .pg-upload-panel-desktop {
@@ -173,7 +187,8 @@ html[data-mobile-shell] .pg-gallery-fabs {
 }
 
 html[data-mobile-shell] .pg-upload-panel-mobile {
-  bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
+  --pg-upload-panel-bottom: calc(var(--mobile-bottom-nav-offset) + 0.75rem);
+  bottom: var(--pg-upload-panel-bottom);
 }
 
 /*
@@ -182,13 +197,17 @@ html[data-mobile-shell] .pg-upload-panel-mobile {
  */
 html[data-gallery-fabs] .pg-upload-panel-mobile,
 html[data-gallery-fabs] .pg-upload-panel-desktop {
-  bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px)) + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap));
+  --pg-upload-panel-bottom: calc(
+    max(1rem, env(safe-area-inset-bottom, 0px)) + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap)
+  );
+  bottom: var(--pg-upload-panel-bottom);
 }
 
 html[data-mobile-shell][data-gallery-fabs] .pg-upload-panel-mobile {
-  bottom: calc(
+  --pg-upload-panel-bottom: calc(
     var(--mobile-bottom-nav-offset) + 0.75rem + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap)
   );
+  bottom: var(--pg-upload-panel-bottom);
 }
 
 html[data-feature-update-modal] .pg-mobile-bottom-nav,
