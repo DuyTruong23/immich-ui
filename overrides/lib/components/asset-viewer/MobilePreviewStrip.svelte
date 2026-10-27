@@ -153,7 +153,7 @@
         type="button"
         class="relative shrink-0 overflow-hidden rounded-full bg-white/10 transition-[box-shadow,opacity] duration-200 {isCurrent
           ? 'z-10 opacity-100 ring-2 ring-white ring-offset-1 ring-offset-black/80'
-          : 'opacity-70 hover:opacity-90'}"
+          : 'opacity-70 hover:opacity-90 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white'}"
         style:width="{THUMB_SIZE}px"
         style:height="{THUMB_SIZE}px"
         aria-current={isCurrent ? 'true' : undefined}

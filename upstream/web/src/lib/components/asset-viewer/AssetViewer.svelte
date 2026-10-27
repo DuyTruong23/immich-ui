@@ -625,6 +625,7 @@
     ? 'grid-rows-1'
     : 'grid-rows-[64px_1fr]'}"
   class:immich-asset-viewer--mobile={isMobileViewer}
+  class:immich-asset-viewer--has-strip={showMobilePreviewStrip || showMobilePreviewStripSkeleton}
   use:focusTrap
   bind:this={assetViewerHtmlElement}
 >
@@ -752,7 +753,7 @@
     {/if}
 
     {#if showActivityStatus}
-      <div class="absolute inset-e-0 bottom-0 me-8 mb-20">
+      <div class="absolute inset-e-0 bottom-0 me-8 mb-[calc(var(--mobile-preview-strip-offset,0px)+5rem)]">
         <ActivityStatus
           disabled={!album?.isActivityEnabled}
           isLiked={activityManager.isLiked}
@@ -764,7 +765,9 @@
     {/if}
 
     {#if showOcrButton}
-      <div class="absolute inset-e-0 bottom-0 me-6 mb-6 drop-shadow-[0_0_1px_rgba(0,0,0,0.4)]">
+      <div
+        class="absolute inset-e-0 bottom-0 me-6 mb-[calc(var(--mobile-preview-strip-offset,0px)+1.5rem)] drop-shadow-[0_0_1px_rgba(0,0,0,0.4)]"
+      >
         <OcrButton />
       </div>
     {/if}
@@ -800,10 +803,8 @@
 
   {#if showMobilePreviewStrip || showMobilePreviewStripSkeleton}
     <div
-      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack &&
-      withStacked
-        ? 'mb-16'
-        : ''}"
+      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1"
+      class:mobile-preview-strip-host--above-stack={Boolean(stack && withStacked)}
     >
       {#if showMobilePreviewStrip}
         <MobilePreviewStrip
@@ -911,14 +912,25 @@
   }
 
   :global(.immich-asset-viewer--mobile) {
-    --mobile-preview-strip-offset: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    /* Không có filmstrip (1 ảnh, shared link không điều hướng, editor): chỉ chừa home indicator */
+    --mobile-preview-strip-offset: env(safe-area-inset-bottom, 0px);
+    /* #stack-slideshow: thumb chọn 65px + chấm 10px + pb-2 8px ≈ 5.25rem */
+    --stack-strip-height: 5.25rem;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     background-color: rgb(0 0 0 / calc(1 - var(--viewer-dismiss, 0) * 0.75));
   }
 
+  :global(.immich-asset-viewer--mobile.immich-asset-viewer--has-strip) {
+    /* Cao thật của filmstrip: pt-1.5 (6px) + FILMSTRIP_THUMB_SIZE 44px + pb-0.5 (2px) = 52px */
+    --mobile-preview-strip-offset: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
   :global(.asset-viewer-navbar--overlay) {
     padding-top: env(safe-area-inset-top, 0px);
+    /* absolute inset-x-0 không có grid placement → nằm trên padding box, tự chừa notch ngang (landscape) */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
     opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
   }
 
@@ -930,6 +942,16 @@
   :global(.mobile-preview-strip-host) {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
+  }
+
+  /* Có stack: filmstrip nằm trên #stack-slideshow; stack đã chừa home indicator nên host không pad thêm */
+  :global(.mobile-preview-strip-host.mobile-preview-strip-host--above-stack) {
+    margin-bottom: calc(var(--stack-strip-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
+  }
+
+  #stack-slideshow {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Panel info/editor/activity trên mobile viewer (xem viewer-panel-layout.ts) */
@@ -951,7 +973,8 @@
   }
 
   @media (orientation: landscape) and (max-height: 500px) {
-    :global(.immich-asset-viewer--mobile) {
+    :global(.immich-asset-viewer--mobile),
+    :global(.immich-asset-viewer--mobile.immich-asset-viewer--has-strip) {
       --mobile-preview-strip-offset: env(safe-area-inset-bottom, 0px);
     }
 
