@@ -7,6 +7,8 @@ vi.mock(import('$lib/managers/server-config-manager.svelte'), () => ({
     value: { externalDomain: 'http://localhost:2283' } as ServerConfigDto,
     init: vi.fn(),
     loadServerConfig: vi.fn(),
+    // Override server-config-manager có thêm setDevValue (UI dev mode) nên mock phải khai báo để khớp kiểu.
+    setDevValue: vi.fn(),
   },
 }));
 
