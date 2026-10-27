@@ -32,10 +32,10 @@
   ]);
 
   const toneClass: Record<string, string> = {
-    sky: 'bg-sky-500/10 text-sky-400',
-    violet: 'bg-violet-500/10 text-violet-400',
-    amber: 'bg-amber-500/10 text-amber-400',
-    emerald: 'bg-emerald-500/10 text-emerald-400',
+    sky: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
+    violet: 'bg-violet-500/10 text-violet-700 dark:text-violet-400',
+    amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    emerald: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
   };
 
   const activeDeviceGroups = $derived(data.userDeviceGroups.filter((group) => group.sessions.length > 0));
@@ -55,8 +55,8 @@
   {#snippet buttons()}
     <div
       class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm {data.serverOnline
-        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-        : 'border-red-500/30 bg-red-500/10 text-red-400'}"
+        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+        : 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400'}"
     >
       <Icon icon={data.serverOnline ? mdiCheckCircle : mdiServerOff} size="16" />
       {data.serverOnline ? 'Server online' : 'Server offline'}
@@ -182,7 +182,7 @@
 
       <article class="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
         <div class="flex gap-3">
-          <Icon icon={mdiInformationOutline} size="22" class="mt-0.5 shrink-0 text-amber-400" />
+          <Icon icon={mdiInformationOutline} size="22" class="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400" />
           <div class="space-y-2 text-sm text-(--pg-text-muted)">
             <p class="font-medium text-(--pg-text)">Giới hạn theo dõi của WeGallery</p>
             <p>
