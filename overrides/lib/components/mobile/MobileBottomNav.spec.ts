@@ -1,6 +1,7 @@
 import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import MobileBottomNav from './MobileBottomNav.svelte';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/photos') } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));

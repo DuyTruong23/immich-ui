@@ -7,6 +7,7 @@ import type { AlbumResponseDto } from '@immich/sdk';
 import type { Component } from 'svelte';
 import { init, register, waitLocale } from 'svelte-i18n';
 import AlbumsTableRow from './AlbumsTableRow.svelte';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 

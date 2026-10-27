@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { isMobileShell } from '$custom/utils/capabilities.svelte';
 import MobileThumbnailHint from '$lib/components/shared-components/MobileThumbnailHint.svelte';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$custom/utils/capabilities.svelte', () => ({
   isMobileShell: vi.fn(() => false),

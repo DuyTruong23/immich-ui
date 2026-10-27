@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import OnboardingTheme from './OnboardingTheme.svelte';
+import { describe, expect, it } from 'vitest';
 
 describe('OnboardingTheme', () => {
   it('mỗi lựa chọn theme có aria-pressed và đúng một lựa chọn đang bật', () => {

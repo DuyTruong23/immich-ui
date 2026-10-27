@@ -1,5 +1,6 @@
 import { render } from '@testing-library/svelte';
 import BlockedPage from './+page.svelte';
+import { describe, expect, it } from 'vitest';
 
 describe('blocked page', () => {
   it('dùng min-h-dvh và màu theme thay cho h-screen/bg-white', () => {

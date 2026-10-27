@@ -2,6 +2,7 @@ import { initAppConfig } from '@photo-gallery/config';
 import { assetFactory } from '@test-data/factories/asset-factory';
 import { render } from '@testing-library/svelte';
 import PhotoBlurBackdrop from './PhotoBlurBackdrop.svelte';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('PhotoBlurBackdrop', () => {
   beforeAll(() => {

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/svelte';
 import { init, register, waitLocale } from 'svelte-i18n';
 import MobilePreviewStrip from './MobilePreviewStrip.svelte';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const stubReducedMotion = (reduce: boolean) =>
   vi.stubGlobal(

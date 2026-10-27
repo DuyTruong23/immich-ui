@@ -9,6 +9,7 @@ import TestWrapper from '$lib/components/TestWrapper.svelte';
 import { getResizeObserverMock } from '$lib/__mocks__/resize-observer.mock';
 import { sdkMock } from '$lib/__mocks__/sdk.mock';
 import SearchPeopleSection from './SearchPeopleSection.svelte';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('SearchPeopleSection', () => {
   beforeAll(async () => {

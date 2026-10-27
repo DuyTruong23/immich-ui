@@ -1,6 +1,7 @@
 import type { ServerConfigDto } from '@immich/sdk';
 import { asUrl } from '$lib/services/shared-link.service';
 import { sharedLinkFactory } from '@test-data/factories/shared-link-factory';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock(import('$lib/managers/server-config-manager.svelte'), () => ({
   serverConfigManager: {

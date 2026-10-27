@@ -3,6 +3,7 @@ import { init, register, waitLocale } from 'svelte-i18n';
 import { locale } from '$lib/stores/preferences.store';
 import DateInput from './DateInput.svelte';
 import DateTimeField from './DateTimeField.svelte';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 describe('DateInput (Vietnamese text mode)', () => {
   beforeAll(async () => {

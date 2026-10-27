@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import SettingAccordion from './SettingAccordion.svelte';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const stubReducedMotion = (reduce: boolean) =>
   vi.stubGlobal(

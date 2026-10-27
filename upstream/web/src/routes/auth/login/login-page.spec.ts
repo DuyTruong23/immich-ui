@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { renderWithTooltips } from '$tests/helpers';
 import { init, register, waitLocale } from 'svelte-i18n';
 import LoginPage from './+page.svelte';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$lib/managers/feature-flags-manager.svelte', () => ({

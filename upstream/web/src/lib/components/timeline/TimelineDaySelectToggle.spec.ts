@@ -1,5 +1,6 @@
 import TimelineDaySelectToggle from '$lib/components/timeline/TimelineDaySelectToggle.svelte';
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('TimelineDaySelectToggle', () => {
   it('is a real button with an accessible name and pressed state', () => {

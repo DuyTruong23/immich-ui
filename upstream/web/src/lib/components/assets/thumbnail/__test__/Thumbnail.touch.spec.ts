@@ -3,6 +3,7 @@ import Thumbnail from '$lib/components/assets/thumbnail/Thumbnail.svelte';
 import { timelineAssetFactory } from '@test-data/factories/asset-factory';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const media = vi.hoisted(() => {
   const state = { coarse: false };

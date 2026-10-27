@@ -1,6 +1,7 @@
 import { UserAvatarColor } from '@immich/sdk';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import LikedByStack from './LikedByStack.svelte';
+import { describe, expect, it } from 'vitest';
 
 const users = [
   {

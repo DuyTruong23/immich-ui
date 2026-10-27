@@ -2,6 +2,7 @@ import { fireEvent } from '@testing-library/svelte';
 import { uploadAssetsStore } from '$lib/stores/upload';
 import { renderWithTooltips } from '$tests/helpers';
 import UploadPanel from './UploadPanel.svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mediaQuery = vi.hoisted(() => ({
   pointerCoarse: false,

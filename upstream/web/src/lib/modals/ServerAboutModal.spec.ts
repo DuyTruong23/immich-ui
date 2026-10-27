@@ -4,6 +4,7 @@ import { init, register, waitLocale } from 'svelte-i18n';
 import { getAnimateMock } from '$lib/__mocks__/animate.mock';
 import { getVisualViewportMock } from '$lib/__mocks__/visual-viewport.mock';
 import ServerAboutModal from './ServerAboutModal.svelte';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const info = {
   version: 'v2.0.0',

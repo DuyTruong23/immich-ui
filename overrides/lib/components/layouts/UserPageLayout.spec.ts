@@ -1,6 +1,7 @@
 import { render } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import UserPageLayout from './UserPageLayout.svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const shell = vi.hoisted(() => ({ mobile: true }));
 
