@@ -71,7 +71,7 @@
           activeIcon: mdiDotsHorizontal,
         },
       ] satisfies Array<NavItem | false>
-    ).filter((item): item is NavItem => Boolean(item)),
+    ).filter((item) => item !== false),
   );
 
   const favoriteChoices = $derived(
@@ -172,6 +172,7 @@
             type="button"
             class="pg-mobile-bottom-nav__item"
             class:pg-mobile-bottom-nav__item--active={active}
+            aria-label={item.title}
             aria-current={active ? 'page' : undefined}
             aria-expanded={favoritesOpen}
             aria-haspopup="menu"
@@ -188,6 +189,7 @@
           href={item.href}
           class="pg-mobile-bottom-nav__item"
           class:pg-mobile-bottom-nav__item--active={active}
+          aria-label={item.title}
           aria-current={active ? 'page' : undefined}
           data-sveltekit-preload-data="hover"
         >

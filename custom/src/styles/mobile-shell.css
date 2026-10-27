@@ -13,8 +13,22 @@
 
 html[data-mobile-shell],
 :root:has(.pg-mobile-bottom-nav) {
-  --mobile-bottom-nav-height: 3.125rem;
+  /* = border-top 1px + item 53px (padding 12 + icon 28 + gap 2 + label 11) — khớp chiều cao nav thật */
+  --mobile-bottom-nav-height: 3.375rem;
   --mobile-bottom-nav-offset: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * Focus bàn phím / scrollIntoView không nằm dưới thanh cố định (WCAG 2.2 SC 2.4.11):
+ * header mobile (safe-area + hàng 44px + padding), bottom nav, và cụm FAB khi đang hiện.
+ */
+html[data-mobile-shell] {
+  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  scroll-padding-bottom: var(--mobile-bottom-nav-offset);
+}
+
+html[data-mobile-shell][data-gallery-fabs] {
+  scroll-padding-bottom: calc(var(--mobile-bottom-nav-offset) + var(--pg-gallery-fabs-height) + var(--pg-gallery-fabs-gap));
 }
 
 html[data-mobile-shell] #dashboard-navbar {
@@ -100,8 +114,24 @@ html[data-mobile-shell] .pg-mobile-shell-main {
 }
 
 .pg-mobile-content {
+  /* Gutter như fluent/responsive.css (4px < 640px, 8px từ 640px), không nhỏ hơn notch khi landscape */
+  --pg-mobile-content-gutter: var(--spacingHorizontalS, 8px);
+
   bottom: var(--mobile-bottom-nav-offset);
   height: unset;
+  padding-left: max(var(--pg-mobile-content-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--pg-mobile-content-gutter), env(safe-area-inset-right, 0px));
+}
+
+@media (max-width: 639px) {
+  .pg-mobile-content {
+    --pg-mobile-content-gutter: var(--spacingHorizontalXS, 4px);
+  }
+}
+
+.pg-mobile-toolbar {
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
 }
 
 html[data-mobile-shell] [data-id='scrubber'] {
@@ -132,10 +162,6 @@ html[data-mobile-shell] .pg-more-page {
 
 html[data-mobile-shell] .fixed.top-0.z-2 {
   padding-top: env(safe-area-inset-top, 0px);
-}
-
-html[data-mobile-shell] main .absolute.flex.h-16.w-full {
-  height: 3rem;
 }
 
 html[data-mobile-shell] .pg-gallery-fabs {
@@ -309,7 +335,7 @@ html[data-feature-update-modal] [data-bits-dialog-content] {
 .pg-mobile-bottom-nav__label {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -426,7 +452,8 @@ html[data-mobile-shell] .pg-mobile-hint {
 
 @media (orientation: landscape) and (max-height: 500px) {
   html[data-mobile-shell] {
-    --mobile-bottom-nav-height: 2.5rem;
+    /* = border-top 1px + item min-height 44px (label ẩn) */
+    --mobile-bottom-nav-height: 2.8125rem;
   }
 
   html[data-mobile-shell] #dashboard-navbar {
@@ -437,6 +464,7 @@ html[data-mobile-shell] .pg-mobile-hint {
     font-size: 1.125rem;
   }
 
+  /* Chỉ icon; tên truy cập vẫn có qua aria-label trên item (MobileBottomNav.svelte) */
   .pg-mobile-bottom-nav__label {
     display: none;
   }
