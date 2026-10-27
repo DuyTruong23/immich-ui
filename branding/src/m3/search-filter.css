@@ -212,7 +212,7 @@
   }
 
   .ant-search-filter-modal__section .pg-people-selection--expanded .pg-people-selection__grid {
-    max-height: min(40vh, 18rem);
+    max-height: min(40dvh, 18rem);
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;

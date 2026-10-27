@@ -19,7 +19,7 @@
 </script>
 
 <div class="absolute inset-0" aria-hidden="true">
-  <PhotoBlurBackdrop {asset} {sharedLink} />
+  <PhotoBlurBackdrop {asset} {sharedLink} peek />
   {#if frame}
     <Image
       src={urls.preview}

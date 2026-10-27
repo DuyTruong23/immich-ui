@@ -28,7 +28,8 @@
   style:background="var(--md-sys-color-surface-container)"
   style:color="var(--md-sys-color-on-surface)"
 >
-  <img {src} alt="" width="500" draggable="false" class="max-w-full" />
+  <!-- width/height theo tỉ lệ 900×600 của các empty-*.svg: giữ chỗ trước khi ảnh tải (tránh CLS) -->
+  <img {src} alt="" width="500" height="333" draggable="false" class="h-auto max-w-full" />
 
   {#if title}
     <h2 class="my-4 text-xl font-medium">{title}</h2>
