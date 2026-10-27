@@ -44,6 +44,22 @@
       padding-bottom: 0;
     }
 
+    /*
+     * Nút media-chrome là custom element nên rule `button` phía trên không áp.
+     * Chỉ dùng min-*: class Tailwind h-10/h-8 (layer utilities) thắng `height` của layer components.
+     */
+    #immich-asset-viewer.immich-asset-viewer--mobile
+      .video-mobile-chrome
+      :is(media-play-button, media-mute-button, media-fullscreen-button, media-settings-menu-button) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    #immich-asset-viewer.immich-asset-viewer--mobile .video-mobile-chrome media-control-bar,
+    #immich-asset-viewer.immich-asset-viewer--mobile .video-mobile-chrome immich-time-range {
+      min-height: 44px;
+    }
+
     #immich-asset-viewer.immich-asset-viewer--mobile
       media-controller[userinactive]
       .video-mobile-chrome {

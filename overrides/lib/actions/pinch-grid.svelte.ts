@@ -1,17 +1,18 @@
 import { gridDensityManager } from '$lib/stores/grid-density.svelte';
 import { isCoarsePointer, isNarrowViewport } from '$lib/utils/mobile-performance.svelte';
+import type { TouchGestureEvent } from '$lib/utils/touch-gesture';
 
 const STEP_SCALE = 0.22;
 
-const isAssetViewerOpen = () => Boolean(document.getElementById('immich-asset-viewer'));
+const isAssetViewerOpen = () => Boolean(document.querySelector('#immich-asset-viewer'));
 
-const touchDistance = (event: TouchEvent) => {
+const touchDistance = (event: TouchGestureEvent) => {
   const first = event.touches[0];
   const second = event.touches[1];
   return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
 };
 
-/** Pinch 2 ngón trên mobile: chum lại = nhiều ảnh hơn, xoè ra = ít ảnh hơn (3–6). */
+/** Pinch 2 ngón trên mobile: chum lại = nhiều ảnh hơn, xoè ra = ít ảnh hơn (3–6 trên điện thoại, 3–10 từ 768px). */
 export const pinchGrid = (node: HTMLElement) => {
   if (!isCoarsePointer() && !isNarrowViewport()) {
     return {};
@@ -21,7 +22,7 @@ export const pinchGrid = (node: HTMLElement) => {
   let startDistance = 0;
   let startColumns = gridDensityManager.columns;
 
-  const onTouchStart = (event: TouchEvent) => {
+  const onTouchStart = (event: TouchGestureEvent) => {
     if (event.touches.length !== 2 || isAssetViewerOpen()) {
       pinching = false;
       return;
@@ -33,7 +34,7 @@ export const pinchGrid = (node: HTMLElement) => {
     node.classList.add('pg-grid-pinching');
   };
 
-  const onTouchMove = (event: TouchEvent) => {
+  const onTouchMove = (event: TouchGestureEvent) => {
     if (!pinching || event.touches.length !== 2 || startDistance <= 0) {
       return;
     }
@@ -44,11 +45,13 @@ export const pinchGrid = (node: HTMLElement) => {
     gridDensityManager.setColumns(startColumns - steps);
   };
 
-  const onTouchEnd = (event: TouchEvent) => {
-    if (event.touches.length < 2) {
-      pinching = false;
-      node.classList.remove('pg-grid-pinching');
+  const onTouchEnd = (event: TouchGestureEvent) => {
+    if (event.touches.length >= 2) {
+      return;
     }
+
+    pinching = false;
+    node.classList.remove('pg-grid-pinching');
   };
 
   node.addEventListener('touchstart', onTouchStart, { passive: true });

@@ -6,7 +6,6 @@ import {
   getAssetOriginalPath,
   getAssetPlaybackPath,
   getAssetThumbnailPath,
-  getBaseUrl,
   getPeopleThumbnailPath,
   getUserProfileImagePath,
   linkOAuthAccount,

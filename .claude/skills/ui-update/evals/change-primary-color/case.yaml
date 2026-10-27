@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: change-primary-color
+expected_outcome: |
+  Primary changed in branding/src/m3/tokens.css for both light and dark themes, hard-coded primary-derived hex values in immich-ui primary scale reviewed, WCAG contrast verified for text/focus ring in both themes, no edits to upstream/web copies, Design System drift reported or updated.

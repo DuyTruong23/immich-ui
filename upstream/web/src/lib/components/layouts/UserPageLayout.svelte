@@ -54,10 +54,12 @@
   const showToolbar = $derived(showPageTitle || Boolean(buttons));
   let hasTitleClass = $derived.by(() => {
     if (mobileShell) {
-      return showToolbar ? 'top-16 pg-mobile-content' : 'top-0 pg-mobile-content';
+      // Toolbar mobile cao 3rem (h-12) → nội dung bắt đầu ngay dưới, không còn khe 16px
+      return showToolbar ? 'top-12 pg-mobile-content' : 'top-0 pg-mobile-content';
     }
     return showToolbar ? 'top-16 h-[calc(100%-(--spacing(16)))]' : 'top-0 h-full';
   });
+  const toolbarClass = $derived(mobileShell ? 'h-12 pg-mobile-toolbar' : 'h-16');
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden">
@@ -82,13 +84,13 @@
     {/if}
   {/if}
 
-  <main class="relative z-0 isolate">
+  <main class="relative isolate z-0">
     <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" use:useActions={use}>
       {@render children?.()}
     </div>
 
     {#if showToolbar}
-      <div class="absolute flex h-16 w-full place-items-center justify-between border-b p-2 text-dark">
+      <div class="absolute flex {toolbarClass} w-full place-items-center justify-between border-b p-2 text-dark">
         <div class="flex items-center gap-2">
           {#if showPageTitle}
             <div class="pe-8 outline-none" tabindex="-1" id={headerId}>{title}</div>

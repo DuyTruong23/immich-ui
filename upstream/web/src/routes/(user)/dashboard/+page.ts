@@ -13,6 +13,7 @@ import {
   type SessionResponseDto,
   type UserAdminResponseDto,
 } from '@immich/sdk';
+import { getFormatter } from '$lib/utils/i18n';
 import type { PageLoad } from './$types';
 
 const formatGiB = (bytes: number): string => `${(bytes / 1024 ** 3).toFixed(1)} GiB`;
@@ -93,8 +94,10 @@ export const load = (async ({ url }) => {
   const storageTotal = storage.diskSizeRaw;
   const storagePercent = storage.diskUsagePercentage;
 
+  const $t = await getFormatter();
+
   return {
-    meta: { title: 'Dashboard' },
+    meta: { title: $t('pg_dashboard') },
     serverVersion: `${version.major}.${version.minor}.${version.patch}`,
     serverOnline,
     albumCount,

@@ -6,7 +6,7 @@
   const formatted = $derived(formatMaintenanceReturn(returnAt, $locale));
 </script>
 
-<div class="pg-maintenance" role="alert" aria-live="polite">
+<div class="pg-maintenance" role="alert">
   <div class="pg-maintenance__content">
     <h1 class="pg-maintenance__title">{$t('pg_maintenance_title')}</h1>
     <p class="pg-maintenance__description">

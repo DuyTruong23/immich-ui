@@ -99,7 +99,7 @@
         <Switch bind:checked={$playVideoThumbnailOnHover} />
         {#if isMobile}
           <Text size="small" class="mt-2 text-(--pg-text-muted)">
-            Thiết bị cảm ứng không phát video khi hover — tùy chọn này chỉ có hiệu lực trên máy tính.
+            {$t('pg_video_hover_touch_note')}
           </Text>
         {/if}
       </Field>

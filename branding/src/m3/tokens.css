@@ -67,7 +67,8 @@
     --md-state-on-primary-pressed: color-mix(in srgb, var(--md-sys-color-on-primary) 12%, var(--md-sys-color-primary));
     --md-state-primary-hover: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
     --md-state-primary-pressed: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
-    --md-state-focus-ring: color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+    /* Focus ring đặc để đạt ≥3:1 trên mọi surface; alpha chỉ dùng cho lớp hover/pressed */
+    --md-state-focus-ring: var(--md-sys-color-primary);
     --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
     --md-motion-duration-short: 200ms;
   }
@@ -126,6 +127,7 @@
     --md-state-on-primary-pressed: color-mix(in srgb, var(--md-sys-color-on-primary) 12%, var(--md-sys-color-primary));
     --md-state-primary-hover: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
     --md-state-primary-pressed: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
-    --md-state-focus-ring: color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+    /* Focus ring đặc để đạt ≥3:1 trên mọi surface; alpha chỉ dùng cho lớp hover/pressed */
+    --md-state-focus-ring: var(--md-sys-color-primary);
   }
 }

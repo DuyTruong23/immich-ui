@@ -69,10 +69,12 @@ export async function refreshAssetsAfterDateUpdate(assetIds: string[]): Promise<
   );
 
   for (const result of results) {
-    if (result.status === 'fulfilled') {
-      refreshed.set(result.value.id, result.value);
-      eventManager.emit('AssetUpdate', result.value);
+    if (result.status !== 'fulfilled') {
+      continue;
     }
+
+    refreshed.set(result.value.id, result.value);
+    eventManager.emit('AssetUpdate', result.value);
   }
 
   const pendingIds = assetIds.filter((id) => !refreshed.has(id));

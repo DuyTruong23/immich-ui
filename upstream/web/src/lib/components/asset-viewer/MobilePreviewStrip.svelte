@@ -3,11 +3,13 @@
   import { FILMSTRIP_THUMB_SIZE, type PreviewStripItem } from '$lib/components/asset-viewer/preview-layout';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { getAssetMediaUrl } from '$lib/utils';
+  import { prefersReducedMotion } from '$lib/utils/mobile-performance.svelte';
   import { AssetMediaSize } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiPlayCircleOutline } from '@mdi/js';
   import { Duration } from 'luxon';
   import { onDestroy } from 'svelte';
+  import { t } from 'svelte-i18n';
 
   type Props = {
     assets: PreviewStripItem[];
@@ -43,13 +45,24 @@
     return Duration.fromMillis(durationMs).toFormat('m:ss');
   };
 
+  const thumbLabel = (asset: PreviewStripItem, index: number, durationLabel: string) => {
+    const name =
+      asset.originalFileName || $t('pg_filmstrip_item_fallback', { values: { index: index + 1, total: assets.length } });
+    if (!asset.isVideo) {
+      return name;
+    }
+    return durationLabel
+      ? $t('pg_filmstrip_video_duration', { values: { name, duration: durationLabel } })
+      : $t('pg_filmstrip_video', { values: { name } });
+  };
+
   const scrollCurrentIntoView = (behavior: ScrollBehavior = 'smooth') => {
     const el = scroller?.querySelector('[aria-current="true"]');
     if (!(el instanceof HTMLElement) || !scroller) {
       return;
     }
     programmaticScroll = true;
-    el.scrollIntoView({ inline: 'center', block: 'nearest', behavior });
+    el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : behavior });
     requestAnimationFrame(() => {
       programmaticScroll = false;
     });
@@ -100,8 +113,8 @@
   };
 
   $effect(() => {
-    currentId;
-    assets;
+    void currentId;
+    void assets;
     if (userScrolling) {
       return;
     }
@@ -137,15 +150,14 @@
   }
 </style>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <nav
   bind:this={scroller}
-  class="mobile-preview-strip pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pt-1.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-  aria-label="Filmstrip"
+  class="mobile-preview-strip pointer-events-auto w-full touch-pan-x [scrollbar-width:none] overflow-x-auto overscroll-x-contain px-3 pt-1.5 pb-0.5 [&::-webkit-scrollbar]:hidden"
+  aria-label={$t('pg_filmstrip')}
   onscroll={onScrollerScroll}
 >
   <div class="flex w-max min-w-full items-center justify-start gap-1.5 sm:justify-center">
-    {#each assets as asset (asset.id)}
+    {#each assets as asset, index (asset.id)}
       {@const isCurrent = asset.id === currentId}
       {@const url = urlFor(asset)}
       {@const durationLabel = asset.isVideo ? formatDuration(asset.duration) : ''}
@@ -153,13 +165,11 @@
         type="button"
         class="relative shrink-0 overflow-hidden rounded-full bg-white/10 transition-[box-shadow,opacity] duration-200 {isCurrent
           ? 'z-10 opacity-100 ring-2 ring-white ring-offset-1 ring-offset-black/80'
-          : 'opacity-70 hover:opacity-90'}"
+          : 'opacity-70 hover:opacity-90 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white'}"
         style:width="{THUMB_SIZE}px"
         style:height="{THUMB_SIZE}px"
         aria-current={isCurrent ? 'true' : undefined}
-        aria-label={asset.isVideo
-          ? `${asset.originalFileName ?? asset.id} (video${durationLabel ? `, ${durationLabel}` : ''})`
-          : (asset.originalFileName ?? asset.id)}
+        aria-label={thumbLabel(asset, index, durationLabel)}
         onpointerdown={isolateFromViewerSwipe}
         onclick={() => {
           if (!isCurrent) {
@@ -184,7 +194,7 @@
 
         {#if asset.isVideo}
           <span
-            class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-0.5 bg-linear-to-t from-black/70 to-transparent px-1 pb-0.5 pt-2 text-[10px] leading-none font-medium text-white"
+            class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-0.5 bg-linear-to-t from-black/70 to-transparent px-1 pt-2 pb-0.5 text-[10px] leading-none font-medium text-white"
             aria-hidden="true"
           >
             <Icon icon={mdiPlayCircleOutline} size="14" class="shrink-0 opacity-90" />

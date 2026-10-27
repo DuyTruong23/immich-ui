@@ -16,13 +16,21 @@
 <div class="flex flex-col gap-1">
   <div id="date-range-selection" class="grid grid-auto-fit-40 gap-5">
     <div>
-      <Text class="mb-2" fontWeight="medium">{$t('start_date')}</Text>
-      <DateTimeField bind:value={filters.takenAfter} maxDate={filters.takenBefore} />
+      <Text id="search-date-start-label" class="mb-2" fontWeight="medium">{$t('start_date')}</Text>
+      <DateTimeField
+        aria-labelledby="search-date-start-label"
+        bind:value={filters.takenAfter}
+        maxDate={filters.takenBefore}
+      />
     </div>
 
     <div>
-      <Text class="mb-2" fontWeight="medium">{$t('end_date')}</Text>
-      <DateTimeField bind:value={filters.takenBefore} minDate={filters.takenAfter} />
+      <Text id="search-date-end-label" class="mb-2" fontWeight="medium">{$t('end_date')}</Text>
+      <DateTimeField
+        aria-labelledby="search-date-end-label"
+        bind:value={filters.takenBefore}
+        minDate={filters.takenAfter}
+      />
     </div>
   </div>
   {#if invalid}

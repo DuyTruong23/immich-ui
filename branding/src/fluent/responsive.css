@@ -14,6 +14,72 @@
     #sidebar a {
       min-height: 44px;
     }
+
+    /*
+     * Nút icon vuông/tròn (IconButton @immich/ui: h-N w-N, hoặc size-N): chỉ nâng min-height sẽ biến
+     * nút tròn thành oval (vd. 40×44) — nâng cả min-width để giữ tỉ lệ 1:1, giống viewer.css cho navbar viewer.
+     */
+    :is(button, a, [role='button']):is(
+        [class*='h-6'][class*='w-6'],
+        [class*='h-8'][class*='w-8'],
+        [class*='h-10'][class*='w-10'],
+        [class*='size-6'],
+        [class*='size-8'],
+        [class*='size-10']
+      ):not([disabled], .pg-touch-target, .pg-day-select-toggle) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /*
+     * .pg-touch-target — giữ kích thước nhìn thấy, mở rộng vùng chạm lên 44px bằng ::before.
+     * Phần tử phải là containing block (relative/absolute/fixed): class không tự đặt position
+     * để không đè `absolute` của nút overlay.
+     */
+    :is(button, a, [role='button']).pg-touch-target:not([disabled]) {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /*
+     * Toggle chọn theo ngày (TimelineDaySelectToggle): chiều cao hàng tiêu đề ngày do layout timeline ảo cố định,
+     * nên không được kéo lên 44px (sẽ tràn xuống hàng thumbnail đầu và chặn nút chọn). Chỉ giữ rộng 44px.
+     * button.pg-day-select-toggle:not([disabled]) = (0,2,1) > button:not([disabled]) = (0,1,1) cùng layer utilities.
+     */
+    button.pg-day-select-toggle:not([disabled]) {
+      min-height: 0;
+    }
+
+    /*
+     * Chevron thu gọn/mở rộng nhóm album ở sidebar (NavbarItem @immich/ui, absolute ở mép trái, rộng ~18px).
+     * Icon của item bắt đầu ở x=20px (ps-5) nên không thể nới tới 44px mà không đè icon: chọn min-width 24px
+     * (tối thiểu WCAG 2.2 SC 2.5.8), phần chồng 4px chỉ lấn vào lề trong suốt của glyph. Hook = nút đứng ngay trước link.
+     * #sidebar button:has(+ a) = (1,1,2) > Tailwind px-0.5 (0,1,0).
+     */
+    #sidebar button:has(+ a) {
+      min-width: 24px;
+      padding-inline: 4px;
+    }
+
+    /*
+     * Ô nhập liệu >= 16px trên cảm ứng để iOS không tự zoom khi focus (đè text-sm/text-xs của Tailwind, (0,1,0)).
+     */
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='button'], [type='submit'], [type='reset'], [type='image']),
+    textarea,
+    select {
+      font-size: 16px;
+    }
+
+    .pg-touch-target::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      border-radius: inherit;
+      transform: translate(-50%, -50%);
+    }
   }
 
   html {

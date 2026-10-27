@@ -44,6 +44,7 @@
     features.sharedFavorites && !assetMultiSelectManager.selectionActive && !authManager.user.isAdmin,
   );
 
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bộ nhớ id đã gộp, không hiển thị
   const mergedOverlayIds = new Set<string>();
 
   const mergeMineOverlayFavorites = async (tm: TimelineManager, isCancelled: () => boolean) => {
@@ -157,8 +158,14 @@
   {#snippet buttons()}
     {#if showShareToggle}
       <div class="flex max-w-72 items-center gap-2 pe-1" title={$t('shared_favorites_share_toggle_subtitle')}>
-        <span class="text-end text-xs font-medium text-primary sm:text-sm">{$t('shared_favorites_share_toggle')}</span>
+        <span id="pg-share-toggle-label" class="text-end text-xs font-medium text-primary sm:text-sm"
+          >{$t('shared_favorites_share_toggle')}</span
+        >
+        <!-- title= chỉ hiện khi hover — mô tả cho trình đọc màn hình qua aria-describedby -->
+        <span id="pg-share-toggle-description" class="sr-only">{$t('shared_favorites_share_toggle_subtitle')}</span>
         <Switch
+          aria-labelledby="pg-share-toggle-label"
+          aria-describedby="pg-share-toggle-description"
           checked={partnerFavoritesStore.shareWithEveryone}
           disabled={savingShare}
           onCheckedChange={(value) => void handleShareToggle(value)}

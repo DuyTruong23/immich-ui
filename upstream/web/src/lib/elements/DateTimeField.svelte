@@ -9,6 +9,7 @@
     type?: 'date' | 'datetime-local';
     class?: string;
     id?: string;
+    'aria-labelledby'?: string;
     onChange?: (date: DateTime | undefined) => void;
   }
 
@@ -19,6 +20,7 @@
     type = 'date',
     class: className = 'immich-form-input w-full',
     id,
+    'aria-labelledby': ariaLabelledby,
     onChange,
   }: Props = $props();
 
@@ -36,11 +38,7 @@
     return type === 'date' ? dt.toFormat('yyyy-MM-dd') : dt.toFormat("yyyy-MM-dd'T'HH:mm");
   };
 
-  let iso = $state(toIso(value));
-
-  $effect(() => {
-    iso = toIso(value);
-  });
+  let iso = $derived(toIso(value));
 
   const setIso = (next: string) => {
     iso = next;
@@ -56,4 +54,12 @@
   };
 </script>
 
-<DateInput {type} {id} class={className} bind:value={() => iso, setIso} min={toBound(minDate)} max={toBound(maxDate)} />
+<DateInput
+  {type}
+  {id}
+  aria-labelledby={ariaLabelledby}
+  class={className}
+  bind:value={() => iso, setIso}
+  min={toBound(minDate)}
+  max={toBound(maxDate)}
+/>

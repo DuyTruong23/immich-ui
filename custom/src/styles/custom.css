@@ -50,10 +50,12 @@ body {
   color: var(--md-sys-color-on-surface);
 }
 
+/* Chỉ áp cho CSS animation/transition. Transition Svelte 5 (element.animate) và scroll bằng JS
+   tự kiểm tra qua motionDuration() / prefersReducedMotion() trong $lib/utils/mobile-performance.svelte */
 @media (prefers-reduced-motion: reduce) {
-  html:not(.immich-allow-motion) *,
-  html:not(.immich-allow-motion) *::before,
-  html:not(.immich-allow-motion) *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -79,7 +81,11 @@ body {
   box-sizing: border-box;
   min-height: 100dvh;
   width: 100%;
-  align-items: center;
+  /*
+   * flex-start + margin-block:auto ở __content: căn giữa khi đủ chỗ; khi nội dung cao hơn viewport
+   * (phone landscape) thì bám đầu, cuộn được tới tiêu đề (align-items:center làm tràn lên trên, bị cắt).
+   */
+  align-items: flex-start;
   justify-content: center;
   background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
@@ -97,6 +103,7 @@ body {
 .pg-server-error__content {
   width: 100%;
   max-width: 34rem;
+  margin-block: auto;
   text-align: center;
 }
 
@@ -177,6 +184,13 @@ body {
     max-width: none;
     font-size: 0.9375rem;
     line-height: 1.7;
+  }
+}
+
+/* Viewport thấp (phone landscape): bỏ hình minh họa ~22rem để tiêu đề + mô tả vừa màn */
+@media (max-height: 480px) {
+  .pg-maintenance__art {
+    display: none;
   }
 }
 

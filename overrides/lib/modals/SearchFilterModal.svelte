@@ -297,7 +297,8 @@
   }
 
   @media (max-width: 767px) {
-    :global(html[data-search-filter-modal='open'] [data-dialog-content]) {
+    /* Chỉ dialog chứa modal lọc — không ép fullscreen dialog khác mở chồng lên */
+    :global(html[data-search-filter-modal='open'] [data-dialog-content]:has(.ant-search-filter-modal)) {
       display: flex;
       flex-direction: column;
       width: 100% !important;
@@ -308,7 +309,7 @@
       border-radius: 0 !important;
     }
 
-    :global(html[data-search-filter-modal='open'] [data-dialog-content] > div) {
+    :global(html[data-search-filter-modal='open'] [data-dialog-content]:has(.ant-search-filter-modal) > div) {
       justify-content: stretch !important;
       height: 100%;
       min-height: 0;

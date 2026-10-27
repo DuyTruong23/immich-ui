@@ -63,6 +63,22 @@
       !blockedCheckLoading,
   );
   const showCluster = $derived(showUpload || showWhatsNew);
+  let clusterHeight = $state(0);
+
+  // Báo cho UploadPanel (mobile-shell.css) cụm FAB đang hiện + chiều cao thật (pointer coarse ép button 44px)
+  // để đặt panel/bubble ngay trên hàng FAB, không bị FAB z-80 che.
+  $effect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute('data-gallery-fabs', showCluster);
+    if (showCluster && clusterHeight > 0) {
+      root.style.setProperty('--pg-gallery-fabs-height', `${clusterHeight}px`);
+    }
+
+    return () => {
+      root.removeAttribute('data-gallery-fabs');
+      root.style.removeProperty('--pg-gallery-fabs-height');
+    };
+  });
 
   onMount(() => {
     try {
@@ -104,7 +120,7 @@
 
 {#if showCluster}
   <Portal target="body">
-    <div class="pg-gallery-fabs" role="group" aria-label={$t('upload')}>
+    <div class="pg-gallery-fabs" bind:offsetHeight={clusterHeight}>
       {#if showUpload}
         <button
           type="button"
@@ -125,6 +141,7 @@
             type="button"
             class="pg-whats-new-pin__open"
             aria-label={$t('feature_updates_whats_new')}
+            title={$t('feature_updates_whats_new')}
             onclick={openWhatsNew}
           >
             <span class="pg-whats-new-pin__icon" aria-hidden="true">
@@ -137,7 +154,12 @@
             </span>
             <span class="pg-whats-new-pin__label">{$t('feature_updates_whats_new')}</span>
           </button>
-          <button type="button" class="pg-whats-new-pin__dismiss" aria-label={$t('close')} onclick={dismissPin}>
+          <button
+            type="button"
+            class="pg-whats-new-pin__dismiss pg-touch-target"
+            aria-label={$t('close')}
+            onclick={dismissPin}
+          >
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
               <path
                 fill="currentColor"
@@ -158,7 +180,7 @@
 
   .pg-gallery-fabs {
     position: fixed;
-    right: max(1rem, env(safe-area-inset-right, 0px));
+    inset-inline-end: max(1rem, env(safe-area-inset-right, 0px));
     bottom: max(1rem, env(safe-area-inset-bottom, 0px));
     z-index: 80;
     display: flex;
@@ -166,7 +188,13 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.5rem;
-    max-width: calc(100vw - 2rem);
+    /* 100% của khối fixed = viewport không gồm scrollbar; trừ cả hai mép safe-area (landscape) */
+    max-width: calc(100% - max(1rem, env(safe-area-inset-left, 0px)) - max(1rem, env(safe-area-inset-right, 0px)));
+  }
+
+  /* RTL: cụm nằm mép trái → dùng inset trái */
+  :global(body[dir='rtl']) .pg-gallery-fabs {
+    inset-inline-end: max(1rem, env(safe-area-inset-left, 0px));
   }
 
   .pg-upload-fab {
@@ -238,6 +266,7 @@
   }
 
   .pg-whats-new-pin__dismiss {
+    position: relative;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -255,7 +284,14 @@
     cursor: pointer;
   }
 
-  .pg-whats-new-pin:has(.pg-whats-new-pin__open:hover) {
+  /* Vùng chạm 44px của nút đóng (pg-touch-target) tràn 8px mỗi bên — giãn gap để không đè nút mở */
+  @media (pointer: coarse) {
+    .pg-whats-new-pin {
+      gap: 0.5rem;
+    }
+  }
+
+  .pg-whats-new-pin:has(.pg-whats-new-pin__open:is(:hover, :focus-visible)) {
     background: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
   }

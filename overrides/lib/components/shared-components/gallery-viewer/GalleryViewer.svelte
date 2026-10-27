@@ -85,7 +85,7 @@
   const navigationAssets = $derived(viewerAssets ?? assets);
 
   const geometry = $derived.by(() => {
-    gridDensityManager.columns;
+    void gridDensityManager.columns;
     return getJustifiedLayoutFromAssets(assets, {
       spacing: 2,
       heightTolerance: 0.5,
@@ -358,7 +358,7 @@
   const toFilmstripItem = (asset: TimelineAsset | AssetResponseDto): PreviewStripItem => ({
     id: asset.id,
     thumbhash: asset.thumbhash,
-    originalFileName: asset.originalFileName,
+    originalFileName: 'originalFileName' in asset ? asset.originalFileName : undefined,
     isVideo: 'isVideo' in asset ? asset.isVideo : asset.type === AssetTypeEnum.Video,
     duration: asset.duration ?? null,
   });
@@ -378,11 +378,11 @@
                 : undefined,
             laterItems: navigationAssets
               .slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex)
-              .toReversed()
-              .map(toFilmstripItem),
+              .reverse()
+              .map((asset) => toFilmstripItem(asset)),
             earlierItems: navigationAssets
               .slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1)
-              .map(toFilmstripItem),
+              .map((asset) => toFilmstripItem(asset)),
           })
         : undefined,
   });
@@ -413,6 +413,7 @@
             }}
             onSelect={() => handleSelectAssets(currentAsset)}
             onPreview={assetInteraction.selectionActive ? () => void navigateToAsset(asset) : undefined}
+            selectionMode={assetInteraction.selectionActive}
             onMouseEvent={() => assetMouseEventHandler(currentAsset)}
             {showArchiveIcon}
             asset={currentAsset}

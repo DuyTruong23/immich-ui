@@ -13,9 +13,7 @@
   import {
     type AlbumGroupOptionMetadata,
     type AlbumSortOptionMetadata,
-    collapseAllAlbumGroups,
     createAlbumAndRedirect,
-    expandAllAlbumGroups,
     findFilterOption,
     findGroupOptionMetadata,
     findSortOptionMetadata,
@@ -23,7 +21,7 @@
     groupOptionsMetadata,
     sortOptionsMetadata,
   } from '$lib/utils/album-utils';
-  import { Button, IconButton, Text } from '@immich/ui';
+  import { Button } from '@immich/ui';
   import {
     mdiArrowDownThin,
     mdiArrowUpThin,
@@ -32,13 +30,12 @@
     mdiFolderRemoveOutline,
     mdiFormatListBulletedSquare,
     mdiPlusBoxOutline,
-    mdiUnfoldLessHorizontal,
-    mdiUnfoldMoreHorizontal,
     mdiViewGridOutline,
   } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import { fly } from 'svelte/transition';
   import { can } from '$custom/utils/capabilities.svelte';
+  import AlbumGroupToggles from './AlbumGroupToggles.svelte';
 
   interface Props {
     albumGroups: string[];
@@ -137,7 +134,7 @@
     variant="ghost"
     color="secondary"
   >
-    <p class="hidden md:block">{$t('create_album')}</p>
+    <span class="max-md:sr-only">{$t('create_album')}</span>
   </Button>
 {/if}
 
@@ -168,33 +165,8 @@
 
 {#if getSelectedAlbumGroupOption($albumViewSettings) !== AlbumGroupBy.None}
   <span in:fly={{ x: -50, duration: 250 }}>
-    <!-- Expand Album Groups -->
-    <div class="hidden gap-0 xl:flex">
-      <div class="block">
-        <IconButton
-          title={$t('expand_all')}
-          onclick={() => expandAllAlbumGroups()}
-          variant="ghost"
-          color="secondary"
-          shape="round"
-          icon={mdiUnfoldMoreHorizontal}
-          aria-label={$t('expand_all')}
-        />
-      </div>
-
-      <!-- Collapse Album Groups -->
-      <div class="block">
-        <IconButton
-          title={$t('collapse_all')}
-          onclick={() => collapseAllAlbumGroups(albumGroups)}
-          variant="ghost"
-          color="secondary"
-          shape="round"
-          icon={mdiUnfoldLessHorizontal}
-          aria-label={$t('collapse_all')}
-        />
-      </div>
-    </div>
+    <!-- Expand / Collapse Album Groups (từ md; dưới md nằm cạnh ô tìm kiếm trong +page.svelte) -->
+    <AlbumGroupToggles {albumGroups} class="hidden md:flex" />
   </span>
 {/if}
 
@@ -207,7 +179,7 @@
     variant="ghost"
     color="secondary"
   >
-    <Text class="hidden md:block">{$t('covers')}</Text>
+    <span class="max-md:sr-only">{$t('covers')}</span>
   </Button>
 {:else}
   <Button
@@ -217,6 +189,6 @@
     variant="ghost"
     color="secondary"
   >
-    <Text class="hidden md:block">{$t('list')}</Text>
+    <span class="max-md:sr-only">{$t('list')}</span>
   </Button>
 {/if}

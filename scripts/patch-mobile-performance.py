@@ -47,10 +47,10 @@ def patch_timeline(path: pathlib.Path) -> None:
             'Timeline mediaQueryManager import',
         )
     density_effect = """  $effect(() => {
-    maxMd;
-    networkManager.quality;
-    gridDensityManager.columns;
-    timelineManager.viewportWidth;
+    void maxMd;
+    void networkManager.quality;
+    void gridDensityManager.columns;
+    void timelineManager.viewportWidth;
     timelineManager.setLayoutOptions(getTimelineLayoutOptions(timelineManager.viewportWidth));
   });
 """
@@ -728,6 +728,7 @@ def patch_timeline_manager_refresh(path: pathlib.Path) -> None:
 """
     thumbnail_poll = """
   async #refreshUploadedThumbnails(assetIds: string[]) {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- tập tạm trong vòng poll, không reactive
     const pending = new Set(assetIds);
     for (const delay of [2500, 5000, 10_000]) {
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -735,9 +736,10 @@ def patch_timeline_manager_refresh(path: pathlib.Path) -> None:
         return;
       }
 
-      const assets = (
-        await Promise.all([...pending].map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)))
-      ).filter((asset): asset is AssetResponseDto => !!asset);
+      const results = await Promise.all(
+        [...pending].map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)),
+      );
+      const assets = results.filter((asset): asset is AssetResponseDto => !!asset);
       const ready = assets.filter((asset) => Boolean(asset.thumbhash));
       if (ready.length === 0) {
         continue;
@@ -789,19 +791,21 @@ def patch_timeline_manager_refresh(path: pathlib.Path) -> None:
       await this.#syncMonthsFromBuckets();
 
       if (assetIds.length > 0) {
-        const assets = (
-          await Promise.all(assetIds.map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)))
-        ).filter((asset): asset is AssetResponseDto => !!asset);
+        const results = await Promise.all(
+          assetIds.map((id) => getAssetInfo({ ...authManager.params, id }).catch(() => null)),
+        );
+        const assets = results.filter((asset): asset is AssetResponseDto => !!asset);
         if (assets.length > 0) {
           this.upsertAssets(assets.map((asset) => toTimelineAsset(asset)));
         }
       }
 
       for (const month of this.months) {
-        if (!month.isLoaded && month.getFirstAsset()) {
-          month.timelineDays = [];
-          await month.loader?.reset();
+        if (month.isLoaded || !month.getFirstAsset()) {
+          continue;
         }
+        month.timelineDays = [];
+        await month.loader?.reset();
       }
 
       this.updateViewportGeometry(true);
@@ -827,7 +831,8 @@ def patch_timeline_manager_refresh(path: pathlib.Path) -> None:
       ...this.#options,
     });
 
-    const existingByKey = new Map(
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Map tạm để tra tháng cũ, không reactive
+    const existingByKey = new Map<string, TimelineMonth>(
       this.months.map((month) => [`${month.yearMonth.year}-${month.yearMonth.month}`, month] as const),
     );
 

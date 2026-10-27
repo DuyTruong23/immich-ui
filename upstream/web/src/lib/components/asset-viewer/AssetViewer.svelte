@@ -44,6 +44,7 @@
   import { onDestroy, onMount, untrack } from 'svelte';
   import type { SwipeCustomEvent } from 'svelte-gestures';
   import { t } from 'svelte-i18n';
+  import { motionDuration } from '$lib/utils/mobile-performance.svelte';
   import { fly } from 'svelte/transition';
   import Thumbnail from '../assets/thumbnail/Thumbnail.svelte';
   import ActivityStatus from './ActivityStatus.svelte';
@@ -62,6 +63,7 @@
   import MobilePreviewStrip from './MobilePreviewStrip.svelte';
   import MobilePreviewStripSkeleton from './MobilePreviewStripSkeleton.svelte';
   import { type PreviewStripItem } from './preview-layout';
+  import { getViewerPanelLayoutClass, isSwipeBackEnabled } from './viewer-panel-layout';
   import VideoViewer from './VideoWrapperViewer.svelte';
 
   export type AssetCursor = {
@@ -223,7 +225,7 @@
     activityManager.reset();
     assetViewerManager.resetPanelState();
     clearGestureWait();
-    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    document.querySelector<HTMLElement>('#immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
     resetViewerPageScrollLock();
     preloadManager.destroy();
     videoPreloadManager.destroy();
@@ -232,7 +234,7 @@
 
   const closeViewer = (assetId = asset.id) => {
     clearGestureWait();
-    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    document.querySelector<HTMLElement>('#immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
     resetViewerPageScrollLock();
     onClose?.(assetId);
   };
@@ -513,12 +515,15 @@
       assetViewerManager.isShowDetailPanel &&
       !assetViewerManager.isShowEditor,
   );
+  const isViewerPanelOpen = $derived(
+    showDetailPanel || assetViewerManager.isShowEditor || assetViewerManager.isShowActivityPanel,
+  );
 
   const GESTURE_WAIT_TIMEOUT_MS = 8000;
   const waitsForGestureMediaReady = (kind: typeof viewerKind) =>
-    kind === 'PhotoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer' || kind === 'VideoViewer';
+    ['PhotoViewer', 'StackVideoViewer', 'LiveVideoViewer', 'VideoViewer'].includes(kind);
   const isVideoViewerKind = (kind: typeof viewerKind) =>
-    kind === 'VideoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer';
+    ['VideoViewer', 'StackVideoViewer', 'LiveVideoViewer'].includes(kind);
   let pendingGestureAssetId = $state<string | null>(null);
   let showGestureSpinner = $state(false);
   const showFullScreenGestureSpinner = $derived(showGestureSpinner && !isVideoViewerKind(viewerKind));
@@ -587,19 +592,27 @@
       return;
     }
 
-    if (event.detail.direction === 'left') {
-      if (!tracker.isActive()) {
-        beginGestureWait(nextAsset?.id);
+    switch (event.detail.direction) {
+      case 'left': {
+        if (!tracker.isActive()) {
+          beginGestureWait(nextAsset?.id);
+        }
+        navigateAsset('next');
+        break;
       }
-      navigateAsset('next');
-    } else if (event.detail.direction === 'right') {
-      if (!tracker.isActive()) {
-        beginGestureWait(previousAsset?.id);
+      case 'right': {
+        if (!tracker.isActive()) {
+          beginGestureWait(previousAsset?.id);
+        }
+        navigateAsset('previous');
+        break;
       }
-      navigateAsset('previous');
-    } else if (event.detail.direction === 'bottom') {
-      clearGestureWait();
-      closeViewer();
+      case 'bottom': {
+        clearGestureWait();
+        closeViewer();
+        break;
+      }
+      // No default
     }
   };
 </script>
@@ -621,14 +634,19 @@
     ? 'grid-rows-1'
     : 'grid-rows-[64px_1fr]'}"
   class:immich-asset-viewer--mobile={isMobileViewer}
+  class:immich-asset-viewer--has-strip={showMobilePreviewStrip || showMobilePreviewStripSkeleton}
   use:focusTrap
   bind:this={assetViewerHtmlElement}
 >
   <SwipeBackEdge
     onBack={closeViewer}
-    enabled={$slideshowState === SlideshowState.None &&
-      !assetViewerManager.isShowEditor &&
-      !assetViewerManager.isFaceEditMode}
+    enabled={isSwipeBackEnabled({
+      isMobileViewer,
+      slideshowIdle: $slideshowState === SlideshowState.None,
+      isShowEditor: assetViewerManager.isShowEditor,
+      isFaceEditMode: assetViewerManager.isFaceEditMode,
+      isPanelOpen: isViewerPanelOpen,
+    })}
   />
   <!-- Top navigation bar -->
   {#if $slideshowState === SlideshowState.None && !assetViewerManager.isShowEditor}
@@ -744,7 +762,7 @@
     {/if}
 
     {#if showActivityStatus}
-      <div class="absolute inset-e-0 bottom-0 me-8 mb-20">
+      <div class="absolute inset-e-0 bottom-0 me-8 mb-[calc(var(--mobile-preview-strip-offset,0px)+5rem)]">
         <ActivityStatus
           disabled={!album?.isActivityEnabled}
           isLiked={activityManager.isLiked}
@@ -756,7 +774,9 @@
     {/if}
 
     {#if showOcrButton}
-      <div class="absolute inset-e-0 bottom-0 me-6 mb-6 drop-shadow-[0_0_1px_rgba(0,0,0,0.4)]">
+      <div
+        class="absolute inset-e-0 bottom-0 me-6 mb-[calc(var(--mobile-preview-strip-offset,0px)+1.5rem)] drop-shadow-[0_0_1px_rgba(0,0,0,0.4)]"
+      >
         <OcrButton />
       </div>
     {/if}
@@ -774,11 +794,11 @@
 
   {#if showDetailPanel || assetViewerManager.isShowEditor}
     <div
-      transition:fly={{ duration: 150 }}
+      transition:fly={{ duration: motionDuration(150) }}
       id="detail-panel"
       class={[
-        'row-span-4 row-start-1 overflow-y-auto bg-light transition-all dark:border-l dark:border-s-immich-dark-gray',
-        showDetailPanel ? 'w-90' : 'w-100',
+        'overflow-y-auto bg-light transition-all dark:border-s-immich-dark-gray',
+        getViewerPanelLayoutClass(showDetailPanel ? 'detail' : 'editor', isMobileViewer),
       ]}
       translate="yes"
     >
@@ -792,10 +812,8 @@
 
   {#if showMobilePreviewStrip || showMobilePreviewStripSkeleton}
     <div
-      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1 {stack &&
-      withStacked
-        ? 'mb-16'
-        : ''}"
+      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 isolate z-20 col-span-4 col-start-1"
+      class:mobile-preview-strip-host--above-stack={Boolean(stack && withStacked)}
     >
       {#if showMobilePreviewStrip}
         <MobilePreviewStrip
@@ -855,9 +873,12 @@
 
   {#if isShared && album && assetViewerManager.isShowActivityPanel && authManager.authenticated}
     <div
-      transition:fly={{ duration: 150 }}
+      transition:fly={{ duration: motionDuration(150) }}
       id="activity-panel"
-      class="row-span-5 row-start-1 w-90 overflow-y-auto transition-all md:w-115 dark:border-l dark:border-s-immich-dark-gray"
+      class={[
+        'overflow-y-auto transition-all dark:border-s-immich-dark-gray',
+        getViewerPanelLayoutClass('activity', isMobileViewer),
+      ]}
       translate="yes"
     >
       <ActivityViewer
@@ -900,14 +921,25 @@
   }
 
   :global(.immich-asset-viewer--mobile) {
-    --mobile-preview-strip-offset: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    /* Không có filmstrip (1 ảnh, shared link không điều hướng, editor): chỉ chừa home indicator */
+    --mobile-preview-strip-offset: env(safe-area-inset-bottom, 0px);
+    /* #stack-slideshow: thumb chọn 65px + chấm 10px + pb-2 8px ≈ 5.25rem */
+    --stack-strip-height: 5.25rem;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     background-color: rgb(0 0 0 / calc(1 - var(--viewer-dismiss, 0) * 0.75));
   }
 
+  :global(.immich-asset-viewer--mobile.immich-asset-viewer--has-strip) {
+    /* Cao thật của filmstrip: pt-1.5 (6px) + FILMSTRIP_THUMB_SIZE 44px + pb-0.5 (2px) = 52px */
+    --mobile-preview-strip-offset: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
   :global(.asset-viewer-navbar--overlay) {
     padding-top: env(safe-area-inset-top, 0px);
+    /* absolute inset-x-0 không có grid placement → nằm trên padding box, tự chừa notch ngang (landscape) */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
     opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
   }
 
@@ -921,8 +953,37 @@
     opacity: calc(1 - min(1, var(--viewer-dismiss, 0) * 1.6));
   }
 
+  /* Có stack: filmstrip nằm trên #stack-slideshow; stack đã chừa home indicator nên host không pad thêm */
+  :global(.mobile-preview-strip-host.mobile-preview-strip-host--above-stack) {
+    margin-bottom: calc(var(--stack-strip-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
+  }
+
+  #stack-slideshow {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Panel info/editor/activity trên mobile viewer (xem viewer-panel-layout.ts) */
+  :global(.asset-viewer-sheet) {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    box-shadow: 0 -8px 24px rgb(0 0 0 / 35%);
+    overscroll-behavior: contain;
+  }
+
+  /* Tablet: drawer cao hết màn → chừa status bar; mép đầu (start) không chạm notch */
+  @media (min-width: 768px) {
+    :global(.asset-viewer-sheet) {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-left: 0;
+      box-shadow: -8px 0 24px rgb(0 0 0 / 35%);
+    }
+  }
+
   @media (orientation: landscape) and (max-height: 500px) {
-    :global(.immich-asset-viewer--mobile) {
+    :global(.immich-asset-viewer--mobile),
+    :global(.immich-asset-viewer--mobile.immich-asset-viewer--has-strip) {
       --mobile-preview-strip-offset: env(safe-area-inset-bottom, 0px);
     }
 

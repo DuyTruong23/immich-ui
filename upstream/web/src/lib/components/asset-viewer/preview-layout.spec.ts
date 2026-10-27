@@ -115,8 +115,8 @@ describe('buildFilmstrip', () => {
       current: item('c'),
       previous: item('p'),
       next: item('n'),
-      laterItems: ['a', 'b', 'c', 'd', 'e', 'f'].map(item),
-      earlierItems: ['x', 'y', 'z', 'w', 'v', 'u'].map(item),
+      laterItems: ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => item(id)),
+      earlierItems: ['x', 'y', 'z', 'w', 'v', 'u'].map((id) => item(id)),
     });
 
     expect(strip).toHaveLength(FILMSTRIP_MAX_ITEMS);
@@ -125,7 +125,7 @@ describe('buildFilmstrip', () => {
 });
 
 describe('windowPreviewStrip', () => {
-  const assets = ['1', '2', '3', '4', '5', '6', '7'].map(item);
+  const assets = ['1', '2', '3', '4', '5', '6', '7'].map((id) => item(id));
 
   it('windows the middle of a long list to five items', () => {
     expect(windowPreviewStrip(assets, '4').map((entry) => entry.id)).toEqual(['2', '3', '4', '5', '6']);

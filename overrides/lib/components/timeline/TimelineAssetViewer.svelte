@@ -200,6 +200,7 @@
   const expandFilmstrip = async (direction: 'earlier' | 'later') => {
     const token = ++expandToken;
     const currentAsset = assetCursor.current;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- tập tạm trong hàm async, không reactive
     const existingIds = new Set(assetCursor.nearbyAssets?.map((entry) => entry.id) ?? [currentAsset.id]);
 
     const anchorId =

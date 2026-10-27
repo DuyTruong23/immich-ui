@@ -2,7 +2,6 @@
   import Thumbnail from '$lib/components/assets/thumbnail/Thumbnail.svelte';
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/EmptyPlaceholder.svelte';
-  import UserAvatar from '$lib/components/shared-components/UserAvatar.svelte';
   import Portal from '$lib/elements/Portal.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -23,6 +22,7 @@
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
+  import LikedByStack from './LikedByStack.svelte';
 
   interface Props {
     data: PageData;
@@ -166,6 +166,7 @@
       return;
     }
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Map bất biến, gán lại vào $state để cập nhật
     const next = new Map(assetsById);
     for (const asset of incoming) {
       next.set(asset.id, { ...asset, isFavorite: false });
@@ -221,6 +222,7 @@
       const cols = isMobileGrid
         ? gridDensityManager.columns
         : styles.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      // eslint-disable-next-line unicorn/prefer-number-coercion -- columnGap có đơn vị ("8px"), Number() trả NaN
       const gap = Number.parseFloat(styles.columnGap) || 0;
       thumbSize = Math.max(1, Math.floor((node.clientWidth - gap * Math.max(cols - 1, 0)) / cols));
     };
@@ -231,7 +233,7 @@
 
     const unsubscribe = $effect.root(() => {
       $effect(() => {
-        gridDensityManager.columns;
+        void gridDensityManager.columns;
         update();
       });
     });
@@ -333,7 +335,7 @@
         const ownerId = partnerFavoritesStore.me?.id;
         const partnerOnlyIds = ownerId
           ? partnerFavoritesStore.listedItems
-              .filter((item) => !item.favoritedBy.some((user) => user.id === ownerId))
+              .filter((item) => item.favoritedBy.every((user) => user.id !== ownerId))
               .map((item) => item.assetId)
           : [];
 
@@ -398,6 +400,7 @@
       return;
     }
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Set bất biến, gán lại vào $state để cập nhật
     removingIds = new Set(removingIds).add(item.assetId);
     try {
       const userIds = isAdmin ? item.favoritedBy.map((user) => user.id) : undefined;
@@ -410,6 +413,7 @@
     } catch (error) {
       handleError(error, $t('shared_favorites_remove_error'));
     } finally {
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Set bất biến, gán lại vào $state để cập nhật
       const next = new Set(removingIds);
       next.delete(item.assetId);
       removingIds = next;
@@ -439,6 +443,7 @@
         class="rounded-full border px-3 py-1.5 text-sm transition-colors {filter === item.id
           ? 'border-primary bg-primary/15 text-primary'
           : 'border-(--pg-border) text-(--pg-text-muted) hover:border-primary/40'}"
+        aria-pressed={filter === item.id}
         onclick={() => (filter = item.id)}
       >
         {item.label}
@@ -455,7 +460,7 @@
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div
-      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}"
+      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'}"
       style:grid-template-columns={isMobileGrid
         ? `repeat(${gridDensityManager.columns}, minmax(0, 1fr))`
         : undefined}
@@ -464,7 +469,7 @@
     >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetForItem(item)}
-        <div class="relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
+        <div class="@container relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
           <Thumbnail
             {asset}
             thumbnailSize={thumbSize || undefined}
@@ -475,7 +480,7 @@
           {#if canRemoveItem(item)}
             <button
               type="button"
-              class="absolute top-2 end-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
+              class="pg-touch-target absolute inset-e-2 top-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
               aria-label={isAdmin ? $t('shared_favorites_remove_admin') : $t('unfavorite')}
               disabled={removingIds.has(item.assetId)}
               onclick={(event) => handlePromiseError(handleRemoveFavorite(event, item))}
@@ -483,17 +488,7 @@
               <Icon icon={mdiClose} size="18" />
             </button>
           {/if}
-          <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
-            {#each item.favoritedBy as user, index (user.id)}
-              <div
-                class="relative rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
-                style="z-index: {item.favoritedBy.length - index}"
-                title={$t('shared_favorites_liked_by', { values: { name: user.name } })}
-              >
-                <UserAvatar user={toAvatarUser(user)} size="sm" />
-              </div>
-            {/each}
-          </div>
+          <LikedByStack users={item.favoritedBy.map((user) => toAvatarUser(user))} />
         </div>
       {/each}
     </div>

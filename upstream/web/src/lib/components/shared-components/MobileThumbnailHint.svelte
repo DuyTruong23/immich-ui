@@ -3,10 +3,12 @@
   import { Icon } from '@immich/ui';
   import { mdiClose, mdiInformationOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
+  import { isMobileShell } from '$custom/utils/capabilities.svelte';
 
   const STORAGE_KEY = 'immich-mobile-thumbnail-hint-dismissed';
 
-  const isMobile = $derived(mediaQueryManager.pointerCoarse || mediaQueryManager.maxMd);
+  // Cùng điều kiện với mobile shell (<850px, đã đăng nhập, ngoài /admin) và mọi thiết bị cảm ứng
+  const isMobile = $derived(isMobileShell() || mediaQueryManager.pointerCoarse);
 
   const readDismissed = () => {
     try {
@@ -34,12 +36,12 @@
     class="pg-mobile-hint flex items-center gap-2 border-b border-white/10 bg-(--md-sys-color-surface-container) px-3 py-1.5 text-(--md-sys-color-on-surface-variant)"
   >
     <Icon icon={mdiInformationOutline} size="16" class="shrink-0 opacity-80" />
-    <p class="min-w-0 flex-1 text-[11px] leading-snug">
+    <p class="min-w-0 flex-1 text-xs/snug">
       {$t('mobile_thumbnail_hint')}
     </p>
     <button
       type="button"
-      class="flex size-6 shrink-0 items-center justify-center rounded-full opacity-70 hover:bg-white/10 hover:opacity-100"
+      class="pg-touch-target relative flex size-6 shrink-0 items-center justify-center rounded-full opacity-70 hover:bg-(--md-state-on-surface-hover) hover:opacity-100"
       aria-label={$t('close')}
       onclick={dismiss}
     >

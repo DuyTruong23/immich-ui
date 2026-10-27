@@ -3,7 +3,7 @@
   import { locale } from '$lib/stores/preferences.store';
   import { formatDate, formatDateTime } from '$lib/utils/date-format';
   import { type ServerAboutResponseDto, type ServerVersionHistoryResponseDto } from '@immich/sdk';
-  import { Alert, Label, Modal, ModalBody } from '@immich/ui';
+  import { Alert, Modal, ModalBody } from '@immich/ui';
   import { DateTime } from 'luxon';
   import { t } from 'svelte-i18n';
 
@@ -72,16 +72,12 @@
       {/if}
 
       <div class="col-span-full">
-        <Label size="small" color="primary" for="version-history">{$t('version_history')}</Label>
-        <ul id="version-history" class="list-none">
+        <h3 id="version-history-label" class="text-sm font-medium text-primary">{$t('version_history')}</h3>
+        <ul aria-labelledby="version-history-label" class="list-none">
           {#each versions.slice(0, 5) as item (item.id)}
             {@const createdAt = DateTime.fromISO(item.createdAt)}
             <li>
-              <span
-                class="pb-2 text-xs immich-form-label"
-                id="version-history"
-                title={formatDateTime(createdAt.toJSDate(), $locale)}
-              >
+              <span class="pb-2 text-xs immich-form-label" title={formatDateTime(createdAt.toJSDate(), $locale)}>
                 {$t('version_history_item', {
                   values: {
                     version: item.version,

@@ -20,7 +20,7 @@ export const resolveAvailableLanguage = (code: string | undefined): string | und
     return converted;
   }
 
-  const prefix = converted.split('-')[0];
+  const prefix = converted.split('-', 1)[0];
   if (prefix && langCodes.includes(prefix)) {
     return prefix;
   }

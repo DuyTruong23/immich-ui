@@ -24,6 +24,7 @@
         currentPreference === ThemePreference.System,
         'text-immich-primary dark:text-immich-dark-primary',
       )}
+      aria-pressed={currentPreference === ThemePreference.System}
       onclick={() => themeManager.setPreference(ThemePreference.System)}
     >
       <Icon icon={mdiThemeLightDark} size="64" />
@@ -33,6 +34,7 @@
     <button
       type="button"
       class={optionClass(currentPreference === ThemePreference.Light, 'text-immich-primary')}
+      aria-pressed={currentPreference === ThemePreference.Light}
       onclick={() => themeManager.setPreference(ThemePreference.Light)}
     >
       <Icon icon={sunPath} viewBox={sunViewBox} size="64" />
@@ -42,6 +44,7 @@
     <button
       type="button"
       class={optionClass(currentPreference === ThemePreference.Dark, 'text-immich-dark-primary')}
+      aria-pressed={currentPreference === ThemePreference.Dark}
       onclick={() => themeManager.setPreference(ThemePreference.Dark)}
     >
       <Icon icon={moonPath} viewBox={moonViewBox} size="64" />

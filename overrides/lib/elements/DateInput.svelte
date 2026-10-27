@@ -5,6 +5,7 @@
   import { mdiCalendar } from '@mdi/js';
   import { onMount } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
+  import { t } from 'svelte-i18n';
 
   interface Props extends HTMLInputAttributes {
     type: 'date' | 'datetime-local';
@@ -33,10 +34,12 @@
   let rootEl: HTMLDivElement | undefined = $state();
 
   $effect(() => {
-    if (value !== lastIso) {
-      lastIso = value;
-      draft = isoInputToDisplay(value ?? '', type);
+    if (value === lastIso) {
+      return;
     }
+
+    lastIso = value;
+    draft = isoInputToDisplay(value ?? '', type);
   });
 
   const commitDraft = () => {
@@ -59,7 +62,7 @@
 
     const onFormSubmit = () => commitDraft();
     // Capture phase: commit draft before FormModal onSubmit reads selectedDate.
-    form.addEventListener('submit', onFormSubmit, true);
+    form.addEventListener('submit', onFormSubmit, { capture: true });
     return () => form.removeEventListener('submit', onFormSubmit, true);
   });
 
@@ -85,7 +88,8 @@
       {...rest}
       class="pg-date-input__text {className}"
       type="text"
-      inputmode="decimal"
+      inputmode="text"
+      enterkeyhint="done"
       autocomplete="off"
       spellcheck="false"
       placeholder={type === 'date' ? 'dd/mm/yyyy' : 'dd/mm/yyyy hh:mm:ss'}
@@ -99,13 +103,7 @@
       }}
     />
     {#if !rest.readonly && !rest.disabled}
-      <button
-        type="button"
-        class="pg-date-input__picker"
-        tabindex="-1"
-        aria-label="Chọn ngày"
-        onclick={openPicker}
-      >
+      <button type="button" class="pg-date-input__picker" aria-label={$t('pg_select_date')} onclick={openPicker}>
         <Icon icon={mdiCalendar} size="20" />
       </button>
     {/if}
@@ -151,25 +149,30 @@
   .pg-date-input__text {
     width: 100%;
     min-width: 0;
-    padding-inline-end: 2.25rem;
+    padding-inline-end: 3rem;
   }
 
+  /* Vùng chạm 44×44 (icon vẫn 20px); màu token thật thay cho --immich-fg (bộ ba RGB, không phải màu hợp lệ) */
   .pg-date-input__picker {
     position: absolute;
-    inset-inline-end: 0.5rem;
+    top: 50%;
+    inset-inline-end: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     padding: 0;
     border: 0;
+    border-radius: 9999px;
     background: transparent;
-    color: var(--immich-fg, currentColor);
-    opacity: 0.7;
+    color: var(--md-sys-color-on-surface-variant);
     cursor: pointer;
+    transform: translateY(-50%);
   }
 
   .pg-date-input__picker:hover {
-    opacity: 1;
+    color: var(--md-sys-color-on-surface);
   }
 
   .pg-date-input__native {

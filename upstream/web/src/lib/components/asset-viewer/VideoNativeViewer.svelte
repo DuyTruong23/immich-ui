@@ -126,7 +126,7 @@
     !isCrossOriginMediaBase() || authManager.isSharedLink || 'sessionKey' in authManager.params,
   );
   let resolvedSource = $derived.by(() => {
-    networkManager.quality;
+    void networkManager.quality;
     return resolveVideoSource({
       assetId,
       cacheKey,
@@ -164,10 +164,12 @@
   const posterUrl = $derived(getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Preview, cacheKey }));
 
   const clearWaitingTimer = () => {
-    if (waitingTimer) {
-      clearTimeout(waitingTimer);
-      waitingTimer = undefined;
+    if (!waitingTimer) {
+      return;
     }
+
+    clearTimeout(waitingTimer);
+    waitingTimer = undefined;
   };
 
   const syncPlaybackFromVideo = (video: HTMLVideoElement) => {
@@ -309,7 +311,7 @@
   });
 
   $effect(() => {
-    assetId;
+    void assetId;
     hlsFallback = false;
     useSameOriginFallback = false;
   });
@@ -601,12 +603,20 @@
       onSwipe(event);
       return;
     }
-    if (event.detail.direction === 'left') {
-      onNextAsset();
-    } else if (event.detail.direction === 'right') {
-      onPreviousAsset();
-    } else if (event.detail.direction === 'bottom') {
-      onClose();
+    switch (event.detail.direction) {
+      case 'left': {
+        onNextAsset();
+        break;
+      }
+      case 'right': {
+        onPreviousAsset();
+        break;
+      }
+      case 'bottom': {
+        onClose();
+        break;
+      }
+      // No default
     }
   };
 
@@ -747,7 +757,7 @@
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="{VIDEO_CLASS}{bufferIndex === 0 ? '' : ' pointer-events-none fixed h-0 w-0 opacity-0'}"
+              class="{VIDEO_CLASS} {bufferIndex === 0 ? '' : 'pointer-events-none fixed size-0 opacity-0'}"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}
@@ -772,7 +782,7 @@
               disablePictureInPicture
               playsinline
               controlslist="nodownload nofullscreen noremoteplayback"
-              class="{VIDEO_CLASS}{bufferIndex === 1 ? '' : ' pointer-events-none fixed h-0 w-0 opacity-0'}"
+              class="{VIDEO_CLASS} {bufferIndex === 1 ? '' : 'pointer-events-none fixed size-0 opacity-0'}"
               onloadedmetadata={handleLoadedMetadata}
               onloadeddata={handleLoadedData}
               onerror={handleVideoError}
@@ -815,7 +825,7 @@
 
           {#if !hideChrome}
             <div
-              class="video-mobile-chrome flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4 mb-[var(--mobile-preview-strip-offset,0px)]"
+              class="video-mobile-chrome mb-(--mobile-preview-strip-offset,0px) flex h-32 w-full flex-col justify-end bg-linear-to-b to-black/80 px-4"
             >
               <media-control-bar part="bottom" class="flex h-10 w-full gap-2">
                 <media-play-button class="shrink-0 rounded-full p-2 outline-none">
@@ -936,10 +946,6 @@
     --media-text-color: var(--md-sys-color-inverse-on-surface);
     --media-tooltip-background-color: var(--md-sys-color-inverse-surface);
     color: var(--md-sys-color-inverse-on-surface);
-  }
-
-  *[mediavolumeunavailable] {
-    --media-volume-range-display: none;
   }
 
   .volume-wrapper {

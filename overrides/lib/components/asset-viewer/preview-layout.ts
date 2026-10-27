@@ -90,7 +90,7 @@ export function buildPreviewStrip(options: {
     pushUnique(right, item);
   }
 
-  return [...left.toReversed().slice(-radius), current, ...right.slice(0, radius)];
+  return [...[...left].reverse().slice(-radius), current, ...right.slice(0, radius)];
 }
 
 /** Filmstrip uses a wider window than swipe peek; same ordering rules. */

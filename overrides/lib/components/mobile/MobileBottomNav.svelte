@@ -37,6 +37,7 @@
   };
 
   let favoritesOpen = $state(false);
+  let favoritesTrigger: HTMLButtonElement | undefined = $state();
 
   const items = $derived(
     (
@@ -71,7 +72,7 @@
           activeIcon: mdiDotsHorizontal,
         },
       ] satisfies Array<NavItem | false>
-    ).filter((item): item is NavItem => Boolean(item)),
+    ).filter((item) => item !== false),
   );
 
   const favoriteChoices = $derived(
@@ -110,13 +111,13 @@
     }
 
     return () => {
-      document.documentElement.removeAttribute('data-mobile-shell');
+      delete document.documentElement.dataset.mobileShell;
     };
   });
 
   $effect(() => {
-    page.url.pathname;
-    assetViewerManager.isViewing;
+    void page.url.pathname;
+    void assetViewerManager.isViewing;
     favoritesOpen = false;
   });
 
@@ -129,6 +130,15 @@
 
   const openFavoritesMenu = () => {
     favoritesOpen = !favoritesOpen;
+  };
+
+  // Escape đóng popup và trả focus về nút mở (mẫu disclosure, không phải ARIA menu)
+  const closeFavoritesMenu = () => {
+    if (!favoritesOpen) {
+      return;
+    }
+    favoritesOpen = false;
+    favoritesTrigger?.focus();
   };
 
   const chooseFavorite = async (href: string) => {
@@ -146,18 +156,18 @@
           class="pg-mobile-bottom-nav__menu"
           use:clickOutside={{
             onOutclick: () => (favoritesOpen = false),
-            onEscape: () => (favoritesOpen = false),
+            onEscape: closeFavoritesMenu,
           }}
         >
           {#if favoritesOpen}
-            <div class="pg-mobile-favorites-menu" role="menu" aria-label={$t('favorites')}>
+            <div class="pg-mobile-favorites-menu" id="pg-mobile-favorites-menu">
               {#each favoriteChoices as choice (choice.id)}
                 {@const choiceActive = isFavoriteChoiceActive(choice)}
                 <button
                   type="button"
                   class="pg-mobile-favorites-menu__item"
                   class:pg-mobile-favorites-menu__item--active={choiceActive}
-                  role="menuitem"
+                  aria-current={choiceActive ? 'page' : undefined}
                   onclick={() => chooseFavorite(choice.href)}
                 >
                   <span class="pg-mobile-favorites-menu__icon" aria-hidden="true">
@@ -169,12 +179,14 @@
             </div>
           {/if}
           <button
+            bind:this={favoritesTrigger}
             type="button"
             class="pg-mobile-bottom-nav__item"
             class:pg-mobile-bottom-nav__item--active={active}
+            aria-label={item.title}
             aria-current={active ? 'page' : undefined}
             aria-expanded={favoritesOpen}
-            aria-haspopup="menu"
+            aria-controls={favoritesOpen ? 'pg-mobile-favorites-menu' : undefined}
             onclick={openFavoritesMenu}
           >
             <span class="pg-mobile-bottom-nav__icon" aria-hidden="true">
@@ -188,6 +200,7 @@
           href={item.href}
           class="pg-mobile-bottom-nav__item"
           class:pg-mobile-bottom-nav__item--active={active}
+          aria-label={item.title}
           aria-current={active ? 'page' : undefined}
           data-sveltekit-preload-data="hover"
         >

@@ -1,14 +1,10 @@
 <script lang="ts">
-  import AppDownloadModal from '$lib/modals/AppDownloadModal.svelte';
-  import ObtainiumConfigModal from '$lib/modals/ObtainiumConfigModal.svelte';
   import { Route } from '$lib/route';
-  import { Icon, modalManager, Text } from '@immich/ui';
+  import { Icon, Text } from '@immich/ui';
   import {
-    mdiCellphoneArrowDownVariant,
     mdiContentDuplicate,
     mdiCrosshairsGps,
     mdiImageSizeSelectLarge,
-    mdiLinkEdit,
     mdiStateMachine,
   } from '@mdi/js';
   import { t } from 'svelte-i18n';

@@ -1,3 +1,5 @@
+import type { TouchGestureEvent } from '$lib/utils/touch-gesture';
+
 const EDGE_PX = 32;
 const MIN_DX = 56;
 const MAX_DY = 72;
@@ -17,7 +19,7 @@ export const swipeBack = (node: HTMLElement, options: SwipeBackOptions) => {
 
   const enabled = () => options.enabled?.() ?? true;
 
-  const onStart = (event: TouchEvent) => {
+  const onStart = (event: TouchGestureEvent) => {
     if (!enabled() || event.touches.length !== 1) {
       return;
     }
@@ -34,7 +36,7 @@ export const swipeBack = (node: HTMLElement, options: SwipeBackOptions) => {
     tracking = true;
   };
 
-  const onMove = (event: TouchEvent) => {
+  const onMove = (event: TouchGestureEvent) => {
     if (!tracking) {
       return;
     }
@@ -48,7 +50,7 @@ export const swipeBack = (node: HTMLElement, options: SwipeBackOptions) => {
     }
   };
 
-  const onEnd = (event: TouchEvent) => {
+  const onEnd = (event: TouchGestureEvent) => {
     if (!tracking) {
       return;
     }

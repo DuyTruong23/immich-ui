@@ -1,5 +1,6 @@
 <script lang="ts">
   import AssetLayout from '$lib/components/timeline/AssetLayout.svelte';
+  import TimelineDaySelectToggle from '$lib/components/timeline/TimelineDaySelectToggle.svelte';
   import type { AssetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
   import { TimelineDay } from '$lib/managers/timeline-manager/timeline-day.svelte';
   import type { TimelineMonth } from '$lib/managers/timeline-manager/timeline-month.svelte';
@@ -11,9 +12,8 @@
   import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { shouldUseTimelineTransitions } from '$lib/utils/mobile-performance.svelte';
   import { fromTimelinePlainDate, getDateLocaleString } from '$lib/utils/timeline-util';
-  import { Icon } from '@immich/ui';
-  import { mdiCheckCircle, mdiCircleOutline } from '@mdi/js';
   import type { Snippet } from 'svelte';
+  import { t } from 'svelte-i18n';
 
   type Props = {
     thumbnail: Snippet<
@@ -86,19 +86,14 @@
       style:width={timelineDay.width + 'px'}
     >
       {#if !singleSelect}
-        <div
-          class="w-0 overflow-hidden transition-all duration-200 ease-out hover:cursor-pointer"
-          class:w-8={hoveredTimelineDay === timelineDay.groupTitle ||
-            assetInteraction.selectedGroup.has(timelineDay.groupTitle)}
-          onclick={() => onTimelineDaySelect(timelineDay, assetsSnapshot(timelineDay.getAssets()))}
-          onkeydown={() => onTimelineDaySelect(timelineDay, assetsSnapshot(timelineDay.getAssets()))}
-        >
-          {#if isTimelineDaySelected}
-            <Icon icon={mdiCheckCircle} size="24" class="text-primary" />
-          {:else}
-            <Icon icon={mdiCircleOutline} size="24" class="text-light-500" />
-          {/if}
-        </div>
+        <TimelineDaySelectToggle
+          selected={isTimelineDaySelected}
+          visible={hoveredTimelineDay === timelineDay.groupTitle ||
+            isTimelineDaySelected ||
+            assetInteraction.selectionActive}
+          label={$t('timeline_select_day', { values: { date: getTimelineDayFullDate(timelineDay) } })}
+          onSelect={() => onTimelineDaySelect(timelineDay, assetsSnapshot(timelineDay.getAssets()))}
+        />
       {/if}
 
       <span class="w-full truncate first-letter:capitalize" title={getTimelineDayFullDate(timelineDay)}>

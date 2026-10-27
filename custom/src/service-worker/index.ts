@@ -17,9 +17,9 @@ type NetworkConnection = {
 const getConnection = (): NetworkConnection | undefined =>
   (navigator as Navigator & { connection?: NetworkConnection }).connection;
 
-const matchesMedia = (query: string): boolean => {
+const isMediaQueryMatch = (query: string): boolean => {
   try {
-    return Boolean(globalThis.matchMedia?.(query)?.matches);
+    return globalThis.matchMedia?.(query)?.matches ?? false;
   } catch {
     return false;
   }
@@ -33,11 +33,11 @@ const getThumbnailCacheLimit = (): number => {
   }
 
   const type = connection?.effectiveType;
-  if (type === 'slow-2g' || type === '2g' || type === '3g') {
+  if (type && ['slow-2g', '2g', '3g'].includes(type)) {
     return 180;
   }
 
-  if (matchesMedia('(pointer: coarse)') || matchesMedia('(max-width: 767px)')) {
+  if (isMediaQueryMatch('(pointer: coarse)') || isMediaQueryMatch('(max-width: 767px)')) {
     return 280;
   }
 
@@ -64,9 +64,7 @@ const cacheKeyFor = (request: Request) => {
   const url = new URL(request.url);
   const size = url.searchParams.get('size') ?? '';
   const cacheBust = url.searchParams.get('c') ?? '';
-  return new Request(`${url.origin}${url.pathname}?size=${encodeURIComponent(size)}&c=${encodeURIComponent(cacheBust)}`, {
-    method: 'GET',
-  });
+  return new Request(`${url.origin}${url.pathname}?size=${encodeURIComponent(size)}&c=${encodeURIComponent(cacheBust)}`);
 };
 
 const pruneCache = async (cache: Cache) => {

@@ -53,15 +53,17 @@
   const RETRY_DELAYS_MS = [800, 2000, 4000, 8000];
 
   $effect(() => {
-    url;
+    void url;
     loaded = false;
     errored = false;
     retryCount = 0;
     return () => {
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-        retryTimer = undefined;
+      if (!retryTimer) {
+        return;
       }
+
+      clearTimeout(retryTimer);
+      retryTimer = undefined;
     };
   });
 

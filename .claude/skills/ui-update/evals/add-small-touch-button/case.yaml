@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: add-small-touch-button
+expected_outcome: |
+  Button added in the shared-favorites route source with an accessible name via $t (en+vi keys), visible size stays ~20px but hit area is 44px only on (pointer: coarse) via pg-touch-target (positioned element), not overlapping the existing remove button/avatar stack hit areas, prepare-custom run, gates run.
