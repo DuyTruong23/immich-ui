@@ -414,6 +414,7 @@
         <Field label={$t('feature_updates_notify_email_label')} class="mt-3">
           <Input
             type="email"
+            size="medium"
             inputmode="email"
             autocomplete="email"
             bind:value={notifyEmail}

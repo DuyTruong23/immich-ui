@@ -1011,6 +1011,7 @@
   "error_title": "Error - Something went wrong",
   "pg_maintenance_title": "We'll Be Back Soon",
   "pg_maintenance_description": "The system is being updated. We expect to be back on {date} at {time}.",
+  "pg_select_date": "Select date",
   "pg_language_toggle": "Language: {current} (VN / EN). Switch to {next}",
   "pg_upload_errors_count": "{count, plural, one {# upload error} other {# upload errors}}",
   "pg_upload_show_details": "Show upload details",

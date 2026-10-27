@@ -278,9 +278,11 @@
       <label for="main-search-bar" class="sr-only">{$t('search_your_photos')}</label>
       <input
         type="text"
+        inputmode="search"
+        enterkeyhint="search"
         name="q"
         id="main-search-bar"
-        class="w-full border-2 py-4 ps-14 text-immich-fg/75 transition-all max-md:py-2 dark:text-immich-dark-fg
+        class="w-full border-2 py-4 ps-14 text-base text-immich-fg/75 transition-all max-md:py-2 dark:text-immich-dark-fg
         {showClearIcon ? 'pe-22.5 max-md:pe-12' : 'pe-14 max-md:pe-4'}
         {grayTheme ? 'dark:bg-immich-dark-gray' : 'dark:bg-immich-dark-bg'}
         {showSuggestions && isSearchSuggestions ? 'rounded-t-3xl' : 'rounded-3xl bg-gray-200'}
