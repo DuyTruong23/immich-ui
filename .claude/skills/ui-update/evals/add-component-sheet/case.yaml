@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: add-component-sheet
+expected_outcome: |
+  New component placed where specs run (overrides/lib/components or custom/src/routes), uses dvh + safe-area + opaque background, fits the z-index ladder, strings via $t with en+vi keys, accessible name and Escape/focus handling, spec with explicit vitest imports.
