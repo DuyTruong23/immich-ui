@@ -112,7 +112,7 @@
           <TableRow color={user.deletedAt ? 'danger' : undefined}>
             <TableCell class={classes.column1}>
               <div class="min-w-0">
-                <Link href={Route.viewUser(user)}>{user.name}</Link>
+                <Link href={Route.viewUser(user)} class="pg-touch-target relative">{user.name}</Link>
                 <span class="block text-xs break-all text-(--md-sys-color-on-surface-variant) md:hidden">
                   {user.email}
                 </span>
