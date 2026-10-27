@@ -20,6 +20,7 @@
   import { mdiAccountCog, mdiAccountOutline, mdiEyeOffOutline, mdiEyeOutline, mdiPalette } from '@mdi/js';
   import { onDestroy, onMount } from 'svelte';
   import { t } from 'svelte-i18n';
+  import type { FullAutoFill } from 'svelte/elements';
   import type { PageData } from './$types';
 
   interface Props {
@@ -27,6 +28,9 @@
   }
 
   let { data }: Props = $props();
+
+  // Cố ý dùng giá trị không hợp lệ "nope" để trình duyệt/password manager không tự điền (giữ thiết kế chống autofill).
+  const autocompleteOff = 'nope' as string as FullAutoFill;
 
   let errorMessage: string = $state('');
   let email = $state('');
@@ -385,7 +389,7 @@
                   autocapitalize="none"
                   autocorrect="off"
                   spellcheck={false}
-                  autocomplete="nope"
+                  autocomplete={autocompleteOff}
                   aria-label={$t('email')}
                   data-1p-ignore
                   data-lpignore="true"
@@ -412,7 +416,7 @@
                     autocapitalize="none"
                     autocorrect="off"
                     spellcheck={false}
-                    autocomplete="nope"
+                    autocomplete={autocompleteOff}
                     aria-label={$t('password')}
                     data-1p-ignore
                     data-lpignore="true"

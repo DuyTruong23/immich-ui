@@ -128,11 +128,9 @@
         </Text>
       </div>
 
-      <Alert
-        color="info"
-        title={$t('admin.feature_updates_auto_release_title')}
-        description={$t('admin.feature_updates_auto_release_description')}
-      />
+      <Alert color="info" title={$t('admin.feature_updates_auto_release_title')}>
+        {$t('admin.feature_updates_auto_release_description')}
+      </Alert>
 
       <Stack gap={3}>
         {#each config.releases ?? [] as release (release.version)}
@@ -180,13 +178,13 @@
         </div>
 
         {#if subscriberStorage === 'none'}
-          <Alert
-            color="warning"
-            title={$t('admin.feature_updates_subscribers_need_blob_title')}
-            description={$t('admin.feature_updates_subscribers_need_blob')}
-          />
+          <Alert color="warning" title={$t('admin.feature_updates_subscribers_need_blob_title')}>
+            {$t('admin.feature_updates_subscribers_need_blob')}
+          </Alert>
         {:else if subscribersError}
-          <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')} description={subscribersError} />
+          <Alert color="danger" title={$t('admin.feature_updates_subscribers_load_failed')}>
+            {subscribersError}
+          </Alert>
         {:else if loadingSubscribers && subscriberEmails.length === 0}
           <Text size="small" class="text-(--md-sys-color-on-surface-variant)">
             {$t('admin.feature_updates_subscribers_loading')}

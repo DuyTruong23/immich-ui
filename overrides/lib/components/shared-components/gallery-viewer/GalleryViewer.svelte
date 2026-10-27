@@ -358,7 +358,7 @@
   const toFilmstripItem = (asset: TimelineAsset | AssetResponseDto): PreviewStripItem => ({
     id: asset.id,
     thumbhash: asset.thumbhash,
-    originalFileName: asset.originalFileName,
+    originalFileName: 'originalFileName' in asset ? asset.originalFileName : undefined,
     isVideo: 'isVideo' in asset ? asset.isVideo : asset.type === AssetTypeEnum.Video,
     duration: asset.duration ?? null,
   });

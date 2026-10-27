@@ -50,14 +50,6 @@ export const createHlsConfig = (getAssetFileUrl: () => string): Partial<HlsConfi
       errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
     },
   },
-  levelLoadPolicy: {
-    default: {
-      maxTimeToFirstByteMs: 30_000,
-      maxLoadTimeMs: 60_000,
-      timeoutRetry: { maxNumRetry: 5, retryDelayMs: 100, maxRetryDelayMs: 0 },
-      errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
-    },
-  },
   useMediaCapabilities: false,
   xhrSetup: (xhr: XMLHttpRequest, url: string) => {
     const authenticatedUrl = new URL(url, getAssetFileUrl() || location.href);

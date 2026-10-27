@@ -328,7 +328,7 @@ export class TimelineManager extends VirtualScrollManager {
       ...this.#options,
     });
 
-    const existingByKey = new Map(
+    const existingByKey = new Map<string, TimelineMonth>(
       this.months.map((month) => [`${month.yearMonth.year}-${month.yearMonth.month}`, month] as const),
     );
 

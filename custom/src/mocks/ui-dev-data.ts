@@ -310,6 +310,7 @@ export const mockServerVersion = (): ServerVersionResponseDto => ({
   major: 0,
   minor: 0,
   patch: 0,
+  prerelease: null,
 });
 
 export const mockServerMediaTypes = (): ServerMediaTypesResponseDto => ({

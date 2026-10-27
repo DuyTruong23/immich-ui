@@ -938,10 +938,6 @@
     color: var(--md-sys-color-inverse-on-surface);
   }
 
-  *[mediavolumeunavailable] {
-    --media-volume-range-display: none;
-  }
-
   .volume-wrapper {
     --media-control-hover-background: none;
   }

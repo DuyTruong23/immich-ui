@@ -5,13 +5,7 @@
   import { onMount } from 'svelte';
 
   interface Props {
-    error?:
-      | ({ message: string; code?: string | number; stack?: string; serverConnectionError?: boolean } & Record<
-          string,
-          unknown
-        >)
-      | undefined
-      | null;
+    error?: App.Error | undefined | null;
   }
 
   let { error = undefined }: Props = $props();

@@ -24,30 +24,21 @@ export class PreloadManager {
     const urls = getAssetUrls(asset, sharedlink);
     const compressed = shouldPreferCompressedMedia();
     const afterThumbnail = (loader: AdaptiveImageLoader) => loader.trigger('preview');
-    const qualityList: QualityList = compressed
-      ? [
-          {
-            quality: 'thumbnail',
-            url: urls.thumbnail,
-            onAfterLoad: afterThumbnail,
-            onAfterError: afterThumbnail,
-          },
-          { quality: 'preview', url: urls.preview },
-        ]
-      : [
-          {
-            quality: 'thumbnail',
-            url: urls.thumbnail,
-            onAfterLoad: afterThumbnail,
-            onAfterError: afterThumbnail,
-          },
-          {
-            quality: 'preview',
-            url: urls.preview,
-            onAfterError: (loader) => loader.trigger('original'),
-          },
-          { quality: 'original', url: urls.original },
-        ];
+    // Chế độ nén: preview lỗi thì dừng, không tải lên original.
+    const qualityList: QualityList = [
+      {
+        quality: 'thumbnail',
+        url: urls.thumbnail,
+        onAfterLoad: afterThumbnail,
+        onAfterError: afterThumbnail,
+      },
+      {
+        quality: 'preview',
+        url: urls.preview,
+        onAfterError: compressed ? undefined : (loader) => loader.trigger('original'),
+      },
+      { quality: 'original', url: urls.original },
+    ];
     const loader = new AdaptiveImageLoader(qualityList, undefined, loadImage);
     loader.start();
     return loader;

@@ -1,5 +1,5 @@
 import { searchUsersAdmin } from '@immich/sdk';
-import type { PageServerLoad } from './$types';
+import type { LayoutLoad } from './$types';
 
 export const load = (async () => {
   const users = await searchUsersAdmin({ withDeleted: false });
@@ -7,4 +7,4 @@ export const load = (async () => {
     users,
     meta: { title: 'Users' },
   };
-}) satisfies PageServerLoad;
+}) satisfies LayoutLoad;

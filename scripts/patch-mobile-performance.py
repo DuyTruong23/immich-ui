@@ -827,7 +827,7 @@ def patch_timeline_manager_refresh(path: pathlib.Path) -> None:
       ...this.#options,
     });
 
-    const existingByKey = new Map(
+    const existingByKey = new Map<string, TimelineMonth>(
       this.months.map((month) => [`${month.yearMonth.year}-${month.yearMonth.month}`, month] as const),
     );
 
