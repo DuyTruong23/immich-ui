@@ -33,6 +33,7 @@ type AssetCursor = {
 const HIDDEN_CONTAINER_ID = 'immich-video-preload-pool';
 
 export class VideoPreloadManager {
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bộ đệm nội bộ, không dùng làm state hiển thị
   private slots = new Map<string, PreloadSlot>();
   private container: HTMLElement | undefined;
 
@@ -43,7 +44,7 @@ export class VideoPreloadManager {
     if (this.container) {
       return this.container;
     }
-    const existing = document.getElementById(HIDDEN_CONTAINER_ID);
+    const existing = document.querySelector<HTMLElement>(`#${HIDDEN_CONTAINER_ID}`);
     if (existing) {
       this.container = existing;
       return existing;
@@ -53,7 +54,7 @@ export class VideoPreloadManager {
     el.setAttribute('aria-hidden', 'true');
     el.style.cssText =
       'position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-1';
-    document.body.appendChild(el);
+    document.body.append(el);
     this.container = el;
     return el;
   }
@@ -61,7 +62,6 @@ export class VideoPreloadManager {
   private createVideoElement(tier: PreloadTier): HTMLVideoElement {
     const video = document.createElement('video');
     video.muted = true;
-    video.playsInline = true;
     video.preload = tier === 'buffer' ? 'auto' : 'metadata';
     video.setAttribute('playsinline', '');
     return video;
@@ -119,10 +119,12 @@ export class VideoPreloadManager {
 
     if (tier === 'buffer') {
       slot.onProgress = () => {
-        if (isPreloadReady(video)) {
-          video.removeEventListener('progress', slot.onProgress!);
-          slot.onProgress = undefined;
+        if (!isPreloadReady(video)) {
+          return;
         }
+
+        video.removeEventListener('progress', slot.onProgress!);
+        slot.onProgress = undefined;
       };
       video.addEventListener('progress', slot.onProgress);
       video.addEventListener(
@@ -155,7 +157,7 @@ export class VideoPreloadManager {
       );
     }
 
-    container.appendChild(video);
+    container.append(video);
     video.load();
   }
 
@@ -195,6 +197,7 @@ export class VideoPreloadManager {
       return;
     }
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- tập tạm trong hàm, không reactive
     const keepIds = new Set<string>();
     const currentIsVideo = isVideoAsset(cursor.current);
 
@@ -233,7 +236,7 @@ export class VideoPreloadManager {
   }
 
   destroy() {
-    for (const assetId of [...this.slots.keys()]) {
+    for (const assetId of this.slots.keys()) {
       this.releaseSlot(assetId);
     }
     this.container?.remove();

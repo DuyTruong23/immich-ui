@@ -23,10 +23,12 @@
   const canSubmit = $derived(!!selectedFile && !uploading);
 
   const revokePreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      previewUrl = undefined;
+    if (!previewUrl) {
+      return;
     }
+
+    URL.revokeObjectURL(previewUrl);
+    previewUrl = undefined;
   };
 
   onDestroy(() => {

@@ -84,7 +84,7 @@
     {/if}
   {/if}
 
-  <main class="relative z-0 isolate">
+  <main class="relative isolate z-0">
     <div class="{scrollbarClass} absolute {hasTitleClass} w-full overflow-y-auto p-2" use:useActions={use}>
       {@render children?.()}
     </div>

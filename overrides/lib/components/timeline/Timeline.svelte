@@ -110,10 +110,10 @@
   const usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
 
   $effect(() => {
-    maxMd;
-    networkManager.quality;
-    gridDensityManager.columns;
-    timelineManager.viewportWidth;
+    void maxMd;
+    void networkManager.quality;
+    void gridDensityManager.columns;
+    void timelineManager.viewportWidth;
     timelineManager.setLayoutOptions(getTimelineLayoutOptions(timelineManager.viewportWidth));
   });
 

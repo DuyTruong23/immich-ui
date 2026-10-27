@@ -17,7 +17,7 @@
 </script>
 
 <div class="pointer-events-none absolute inset-0 overflow-hidden bg-black" aria-hidden="true">
-  <div class="absolute -inset-[22%] saturate-150" style="filter: blur(48px); transform: translateZ(0);">
+  <div class="absolute inset-[-22%] saturate-150" style="filter: blur(48px); transform: translateZ(0);">
     {#if asset.thumbhash}
       <Thumbhash base64ThumbHash={asset.thumbhash} class="absolute inset-0 size-full" />
     {/if}

@@ -166,6 +166,7 @@
       return;
     }
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Map bất biến, gán lại vào $state để cập nhật
     const next = new Map(assetsById);
     for (const asset of incoming) {
       next.set(asset.id, { ...asset, isFavorite: false });
@@ -221,6 +222,7 @@
       const cols = isMobileGrid
         ? gridDensityManager.columns
         : styles.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      // eslint-disable-next-line unicorn/prefer-number-coercion -- columnGap có đơn vị ("8px"), Number() trả NaN
       const gap = Number.parseFloat(styles.columnGap) || 0;
       thumbSize = Math.max(1, Math.floor((node.clientWidth - gap * Math.max(cols - 1, 0)) / cols));
     };
@@ -231,7 +233,7 @@
 
     const unsubscribe = $effect.root(() => {
       $effect(() => {
-        gridDensityManager.columns;
+        void gridDensityManager.columns;
         update();
       });
     });
@@ -333,7 +335,7 @@
         const ownerId = partnerFavoritesStore.me?.id;
         const partnerOnlyIds = ownerId
           ? partnerFavoritesStore.listedItems
-              .filter((item) => !item.favoritedBy.some((user) => user.id === ownerId))
+              .filter((item) => item.favoritedBy.every((user) => user.id !== ownerId))
               .map((item) => item.assetId)
           : [];
 
@@ -398,6 +400,7 @@
       return;
     }
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Set bất biến, gán lại vào $state để cập nhật
     removingIds = new Set(removingIds).add(item.assetId);
     try {
       const userIds = isAdmin ? item.favoritedBy.map((user) => user.id) : undefined;
@@ -410,6 +413,7 @@
     } catch (error) {
       handleError(error, $t('shared_favorites_remove_error'));
     } finally {
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Set bất biến, gán lại vào $state để cập nhật
       const next = new Set(removingIds);
       next.delete(item.assetId);
       removingIds = next;
@@ -476,7 +480,7 @@
           {#if canRemoveItem(item)}
             <button
               type="button"
-              class="pg-touch-target absolute top-2 end-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
+              class="pg-touch-target absolute inset-e-2 top-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
               aria-label={isAdmin ? $t('shared_favorites_remove_admin') : $t('unfavorite')}
               disabled={removingIds.has(item.assetId)}
               onclick={(event) => handlePromiseError(handleRemoveFavorite(event, item))}

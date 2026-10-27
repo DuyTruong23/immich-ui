@@ -111,13 +111,13 @@
     }
 
     return () => {
-      document.documentElement.removeAttribute('data-mobile-shell');
+      delete document.documentElement.dataset.mobileShell;
     };
   });
 
   $effect(() => {
-    page.url.pathname;
-    assetViewerManager.isViewing;
+    void page.url.pathname;
+    void assetViewerManager.isViewing;
     favoritesOpen = false;
   });
 

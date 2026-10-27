@@ -405,10 +405,9 @@ const handleFavorite = async (asset: AssetResponseDto) => {
   const isOwner = authManager.authenticated && authManager.user.id === asset.ownerId;
 
   try {
-    let response: AssetResponseDto = { ...asset, isFavorite: true };
-    if (isOwner) {
-      response = await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: true } });
-    }
+    const response: AssetResponseDto = isOwner
+      ? await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: true } })
+      : { ...asset, isFavorite: true };
 
     try {
       await syncPartnerFavorite(asset.id, true);
@@ -431,10 +430,9 @@ const handleUnfavorite = async (asset: AssetResponseDto) => {
   const isOwner = authManager.authenticated && authManager.user.id === asset.ownerId;
 
   try {
-    let response: AssetResponseDto = { ...asset, isFavorite: false };
-    if (isOwner) {
-      response = await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: false } });
-    }
+    const response: AssetResponseDto = isOwner
+      ? await updateAsset({ id: asset.id, updateAssetDto: { isFavorite: false } })
+      : { ...asset, isFavorite: false };
 
     try {
       await syncPartnerFavorite(asset.id, false);

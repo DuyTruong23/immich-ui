@@ -71,7 +71,7 @@ export class SwipeNavigate {
     this.#touchGuard = undefined;
   }
 
-  #onTouchMove = (event: TouchEvent) => {
+  #onTouchMove = (event: Event) => {
     if (this.#lock) {
       event.preventDefault();
     }
@@ -116,7 +116,9 @@ export class SwipeNavigate {
         return;
       }
 
-      event.currentTarget instanceof HTMLElement && event.currentTarget.setPointerCapture(event.pointerId);
+      if (event.currentTarget instanceof HTMLElement) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
     }
 
     if (this.#lock === 'v') {
@@ -238,9 +240,11 @@ export class SwipeNavigate {
   }
 
   #clearCommit() {
-    if (this.#commitTimer) {
-      clearTimeout(this.#commitTimer);
-      this.#commitTimer = undefined;
+    if (!this.#commitTimer) {
+      return;
     }
+
+    clearTimeout(this.#commitTimer);
+    this.#commitTimer = undefined;
   }
 }

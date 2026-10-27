@@ -44,6 +44,7 @@
     features.sharedFavorites && !assetMultiSelectManager.selectionActive && !authManager.user.isAdmin,
   );
 
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bộ nhớ id đã gộp, không hiển thị
   const mergedOverlayIds = new Set<string>();
 
   const mergeMineOverlayFavorites = async (tm: TimelineManager, isCancelled: () => boolean) => {

@@ -100,8 +100,8 @@
   };
 
   $effect(() => {
-    currentId;
-    assets;
+    void currentId;
+    void assets;
     if (userScrolling) {
       return;
     }
@@ -137,10 +137,9 @@
   }
 </style>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <nav
   bind:this={scroller}
-  class="mobile-preview-strip pointer-events-auto w-full overflow-x-auto overscroll-x-contain touch-pan-x px-3 pt-1.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  class="mobile-preview-strip pointer-events-auto w-full touch-pan-x [scrollbar-width:none] overflow-x-auto overscroll-x-contain px-3 pt-1.5 pb-0.5 [&::-webkit-scrollbar]:hidden"
   aria-label="Filmstrip"
   onscroll={onScrollerScroll}
 >
@@ -184,7 +183,7 @@
 
         {#if asset.isVideo}
           <span
-            class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-0.5 bg-linear-to-t from-black/70 to-transparent px-1 pb-0.5 pt-2 text-[10px] leading-none font-medium text-white"
+            class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-0.5 bg-linear-to-t from-black/70 to-transparent px-1 pt-2 pb-0.5 text-[10px] leading-none font-medium text-white"
             aria-hidden="true"
           >
             <Icon icon={mdiPlayCircleOutline} size="14" class="shrink-0 opacity-90" />

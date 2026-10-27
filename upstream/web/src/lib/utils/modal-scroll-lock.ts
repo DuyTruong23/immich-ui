@@ -45,7 +45,7 @@ export const lockModalBackgroundScroll = () => {
   }
 
   if (lockCount === 0) {
-    findScrollSurfaces().forEach((el) => {
+    for (const el of findScrollSurfaces()) {
       lockedSurfaces.push({
         el,
         scrollTop: el.scrollTop,
@@ -56,9 +56,9 @@ export const lockModalBackgroundScroll = () => {
       el.style.overflow = 'hidden';
       el.style.touchAction = 'none';
       el.style.overscrollBehavior = 'none';
-    });
+    }
 
-    touchMoveBlocker = (event: TouchEvent) => {
+    touchMoveBlocker = (event: Event) => {
       if (isInsideScrollableModal(event.target)) {
         return;
       }
@@ -87,12 +87,12 @@ export const unlockModalBackgroundScroll = () => {
     touchMoveBlocker = undefined;
   }
 
-  lockedSurfaces.forEach(({ el, scrollTop, overflow, touchAction, overscrollBehavior }) => {
+  for (const { el, scrollTop, overflow, touchAction, overscrollBehavior } of lockedSurfaces) {
     el.style.overflow = overflow;
     el.style.touchAction = touchAction;
     el.style.overscrollBehavior = overscrollBehavior;
     el.scrollTop = scrollTop;
-  });
+  }
   lockedSurfaces.length = 0;
 
   delete document.documentElement.dataset.modalScrollLock;

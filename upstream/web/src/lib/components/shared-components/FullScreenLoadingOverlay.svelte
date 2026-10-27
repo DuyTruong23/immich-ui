@@ -12,7 +12,7 @@
 
 {#if visible}
   <div
-    class="{fullscreen ? 'fixed z-[200]' : 'absolute z-50'} inset-0 flex items-center justify-center bg-black/40"
+    class="{fullscreen ? 'fixed z-200' : 'absolute z-50'} inset-0 flex items-center justify-center bg-black/40"
     role="status"
     aria-live="polite"
     aria-busy="true"

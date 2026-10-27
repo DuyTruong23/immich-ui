@@ -17,6 +17,7 @@
   let showOptions = $state(false);
   let concurrency = $state(uploadExecutionQueue.concurrency);
   let didNotifyComplete = false;
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bộ nhớ id đã báo hoàn tất, không hiển thị
   const completedAssetIds = new Set<string>();
 
   let { stats, isDismissible, isUploading, remainingUploads } = uploadAssetsStore;
@@ -161,7 +162,7 @@
           </div>
         {/if}
         <div
-          class="immich-scrollbar flex flex-col gap-2 overflow-y-auto rounded-lg {isMobilePanel
+          class="flex immich-scrollbar flex-col gap-2 overflow-y-auto rounded-lg {isMobilePanel
             ? 'max-h-[min(48dvh,22rem)]'
             : 'max-h-[400px]'}"
         >

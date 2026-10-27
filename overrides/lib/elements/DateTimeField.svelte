@@ -36,11 +36,7 @@
     return type === 'date' ? dt.toFormat('yyyy-MM-dd') : dt.toFormat("yyyy-MM-dd'T'HH:mm");
   };
 
-  let iso = $state(toIso(value));
-
-  $effect(() => {
-    iso = toIso(value);
-  });
+  let iso = $derived(toIso(value));
 
   const setIso = (next: string) => {
     iso = next;

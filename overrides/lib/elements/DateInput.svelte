@@ -33,10 +33,12 @@
   let rootEl: HTMLDivElement | undefined = $state();
 
   $effect(() => {
-    if (value !== lastIso) {
-      lastIso = value;
-      draft = isoInputToDisplay(value ?? '', type);
+    if (value === lastIso) {
+      return;
     }
+
+    lastIso = value;
+    draft = isoInputToDisplay(value ?? '', type);
   });
 
   const commitDraft = () => {
@@ -59,7 +61,7 @@
 
     const onFormSubmit = () => commitDraft();
     // Capture phase: commit draft before FormModal onSubmit reads selectedDate.
-    form.addEventListener('submit', onFormSubmit, true);
+    form.addEventListener('submit', onFormSubmit, { capture: true });
     return () => form.removeEventListener('submit', onFormSubmit, true);
   });
 

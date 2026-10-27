@@ -1,5 +1,5 @@
 import { authManager } from '$lib/managers/auth-manager.svelte';
-import Hls, { AbrController, Events, type FragLoadedData, type FragLoadingData, type HlsConfig } from 'hls.js';
+import { AbrController, Events, type FragLoadedData, type FragLoadingData, type HlsConfig } from 'hls.js';
 
 class NoAbandonAbrController extends AbrController {
   private switchTarget = -1;
@@ -62,4 +62,4 @@ export const createHlsConfig = (getAssetFileUrl: () => string): Partial<HlsConfi
   },
 });
 
-export { Hls };
+export { default as Hls } from 'hls.js';

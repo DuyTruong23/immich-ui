@@ -24,7 +24,7 @@ export const getNetworkQuality = (): NetworkQuality => {
   }
 
   const type = connection?.effectiveType;
-  if (type === 'slow-2g' || type === '2g' || type === '3g') {
+  if (type && ['slow-2g', '2g', '3g'].includes(type)) {
     return 'slow';
   }
 

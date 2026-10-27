@@ -1,6 +1,7 @@
 import { isServerConnectionError, isStaleChunkError } from '$custom/utils/server-connection-error';
 import { reloadApp } from '$custom/hooks/app-reload';
 import { isHttpError, type ApiHttpError } from '@immich/sdk';
+import type { TouchGestureEvent } from '$lib/utils/touch-gesture';
 import type { HandleClientError } from '@sveltejs/kit';
 
 const STALE_CHUNK_RELOAD_KEY = 'pg-stale-chunk-reload';
@@ -32,7 +33,7 @@ function noteStaleChunk(reason: string) {
 }
 
 function isAssetViewerOpen() {
-  return Boolean(document.getElementById('immich-asset-viewer'));
+  return Boolean(document.querySelector('#immich-asset-viewer'));
 }
 
 function lockBrowserPageZoom() {
@@ -57,7 +58,7 @@ function lockBrowserPageZoom() {
 
   document.addEventListener(
     'touchmove',
-    (event) => {
+    (event: TouchGestureEvent) => {
       if (event.touches.length > 1 && !isAssetViewerOpen()) {
         event.preventDefault();
       }
@@ -75,12 +76,12 @@ if (typeof window !== 'undefined') {
 
   lockBrowserPageZoom();
 
-  window.addEventListener('vite:preloadError', (event) => {
+  addEventListener('vite:preloadError', (event) => {
     event.preventDefault();
     noteStaleChunk('vite:preloadError');
   });
 
-  window.addEventListener(
+  addEventListener(
     'error',
     (event) => {
       const target = event.target;
@@ -100,10 +101,10 @@ if (typeof window !== 'undefined') {
         noteStaleChunk(String(event.error));
       }
     },
-    true,
+    { capture: true },
   );
 
-  window.addEventListener('unhandledrejection', (event) => {
+  addEventListener('unhandledrejection', (event) => {
     if (!isStaleChunkError(event.reason)) {
       return;
     }

@@ -2,10 +2,11 @@
   import MaintenancePage from '$custom/components/MaintenancePage.svelte';
   import { isStaleChunkError } from '$custom/utils/server-connection-error';
   import { reloadApp } from '$custom/hooks/app-reload';
+  import type { Page } from '@sveltejs/kit';
   import { onMount } from 'svelte';
 
   interface Props {
-    error?: App.Error | undefined | null;
+    error?: Page['error'] | undefined;
   }
 
   let { error = undefined }: Props = $props();
@@ -17,11 +18,11 @@
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       reloadApp();
     }, 250);
 
-    return () => window.clearTimeout(timer);
+    return () => clearTimeout(timer);
   });
 </script>
 

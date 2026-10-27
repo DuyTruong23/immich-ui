@@ -44,15 +44,14 @@
       // Token đi qua header, không nằm trong URL (tránh lộ ở log/proxy/lịch sử)
       const accessToken = getStoredAccessToken();
       const response = await fetch('/api/admin-block-user?list=1', {
-        method: 'GET',
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       const result = await response.json();
       if (result.ok) {
         blockedUserIds = result.blockedUserIds || [];
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   });
 
@@ -75,11 +74,7 @@
     const { Detail, Update, Delete, ResetPassword, ResetPinCode } = getUserAdminActions($t, user);
     const isBlocked = blockedUserIds.includes(user.id);
     const { Block, Unblock } = getUserAdminActionsOverride($t, user, () => {
-      if (isBlocked) {
-        blockedUserIds = blockedUserIds.filter(id => id !== user.id);
-      } else {
-        blockedUserIds = [...blockedUserIds, user.id];
-      }
+      blockedUserIds = isBlocked ? blockedUserIds.filter((id) => id !== user.id) : [...blockedUserIds, user.id];
     });
     return [Detail, Update, ResetPassword, ResetPinCode, isBlocked ? Unblock : Block, MenuItemType.Divider, Delete];
   };

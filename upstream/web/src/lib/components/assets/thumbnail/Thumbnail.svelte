@@ -87,11 +87,11 @@
 
   let usingMobileDevice = $derived(mediaQueryManager.pointerCoarse);
   const lazyThumbnails = $derived.by(() => {
-    networkManager.quality;
+    void networkManager.quality;
     return shouldLazyLoadThumbnails();
   });
   const allowVideoHover = $derived.by(() => {
-    networkManager.quality;
+    void networkManager.quality;
     return shouldPlayVideoThumbnailOnHover() && $playVideoThumbnailOnHover;
   });
   const thumbnailUrl = $derived.by(() => {

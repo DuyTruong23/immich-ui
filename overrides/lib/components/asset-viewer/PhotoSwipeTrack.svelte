@@ -1,6 +1,7 @@
 <script lang="ts">
   import { SwipeNavigate, swipeDismissProgress, swipeDismissScale } from '$lib/actions/swipe-navigate.svelte';
   import { motionDuration } from '$lib/utils/mobile-performance.svelte';
+  import type { TouchGestureEvent } from '$lib/utils/touch-gesture';
   import type { AssetResponseDto, SharedLinkResponseDto } from '@immich/sdk';
   import { onDestroy, untrack, type Snippet } from 'svelte';
   import type { SwipeCustomEvent } from 'svelte-gestures';
@@ -55,7 +56,7 @@
   });
 
   $effect.pre(() => {
-    currentId;
+    void currentId;
     untrack(() => swipe.reset());
   });
 
@@ -67,7 +68,7 @@
 
   onDestroy(() => {
     swipe.destroy();
-    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    document.querySelector<HTMLElement>('#immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
   });
 
   const settleMs = $derived(motionDuration(280));
@@ -76,7 +77,7 @@
   const bindTouchGuard = (node: HTMLElement) => swipe.bindTouchGuard(node);
 
   $effect(() => {
-    const root = document.getElementById('immich-asset-viewer');
+    const root = document.querySelector<HTMLElement>('#immich-asset-viewer');
     if (!root) {
       return;
     }
@@ -94,7 +95,7 @@
   onpointermove={swipe.onPointerMove}
   onpointerup={swipe.onPointerUp}
   onpointercancel={swipe.onPointerCancel}
-  ontouchstart={(event) => {
+  ontouchstart={(event: TouchGestureEvent) => {
     if (event.touches.length > 1) {
       swipe.reset();
     }

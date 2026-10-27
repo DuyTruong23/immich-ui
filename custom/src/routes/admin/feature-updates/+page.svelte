@@ -81,7 +81,7 @@
       return;
     }
 
-    const confirmed = window.confirm(
+    const confirmed = confirm(
       get(t)('admin.feature_updates_send_email_confirm', { values: { version: config.version } }),
     );
     if (!confirmed) {

@@ -224,7 +224,7 @@
     activityManager.reset();
     assetViewerManager.resetPanelState();
     clearGestureWait();
-    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    document.querySelector<HTMLElement>('#immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
     resetViewerPageScrollLock();
     preloadManager.destroy();
     videoPreloadManager.destroy();
@@ -233,7 +233,7 @@
 
   const closeViewer = (assetId = asset.id) => {
     clearGestureWait();
-    document.getElementById('immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
+    document.querySelector<HTMLElement>('#immich-asset-viewer')?.style.removeProperty('--viewer-dismiss');
     resetViewerPageScrollLock();
     onClose?.(assetId);
   };
@@ -520,9 +520,9 @@
 
   const GESTURE_WAIT_TIMEOUT_MS = 8000;
   const waitsForGestureMediaReady = (kind: typeof viewerKind) =>
-    kind === 'PhotoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer' || kind === 'VideoViewer';
+    ['PhotoViewer', 'StackVideoViewer', 'LiveVideoViewer', 'VideoViewer'].includes(kind);
   const isVideoViewerKind = (kind: typeof viewerKind) =>
-    kind === 'VideoViewer' || kind === 'StackVideoViewer' || kind === 'LiveVideoViewer';
+    ['VideoViewer', 'StackVideoViewer', 'LiveVideoViewer'].includes(kind);
   let pendingGestureAssetId = $state<string | null>(null);
   let showGestureSpinner = $state(false);
   const showFullScreenGestureSpinner = $derived(showGestureSpinner && !isVideoViewerKind(viewerKind));
@@ -591,19 +591,27 @@
       return;
     }
 
-    if (event.detail.direction === 'left') {
-      if (!tracker.isActive()) {
-        beginGestureWait(nextAsset?.id);
+    switch (event.detail.direction) {
+      case 'left': {
+        if (!tracker.isActive()) {
+          beginGestureWait(nextAsset?.id);
+        }
+        navigateAsset('next');
+        break;
       }
-      navigateAsset('next');
-    } else if (event.detail.direction === 'right') {
-      if (!tracker.isActive()) {
-        beginGestureWait(previousAsset?.id);
+      case 'right': {
+        if (!tracker.isActive()) {
+          beginGestureWait(previousAsset?.id);
+        }
+        navigateAsset('previous');
+        break;
       }
-      navigateAsset('previous');
-    } else if (event.detail.direction === 'bottom') {
-      clearGestureWait();
-      closeViewer();
+      case 'bottom': {
+        clearGestureWait();
+        closeViewer();
+        break;
+      }
+      // No default
     }
   };
 </script>
@@ -803,7 +811,7 @@
 
   {#if showMobilePreviewStrip || showMobilePreviewStripSkeleton}
     <div
-      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 z-20 isolate col-span-4 col-start-1"
+      class="mobile-preview-strip-host absolute inset-x-0 bottom-0 isolate z-20 col-span-4 col-start-1"
       class:mobile-preview-strip-host--above-stack={Boolean(stack && withStacked)}
     >
       {#if showMobilePreviewStrip}

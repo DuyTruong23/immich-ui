@@ -59,7 +59,7 @@ const normalizeExtension = (value: string) => {
 export const isSupportedUploadFile = (file: File, extensions: string[]): boolean => {
   const name = (file.name || '').toLowerCase();
   const type = (file.type || '').toLowerCase();
-  const allowed = extensions.map(normalizeExtension);
+  const allowed = extensions.map((extension) => normalizeExtension(extension));
 
   if (allowed.some((ext) => ext.startsWith('.') && name.endsWith(ext))) {
     return true;
@@ -70,11 +70,7 @@ export const isSupportedUploadFile = (file: File, extensions: string[]): boolean
   }
 
   const mapped = MIME_TO_EXTENSIONS[type] ?? [];
-  if (mapped.some((ext) => allowed.includes(ext))) {
-    return true;
-  }
-
-  return false;
+  return mapped.some((ext) => allowed.includes(ext));
 };
 
 const uploadQueryString = (params: { slug?: string; key?: string; sessionKey?: string }) => {

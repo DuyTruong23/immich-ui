@@ -55,6 +55,7 @@
 
   const CLOSE_MS = 200;
   const MODAL_CLASS = 'pg-feature-update-modal';
+  const MODAL_CLOSING_CLASS = 'pg-feature-update-modal--closing';
   const notifyIdentity = { accountEmail, userId };
 
   let feedback = $state('');
@@ -102,6 +103,7 @@
   const itemKey = (releaseVersion: string, index: number) => `${releaseVersion}:${index}`;
 
   const toggleItem = (key: string) => {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- Set bất biến, gán lại vào $state để cập nhật
     const next = new Set(expandedItems);
     if (next.has(key)) {
       next.delete(key);
@@ -112,7 +114,7 @@
   };
 
   const prefersReducedMotion = () =>
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const setTransformOrigin = () => {
     const card = document.querySelector<HTMLElement>(`.${MODAL_CLASS}`);
@@ -258,7 +260,7 @@
     };
 
     const card = document.querySelector<HTMLElement>(`.${MODAL_CLASS}`);
-    const fallbackTimer = window.setTimeout(finish, CLOSE_MS + 40);
+    const fallbackTimer = setTimeout(finish, CLOSE_MS + 40);
 
     if (!card) {
       return;
@@ -270,7 +272,7 @@
       }
 
       card.removeEventListener('animationend', onAnimationEnd);
-      window.clearTimeout(fallbackTimer);
+      clearTimeout(fallbackTimer);
       finish();
     };
 
@@ -302,10 +304,8 @@
         if (!(await persistUnsubscribeEmail())) {
           return;
         }
-      } else if (emailNeedsSave) {
-        if (!(await persistNotifyEmail())) {
-          return;
-        }
+      } else if (emailNeedsSave && !(await persistNotifyEmail())) {
+        return;
       }
 
       closeModal();
@@ -320,7 +320,7 @@
   title={$t('feature_updates_title')}
   onClose={handleDismiss}
   icon={false}
-  class="{MODAL_CLASS}{isClosing ? ` ${MODAL_CLASS}--closing` : ''}"
+  class="{MODAL_CLASS} {isClosing ? MODAL_CLOSING_CLASS : ''}"
 >
   <ModalBody class="feature-update-body">
     <div class="feature-update-body__header">

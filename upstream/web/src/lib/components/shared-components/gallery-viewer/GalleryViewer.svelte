@@ -85,7 +85,7 @@
   const navigationAssets = $derived(viewerAssets ?? assets);
 
   const geometry = $derived.by(() => {
-    gridDensityManager.columns;
+    void gridDensityManager.columns;
     return getJustifiedLayoutFromAssets(assets, {
       spacing: 2,
       heightTolerance: 0.5,
@@ -378,11 +378,11 @@
                 : undefined,
             laterItems: navigationAssets
               .slice(Math.max(0, currentViewerIndex - STRIP_RADIUS), currentViewerIndex)
-              .toReversed()
-              .map(toFilmstripItem),
+              .reverse()
+              .map((asset) => toFilmstripItem(asset)),
             earlierItems: navigationAssets
               .slice(currentViewerIndex + 1, currentViewerIndex + STRIP_RADIUS + 1)
-              .map(toFilmstripItem),
+              .map((asset) => toFilmstripItem(asset)),
           })
         : undefined,
   });

@@ -20,4 +20,5 @@ export const applyIcloudLogos = (): void => {
   logoManager.setLogo(ICLOUD_LOGOS);
 };
 
+// eslint-disable-next-line unicorn/no-top-level-side-effects -- module được import để áp logo ngay khi tải (routes/+layout.ts)
 applyIcloudLogos();
