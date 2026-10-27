@@ -66,6 +66,16 @@ Plan được ghép từ 3 bản nháp; trong thân task, "Task X-y" là nhãn n
 - R6 — Task 7 bổ sung `scroll-padding-top`/`scroll-padding-bottom` trên `html[data-mobile-shell]` theo biến chiều cao header / `--mobile-bottom-nav-offset` (cộng `--pg-gallery-fabs-height` khi có `html[data-gallery-fabs]`) để focus bàn phím/cuộn không nằm dưới thanh cố định (WCAG 2.4.11). Kiểm bằng grep + svelte-check; không cần spec jsdom.
 - R7 — Skill ui-ux-pro-max liệt kê "Disable zoom" là anti-pattern; quyết định của user (giữ chặn zoom) được ưu tiên.
 - R8 — Không áp dụng gợi ý `transition:x|local` của skill: Svelte 5 transition mặc định đã local.
+- R9 — Task 14 KHÔNG tạo lại `custom/src/routes/UploadPanel.spec.ts` (Task 1 tạo) và `overrides/lib/components/mobile/MobileBottomNav.spec.ts` (Task 7 tạo): mở rộng file có sẵn bằng `describe`/`it` mới, giữ setup i18n hiện có (assert theo key i18n, không đổi locale). Step 4 thấy các spec đó ở trạng thái M, không phải ??.
+- R10 — `AlbumsTableRow.svelte`: Task 11 sở hữu `text-ellipsis`→`truncate`; Task 13 neo theo markup hiện tại sau Task 11 và chỉ làm phần bàn phím/context menu.
+- R11 — Kiểm tra "không còn chữ tiếng Việt" ở Task 18 chỉ áp lên chuỗi hiển thị (markup/string literal), bỏ qua dòng comment.
+- R12 — Số lượng kết quả grep kỳ vọng trong Step 5 (Task 4, 7, 9, …) là tham khảo: nếu lệch vì comment hoặc dòng không liên quan, implementer ghi số thực tế và lý do trong report; không phải lỗi.
+- R13 — Task 4 không thêm `!important` mới đè `!important` 36px trong `branding/src/m3/search-filter.css`: giới hạn rule 36px bằng `@media (pointer: fine)` (hoặc tương đương) để rule 44px coarse áp dụng.
+- R14 — Task 11 không sao chép nguyên markup nút expand/collapse: tái dùng (snippet Svelte hoặc component dùng chung) cho cả hai breakpoint.
+- R15 — Sửa `upstream/i18n/en.json`/`vi.json` được phép (ngoại lệ của ràng buộc "chỉ sửa nguồn" — bullet i18n yêu cầu).
+- R16 — Task chỉ đổi CSS (3, 10, 11, 12, 16) dùng bước kiểm grep + svelte-check thay spec jsdom; chấp nhận.
+- R17 — Spec assert class Tailwind chấp nhận khi class chính là hành vi (đổi layout theo state); ưu tiên data-attribute khi tự thêm.
+- R18 — Task 19 bỏ phần tắt ảnh blur khi mạng chậm (ngoài finding); chỉ giảm số lớp blur/bán kính như finding yêu cầu.
 
 ## Phụ lục — ghi chú planner, finding bị bỏ, chồng lấn giữa task
 
