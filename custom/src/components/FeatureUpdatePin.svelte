@@ -141,6 +141,7 @@
             type="button"
             class="pg-whats-new-pin__open"
             aria-label={$t('feature_updates_whats_new')}
+            title={$t('feature_updates_whats_new')}
             onclick={openWhatsNew}
           >
             <span class="pg-whats-new-pin__icon" aria-hidden="true">
@@ -290,7 +291,7 @@
     }
   }
 
-  .pg-whats-new-pin:has(.pg-whats-new-pin__open:hover) {
+  .pg-whats-new-pin:has(.pg-whats-new-pin__open:is(:hover, :focus-visible)) {
     background: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
   }

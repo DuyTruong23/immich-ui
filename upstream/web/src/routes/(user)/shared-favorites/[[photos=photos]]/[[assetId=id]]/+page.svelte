@@ -2,7 +2,6 @@
   import Thumbnail from '$lib/components/assets/thumbnail/Thumbnail.svelte';
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/EmptyPlaceholder.svelte';
-  import UserAvatar from '$lib/components/shared-components/UserAvatar.svelte';
   import Portal from '$lib/elements/Portal.svelte';
   import { assetViewerManager } from '$lib/managers/asset-viewer-manager.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
@@ -23,6 +22,7 @@
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
+  import LikedByStack from './LikedByStack.svelte';
 
   interface Props {
     data: PageData;
@@ -465,7 +465,7 @@
     >
       {#each displayItems as item (item.assetId)}
         {@const asset = assetForItem(item)}
-        <div class="relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
+        <div class="@container relative isolate aspect-square overflow-hidden rounded-xl {removingIds.has(item.assetId) ? 'opacity-60' : ''}">
           <Thumbnail
             {asset}
             thumbnailSize={thumbSize || undefined}
@@ -484,17 +484,7 @@
               <Icon icon={mdiClose} size="18" />
             </button>
           {/if}
-          <div class="pointer-events-none absolute inset-e-2 bottom-2 flex">
-            {#each item.favoritedBy as user, index (user.id)}
-              <div
-                class="relative rounded-full ring-2 ring-black/50 {index > 0 ? '-ms-2' : ''}"
-                style="z-index: {item.favoritedBy.length - index}"
-                title={$t('shared_favorites_liked_by', { values: { name: user.name } })}
-              >
-                <UserAvatar user={toAvatarUser(user)} size="sm" />
-              </div>
-            {/each}
-          </div>
+          <LikedByStack users={item.favoritedBy.map((user) => toAvatarUser(user))} />
         </div>
       {/each}
     </div>
