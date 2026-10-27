@@ -1,5 +1,9 @@
-export const load = () => {
+import { getFormatter } from '$lib/utils/i18n';
+
+export const load = async () => {
+  const $t = await getFormatter();
+
   return {
-    meta: { title: 'Trang web đã dừng hoạt động' },
+    meta: { title: $t('pg_blocked_title') },
   };
 };

@@ -67,7 +67,7 @@
     ].filter((item): item is MoreItem => Boolean(item));
 
     const adminItems = [
-      can('dashboard') && { id: 'dashboard', href: '/dashboard', title: 'Dashboard', icon: mdiViewDashboardOutline },
+      can('dashboard') && { id: 'dashboard', href: '/dashboard', title: $t('pg_dashboard'), icon: mdiViewDashboardOutline },
       can('admin') && { id: 'users', href: Route.users(), title: $t('users'), icon: mdiAccountOutline },
       can('admin') && { id: 'system', href: Route.systemSettings(), title: $t('admin.system_settings'), icon: mdiCogOutline },
       can('admin') && {

@@ -9,6 +9,7 @@
   import { mdiPlayCircleOutline } from '@mdi/js';
   import { Duration } from 'luxon';
   import { onDestroy } from 'svelte';
+  import { t } from 'svelte-i18n';
 
   type Props = {
     assets: PreviewStripItem[];
@@ -42,6 +43,17 @@
       return '';
     }
     return Duration.fromMillis(durationMs).toFormat('m:ss');
+  };
+
+  const thumbLabel = (asset: PreviewStripItem, index: number, durationLabel: string) => {
+    const name =
+      asset.originalFileName || $t('pg_filmstrip_item_fallback', { values: { index: index + 1, total: assets.length } });
+    if (!asset.isVideo) {
+      return name;
+    }
+    return durationLabel
+      ? $t('pg_filmstrip_video_duration', { values: { name, duration: durationLabel } })
+      : $t('pg_filmstrip_video', { values: { name } });
   };
 
   const scrollCurrentIntoView = (behavior: ScrollBehavior = 'smooth') => {
@@ -141,11 +153,11 @@
 <nav
   bind:this={scroller}
   class="mobile-preview-strip pointer-events-auto w-full touch-pan-x [scrollbar-width:none] overflow-x-auto overscroll-x-contain px-3 pt-1.5 pb-0.5 [&::-webkit-scrollbar]:hidden"
-  aria-label="Filmstrip"
+  aria-label={$t('pg_filmstrip')}
   onscroll={onScrollerScroll}
 >
   <div class="flex w-max min-w-full items-center justify-start gap-1.5 sm:justify-center">
-    {#each assets as asset (asset.id)}
+    {#each assets as asset, index (asset.id)}
       {@const isCurrent = asset.id === currentId}
       {@const url = urlFor(asset)}
       {@const durationLabel = asset.isVideo ? formatDuration(asset.duration) : ''}
@@ -157,9 +169,7 @@
         style:width="{THUMB_SIZE}px"
         style:height="{THUMB_SIZE}px"
         aria-current={isCurrent ? 'true' : undefined}
-        aria-label={asset.isVideo
-          ? `${asset.originalFileName ?? asset.id} (video${durationLabel ? `, ${durationLabel}` : ''})`
-          : (asset.originalFileName ?? asset.id)}
+        aria-label={thumbLabel(asset, index, durationLabel)}
         onpointerdown={isolateFromViewerSwipe}
         onclick={() => {
           if (!isCurrent) {

@@ -48,4 +48,24 @@ describe('MobilePreviewStrip', () => {
       expect(scrollIntoView).toHaveBeenCalledWith({ inline: 'center', block: 'nearest', behavior: 'auto' }),
     );
   });
+
+  it('uses translated labels for the strip and its thumbs', () => {
+    render(MobilePreviewStrip, {
+      props: {
+        assets: [
+          { id: 'v', thumbhash: null, originalFileName: 'clip.mp4', isVideo: true, duration: 65_000 },
+          { id: 'x', thumbhash: null },
+        ],
+        currentId: 'v',
+        onSelect: vi.fn(),
+      },
+    });
+
+    expect(document.querySelector('nav')).toHaveAttribute('aria-label', 'Filmstrip');
+    expect(document.querySelector('button[aria-current="true"]')).toHaveAttribute(
+      'aria-label',
+      'clip.mp4 (video, 1:05)',
+    );
+    expect(document.querySelectorAll('button')[1]).toHaveAttribute('aria-label', 'Item 2 of 2');
+  });
 });

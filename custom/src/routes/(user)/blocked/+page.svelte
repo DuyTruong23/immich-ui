@@ -7,7 +7,7 @@
   class="pg-blocked-page flex min-h-dvh w-full items-center justify-center bg-(--md-sys-color-surface) text-(--md-sys-color-on-surface)"
 >
   <div class="flex flex-col items-center gap-6 text-center">
-    <h1 class="text-2xl font-semibold">Trang web đã dừng hoạt động</h1>
+    <h1 class="text-2xl font-semibold">{$t('pg_blocked_title')}</h1>
     <a
       href={Route.logout()}
       class="inline-flex min-h-11 items-center justify-center rounded-full border border-(--md-sys-color-outline) px-6 text-base font-medium text-(--md-sys-color-primary) hover:bg-(--md-state-on-surface-hover)"
