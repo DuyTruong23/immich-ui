@@ -8,7 +8,7 @@
     "moduleResolution": "bundler",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
-    "rootDir": ".",
+    "rootDir": "../..",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
