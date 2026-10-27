@@ -28,4 +28,9 @@ describe('TimelineDaySelectToggle', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Select day 4' }));
     expect(onSelect).toHaveBeenCalledOnce();
   });
+
+  it('drops the global 44px min-height on touch so the hit area stays inside the day header row', () => {
+    render(TimelineDaySelectToggle, { selected: false, visible: true, label: 'Select day 5', onSelect: vi.fn() });
+    expect(screen.getByRole('button', { name: 'Select day 5' })).toHaveClass('pointer-coarse:min-h-0', 'pointer-coarse:h-6');
+  });
 });
