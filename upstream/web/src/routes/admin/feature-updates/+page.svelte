@@ -198,7 +198,7 @@
         {:else}
           <ul class="m-0 list-none space-y-1 p-0 text-sm">
             {#each subscriberEmails as email (email)}
-              <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2">{email}</li>
+              <li class="rounded-lg bg-(--md-sys-color-surface-container) px-3 py-2 break-all">{email}</li>
             {/each}
           </ul>
         {/if}

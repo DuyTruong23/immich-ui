@@ -51,12 +51,12 @@
   };
 
   const classes = {
-    column1: 'w-7/12 md:w-4/12',
+    column1: 'w-7/12 md:w-3/12 lg:w-4/12',
     column2: 'hidden md:block md:w-3/12',
-    column3: 'hidden lg:block lg:w-1/12',
-    column4: 'hidden lg:block lg:w-1/12',
+    column3: 'hidden md:block md:w-1/12',
+    column4: 'hidden md:block md:w-1/12',
     column5: 'hidden md:block md:w-2/12',
-    column6: 'w-5/12 md:w-1/12 flex justify-end',
+    column6: 'w-5/12 md:w-2/12 lg:w-1/12 flex justify-end',
   };
 </script>
 
@@ -82,7 +82,20 @@
               {@const owner = owners[library.id]}
               <TableRow>
                 <TableCell class={classes.column1}>
-                  <Link href={Route.viewLibrary(library)}>{library.name}</Link>
+                  <div class="min-w-0">
+                    <Link href={Route.viewLibrary(library)}>{library.name}</Link>
+                    <!-- Dưới md các cột chủ sở hữu / dung lượng bị ẩn: hiện ở dòng phụ -->
+                    <span class="block text-xs break-all text-(--md-sys-color-on-surface-variant) md:hidden">
+                      {owner.name}
+                      {#await data.statisticsPromise}{:then loadedStats}
+                        {@const stats = loadedStats[library.id]}
+                        {#if stats}
+                          {@const [diskUsage, diskUsageUnit] = getBytesWithUnit(stats.usage, 0)}
+                          · {diskUsage} {diskUsageUnit}
+                        {/if}
+                      {/await}
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell class={classes.column2}>
                   <Link href={Route.viewUser(owner)}>{owner.name}</Link>

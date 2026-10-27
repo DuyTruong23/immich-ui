@@ -41,6 +41,14 @@
   const activeDeviceGroups = $derived(data.userDeviceGroups.filter((group) => group.sessions.length > 0));
 
   const formatSessionTime = (iso: string) => formatDateTime(new Date(iso), 'vi-VN');
+
+  /** Heatmap rộng hơn khung trên điện thoại: cuộn sẵn tới các tuần mới nhất (cuối lưới) */
+  const scrollHeatmapToLatest = (node: HTMLElement) => {
+    const scroller = node.querySelector<HTMLElement>('.overflow-x-auto');
+    if (scroller) {
+      scroller.scrollLeft = scroller.scrollWidth;
+    }
+  };
 </script>
 
 <UserPageLayout title={data.meta.title} description={publicEnv.companyName || 'Quản trị hệ thống'}>
@@ -55,7 +63,7 @@
     </div>
   {/snippet}
 
-  <div class="mx-auto max-w-6xl px-2 pb-8 md:px-4">
+  <div class="mx-auto max-w-6xl px-2 pb-8 md:px-4 2xl:max-w-7xl">
     <p class="mb-6 text-sm text-(--pg-text-muted)">Tổng quan thư viện — chỉ dành cho admin</p>
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -74,7 +82,7 @@
 
     <section class="mt-6">
       <article class="rounded-2xl border border-(--pg-border) p-6">
-        <div class="mb-4 flex items-end justify-between gap-4">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
           <div>
             <h2 class="text-lg font-semibold">Dung lượng lưu trữ</h2>
             <p class="mt-1 text-sm text-(--pg-text-muted)">
@@ -117,7 +125,7 @@
         <p class="mb-4 text-sm text-(--pg-text-muted)">Tổng hợp upload của tất cả người dùng trên hệ thống</p>
 
         {#if data.uploadHistory}
-          <div class="overflow-x-auto">
+          <div class="pg-dashboard-heatmap" use:scrollHeatmapToLatest>
             <CalendarHeatmap
               data={data.uploadHistory}
               itemLabel={({ date, count }) => `${count} ảnh/video ngày ${date}`}
@@ -130,7 +138,7 @@
       </article>
 
       <article class="rounded-2xl border border-(--pg-border) p-6">
-        <div class="mb-2 flex items-center justify-between gap-4">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <div class="flex items-center gap-2">
             <Icon icon={mdiDevices} size="22" class="text-(--pg-primary)" />
             <h3 class="text-base font-semibold">Thiết bị được phép</h3>
@@ -192,3 +200,10 @@
     </section>
   </div>
 </UserPageLayout>
+
+<style>
+  /* CalendarHeatmap (upstream) co 53 cột vừa khung → ô ~5px trên điện thoại; ép bề rộng tối thiểu để khung overflow-x-auto bên trong cuộn ngang */
+  .pg-dashboard-heatmap :global(.grid-flow-col) {
+    min-width: 48rem;
+  }
+</style>

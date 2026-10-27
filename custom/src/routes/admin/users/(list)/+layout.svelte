@@ -82,10 +82,11 @@
     return [Detail, Update, ResetPassword, ResetPinCode, isBlocked ? Unblock : Block, MenuItemType.Divider, Delete];
   };
 
+  // Từ md hiện đủ email + quota; dưới md email nằm ở dòng phụ dưới tên
   const classes = {
-    column1: 'w-8/12 md:w-5/12 lg:w-4/12',
-    column2: 'hidden md:block md:w-5/12 lg:w-4/12',
-    column3: 'hidden lg:block lg:w-2/12',
+    column1: 'w-8/12 md:w-4/12',
+    column2: 'hidden md:block md:w-4/12 break-all',
+    column3: 'hidden md:block md:w-2/12',
     column4: 'w-4/12 md:w-2/12 flex justify-end',
   };
 </script>
@@ -113,7 +114,12 @@
         {#each users as user (user.id)}
           <TableRow color={user.deletedAt ? 'danger' : undefined}>
             <TableCell class={classes.column1}>
-              <Link href={Route.viewUser(user)}>{user.name}</Link>
+              <div class="min-w-0">
+                <Link href={Route.viewUser(user)}>{user.name}</Link>
+                <span class="block text-xs break-all text-(--md-sys-color-on-surface-variant) md:hidden">
+                  {user.email}
+                </span>
+              </div>
             </TableCell>
             <TableCell class={classes.column2}>{user.email}</TableCell>
             <TableCell class={classes.column3}>
