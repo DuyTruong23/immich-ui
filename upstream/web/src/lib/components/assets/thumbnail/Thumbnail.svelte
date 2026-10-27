@@ -183,15 +183,17 @@
     onMouseEvent?.({ isMouseOver: false, selectedGroupIndex: groupIndex });
   };
 
-  const onFocus = () => {
+  // focusin/focusout nổi bọt: focus vào/ra khỏi nút con cũng cập nhật cờ, không bị kẹt khi blur từ nút con
+  const onFocusIn = (event: FocusEvent) => {
     try {
-      keyboardFocused = element?.matches(':focus-visible') ?? false;
+      const target = event.target instanceof Element ? event.target : element;
+      keyboardFocused = target?.matches(':focus-visible') ?? false;
     } catch {
       keyboardFocused = false;
     }
   };
 
-  const onBlur = (event: FocusEvent) => {
+  const onFocusOut = (event: FocusEvent) => {
     // Giữ nút khi focus chuyển sang nút con bên trong thumbnail
     if (event.relatedTarget instanceof Node && element?.contains(event.relatedTarget)) {
       return;
@@ -291,8 +293,8 @@
   style:height="{height}px"
   onmouseenter={onMouseEnter}
   onmouseleave={onMouseLeave}
-  onfocus={onFocus}
-  onblur={onBlur}
+  onfocusin={onFocusIn}
+  onfocusout={onFocusOut}
   use:longPress={{ onLongPress: () => onSelect?.($state.snapshot(asset)) }}
   onkeydown={(evt) => {
     if (evt.key === 'Enter') {

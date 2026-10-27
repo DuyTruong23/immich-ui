@@ -79,4 +79,20 @@ describe('Thumbnail touch and keyboard affordances', () => {
     await tick();
     expect(screen.getByRole('checkbox', { name: 'select' })).toBeInTheDocument();
   });
+
+  it('hides the controls when focus moves into a child button and then leaves the thumbnail', async () => {
+    const { baseElement } = render(Thumbnail, { asset: buildAsset(), onSelect: vi.fn() });
+    const container = baseElement.querySelector<HTMLElement>('[data-thumbnail-focus-container]')!;
+    container.focus();
+    await tick();
+    const checkbox = screen.getByRole('checkbox', { name: 'select' });
+
+    checkbox.focus();
+    await tick();
+    expect(screen.getByRole('checkbox', { name: 'select' })).toBeInTheDocument();
+
+    checkbox.blur();
+    await tick();
+    expect(screen.queryByRole('checkbox')).toBeNull();
+  });
 });
