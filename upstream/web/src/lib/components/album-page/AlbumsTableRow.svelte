@@ -41,7 +41,7 @@
   onclick={() => goto(Route.viewAlbum(album))}
   {oncontextmenu}
 >
-  <td class="text-md w-8/12 items-center text-start text-ellipsis sm:w-4/12 md:w-4/12 xl:w-[30%] 2xl:w-[40%]">
+  <td class="text-md w-8/12 items-center truncate text-start sm:w-4/12 md:w-4/12 xl:w-[30%] 2xl:w-[40%]">
     {album.albumName}
     {#if album.shared}
       <Icon

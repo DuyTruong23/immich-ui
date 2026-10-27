@@ -456,7 +456,7 @@
     <EmptyPlaceholder text={$t('shared_favorites_empty')} class="mx-auto mt-10" />
   {:else}
     <div
-      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}"
+      class="pg-photo-grid grid gap-2 {isMobileGrid ? '' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'}"
       style:grid-template-columns={isMobileGrid
         ? `repeat(${gridDensityManager.columns}, minmax(0, 1fr))`
         : undefined}

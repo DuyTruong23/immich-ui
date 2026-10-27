@@ -1,5 +1,6 @@
 <script lang="ts">
   import { scrollMemory } from '$lib/actions/scroll-memory';
+  import AlbumGroupToggles from './AlbumGroupToggles.svelte';
   import AlbumsControls from './AlbumsControls.svelte';
   import Albums from '$lib/components/album-page/AlbumsList.svelte';
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
@@ -39,8 +40,12 @@
         onSelect={(selected) => ($albumViewSettings.filter = selected)}
       />
     </div>
-    <div class="w-60">
-      <SearchBar placeholder={$t('search_albums')} bind:name={searchQuery} showLoadingSpinner={false} />
+    <div class="flex items-center gap-2">
+      <div class="w-60 min-w-0">
+        <SearchBar placeholder={$t('search_albums')} bind:name={searchQuery} showLoadingSpinner={false} />
+      </div>
+      <!-- Dưới md thanh công cụ không đủ chỗ cho nút mở/thu gọn nhóm: đặt cạnh ô tìm kiếm -->
+      <AlbumGroupToggles {albumGroups} class="flex md:hidden" />
     </div>
   </div>
 

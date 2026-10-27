@@ -71,7 +71,7 @@
         <p class="mb-4 font-medium dark:text-immich-dark-fg">{$t('people')}</p>
         <a
           href={Route.people()}
-          class="pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
+          class="pg-touch-target relative pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
           draggable="false">{$t('view_all')}</a
         >
       </div>
@@ -91,7 +91,7 @@
                   <Icon icon={mdiHeart} size="24" class="text-white" />
                 </div>
               {/if}
-              <p class="mt-2 text-sm font-medium text-ellipsis dark:text-white">{person.name}</p>
+              <p class="mt-2 truncate text-sm font-medium dark:text-white">{person.name}</p>
             </a>
           {/each}
         {/snippet}
@@ -105,7 +105,7 @@
         <p class="mb-4 font-medium dark:text-immich-dark-fg">{$t('places')}</p>
         <a
           href={Route.places()}
-          class="pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
+          class="pg-touch-target relative pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
           draggable="false">{$t('view_all')}</a
         >
       </div>
@@ -138,26 +138,33 @@
         <p class="mb-4 font-medium dark:text-immich-dark-fg">{$t('recently_added')}</p>
         <a
           href={Route.recentlyAdded()}
-          class="pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
+          class="pg-touch-target relative pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
           draggable="false">{$t('view_all')}</a
         >
       </div>
-      <div class="flex h-24 max-w-fit flex-wrap gap-x-1 overflow-hidden md:h-42">
-        {#each recents as item (item.data.id)}
-          <button
-            type="button"
-            class="relative h-full flex-auto"
-            onclick={() => handlePromiseError(onViewAsset(item.data.id))}
-            draggable="false"
-          >
-            <img
-              src={getAssetMediaUrl({ id: item.data.id, size: AssetMediaSize.Thumbnail })}
-              alt={$getAltText(toTimelineAsset(item.data))}
-              class="size-full min-w-max rounded-xl object-cover"
-            />
-          </button>
-        {/each}
-      </div>
+      <!-- Một hàng ô vuông lấp đủ bề rộng (như People/Places): không reflow khi ảnh tải, không lệch mép phải -->
+      <SingleGridRow class="grid grid-flow-col grid-auto-fill-24 gap-x-1 md:grid-auto-fill-42">
+        {#snippet children({ itemCount })}
+          {#each recents.slice(0, itemCount) as item (item.data.id)}
+            <button
+              type="button"
+              class="relative aspect-square overflow-hidden rounded-xl"
+              onclick={() => handlePromiseError(onViewAsset(item.data.id))}
+              draggable="false"
+            >
+              <img
+                src={getAssetMediaUrl({ id: item.data.id, size: AssetMediaSize.Thumbnail })}
+                alt={$getAltText(toTimelineAsset(item.data))}
+                width="250"
+                height="250"
+                loading="lazy"
+                decoding="async"
+                class="size-full object-cover"
+              />
+            </button>
+          {/each}
+        {/snippet}
+      </SingleGridRow>
     </div>
   {/if}
 
