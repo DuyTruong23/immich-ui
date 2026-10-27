@@ -18,7 +18,8 @@
 
   let { users }: Props = $props();
 
-  // Chạm/click/Enter để hiện tên — `title` chỉ hiện khi hover chuột, không dùng được trên màn cảm ứng
+  // Chạm/click/Enter để hiện tên — `title` chỉ hiện khi hover chuột, không dùng được trên màn cảm ứng.
+  // Caption chỉ là lớp hiện thị (aria-hidden); tên đã nằm trong aria-label nên không dùng aria-expanded.
   let open = $state(false);
 
   const label = $derived(
@@ -53,7 +54,6 @@
       type="button"
       class="pg-touch-target relative flex rounded-full"
       aria-label={label}
-      aria-expanded={open}
       title={label}
       onclick={toggle}
       onblur={() => (open = false)}

@@ -26,17 +26,17 @@ describe('LikedByStack', () => {
     render(LikedByStack, { users });
     const button = screen.getByRole('button', { name: 'shared_favorites_liked_by' });
     expect(button).toHaveClass('pg-touch-target', 'relative');
-    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).not.toHaveAttribute('aria-expanded');
   });
 
   it('reveals the names on tap and hides them on Escape', async () => {
     render(LikedByStack, { users });
     const button = screen.getByRole('button', { name: 'shared_favorites_liked_by' });
     await fireEvent.click(button);
-    expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('liked-by-caption')).toBeInTheDocument();
+    expect(screen.getByTestId('liked-by-caption')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByRole('button', { name: 'shared_favorites_liked_by' })).toBe(button);
     await fireEvent.keyDown(button, { key: 'Escape' });
-    expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByTestId('liked-by-caption')).toBeNull();
   });
 
