@@ -797,7 +797,7 @@
       transition:fly={{ duration: motionDuration(150) }}
       id="detail-panel"
       class={[
-        'overflow-y-auto bg-light transition-all dark:border-l dark:border-s-immich-dark-gray',
+        'overflow-y-auto bg-light transition-all dark:border-s-immich-dark-gray',
         getViewerPanelLayoutClass(showDetailPanel ? 'detail' : 'editor', isMobileViewer),
       ]}
       translate="yes"
@@ -876,7 +876,7 @@
       transition:fly={{ duration: motionDuration(150) }}
       id="activity-panel"
       class={[
-        'overflow-y-auto transition-all dark:border-l dark:border-s-immich-dark-gray',
+        'overflow-y-auto transition-all dark:border-s-immich-dark-gray',
         getViewerPanelLayoutClass('activity', isMobileViewer),
       ]}
       translate="yes"

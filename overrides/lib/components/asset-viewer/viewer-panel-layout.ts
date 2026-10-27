@@ -9,14 +9,16 @@
  */
 export type ViewerPanelKind = 'detail' | 'editor' | 'activity';
 
+// dark:border-l chỉ ở nhánh desktop: bottom sheet mobile full-width không có viền cạnh
 const DESKTOP_PANEL_CLASS: Record<ViewerPanelKind, string> = {
-  detail: 'row-span-4 row-start-1 w-90',
-  editor: 'row-span-4 row-start-1 w-100',
-  activity: 'row-span-5 row-start-1 w-90 md:w-115',
+  detail: 'row-span-4 row-start-1 w-90 dark:border-l',
+  editor: 'row-span-4 row-start-1 w-100 dark:border-l',
+  activity: 'row-span-5 row-start-1 w-90 md:w-115 dark:border-l',
 };
 
+// bg-light: nền đặc phía sau padding safe-area của .asset-viewer-sheet (home indicator / mép landscape)
 const MOBILE_PANEL_BASE_CLASS =
-  'asset-viewer-sheet absolute inset-x-0 bottom-0 z-40 w-full rounded-t-2xl md:inset-x-auto md:inset-y-0 md:inset-e-0 md:rounded-none';
+  'asset-viewer-sheet bg-light absolute inset-x-0 bottom-0 z-40 w-full rounded-t-2xl md:inset-x-auto md:inset-y-0 md:inset-e-0 md:rounded-none';
 
 // detail: nội dung tự cao → max-h; editor/activity dùng h-full bên trong nên cần chiều cao xác định
 const MOBILE_PANEL_SIZE_CLASS: Record<ViewerPanelKind, string> = {
