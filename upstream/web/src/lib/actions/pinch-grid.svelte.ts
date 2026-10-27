@@ -11,7 +11,7 @@ const touchDistance = (event: TouchEvent) => {
   return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
 };
 
-/** Pinch 2 ngón trên mobile: chum lại = nhiều ảnh hơn, xoè ra = ít ảnh hơn (3–6). */
+/** Pinch 2 ngón trên mobile: chum lại = nhiều ảnh hơn, xoè ra = ít ảnh hơn (3–6 trên điện thoại, 3–10 từ 768px). */
 export const pinchGrid = (node: HTMLElement) => {
   if (!isCoarsePointer() && !isNarrowViewport()) {
     return {};

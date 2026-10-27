@@ -118,7 +118,7 @@ export const getTimelineLayoutOptions = (viewportWidth = 0): { rowHeight: number
 
   if (compact) {
     const width = viewportWidth || (browser ? window.innerWidth : 390);
-    const columns = gridDensityManager.columns;
+    const columns = gridDensityManager.columnsFor(width);
     const gap = 2;
     const rowHeight = Math.max(48, Math.round((width - gap * (columns - 1)) / columns));
     return { rowHeight, headerHeight: quality === 'save-data' ? 24 : 32 };
