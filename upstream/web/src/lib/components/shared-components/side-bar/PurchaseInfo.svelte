@@ -1,16 +1,11 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { OpenQueryParam } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import PurchaseModal from '$lib/modals/PurchaseModal.svelte';
-  import { Route } from '$lib/route';
-  import { getAccountAge } from '$lib/utils/auth';
   import { handleError } from '$lib/utils/handle-error';
-  import { getButtonVisibility } from '$lib/utils/purchase-utils';
   import { updateMyPreferences } from '@immich/sdk';
-  import { Button, Icon, IconButton, Logo, modalManager, SupporterBadge } from '@immich/ui';
-  import { mdiClose, mdiInformationOutline } from '@mdi/js';
+  import { Button, IconButton, Logo, modalManager } from '@immich/ui';
+  import { mdiClose } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import { SvelteDate } from 'svelte/reactivity';
   import { fade } from 'svelte/transition';
@@ -19,16 +14,9 @@
   let hoverMessage = $state(false);
   let hoverButton = $state(false);
 
-  let showBuyButton = $state(getButtonVisibility());
-
   const openPurchaseModal = async () => {
     await modalManager.show(PurchaseModal);
     showMessage = false;
-  };
-
-  const onButtonHover = () => {
-    showMessage = true;
-    hoverButton = true;
   };
 
   const hideButton = async (always: boolean) => {
@@ -51,7 +39,6 @@
 
       authManager.setPreferences(response);
 
-      showBuyButton = getButtonVisibility();
       showMessage = false;
     } catch (error) {
       handleError(error, $t('errors.error_hiding_buy_button'));
