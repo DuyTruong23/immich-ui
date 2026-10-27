@@ -47,6 +47,17 @@ text = re.sub(
     'class="absolute inset-e-0 top-full z-50 mt-2 w-[min(360px,100vw-50px)]',
     text,
 )
+# Bản ở ref có import HelpAndFeedbackModal và state `info` (kèm getAboutInfo trong onMount) không dùng ở markup:
+# bỏ để eslint no-unused-vars sạch. Thay thế chuỗi chính xác nên chạy lại không đổi gì.
+for unused in (
+    "  import HelpAndFeedbackModal from '$lib/modals/HelpAndFeedbackModal.svelte';\n",
+    "  import { userInteraction } from '$lib/stores/user.svelte';\n",
+    "  import { getAboutInfo, type ServerAboutResponseDto } from '@immich/sdk';\n",
+    "  import { onMount } from 'svelte';\n",
+    "\n  let info: ServerAboutResponseDto | undefined = $state();\n"
+    "\n  onMount(async () => {\n    info = userInteraction.aboutInfo ?? (await getAboutInfo());\n  });\n",
+):
+    text = text.replace(unused, "", 1)
 path.write_text(text, encoding="utf-8")
 PY
 
