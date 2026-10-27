@@ -160,15 +160,30 @@
 
   /* IconButton search/clear — giữ tròn, không dính style card người */
   .ant-search-filter-modal__section .pg-people-filter button {
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-    min-width: 2.25rem !important;
-    min-height: 2.25rem !important;
     flex-shrink: 0;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 999px !important;
     background: transparent !important;
+  }
+
+  /* 36px chỉ cho con trỏ chuột; màn cảm ứng dùng 44px (không !important để rule 44px toàn cục áp dụng) */
+  @media (pointer: fine) {
+    .ant-search-filter-modal__section .pg-people-filter button {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+      min-width: 2.25rem !important;
+      min-height: 2.25rem !important;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .ant-search-filter-modal__section .pg-people-filter button {
+      width: 2.75rem;
+      height: 2.75rem;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+    }
   }
 
   .ant-search-filter-modal__section .pg-people-filter input {
@@ -219,8 +234,6 @@
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    min-height: 2.75rem;
-    padding-block: 0.25rem;
   }
 
   .pg-search-display-options__input {
@@ -232,9 +245,13 @@
     cursor: pointer;
   }
 
+  /* Label là vùng chạm 44px của cả hàng (div bọc ngoài không tương tác được) */
   .pg-search-display-options__label {
+    display: flex;
     flex: 1 1 auto;
+    align-items: center;
     min-width: 0;
+    min-height: 2.75rem;
     font-size: 0.9375rem;
     font-weight: 400;
     line-height: 1.35;
@@ -248,9 +265,14 @@
       gap: 0.5rem 1.25rem;
     }
 
-    .pg-search-display-options__item {
+    .pg-search-display-options__label {
       min-height: auto;
-      padding-block: 0;
+    }
+  }
+
+  @media (min-width: 640px) and (pointer: coarse) {
+    .pg-search-display-options__label {
+      min-height: 2.75rem;
     }
   }
 

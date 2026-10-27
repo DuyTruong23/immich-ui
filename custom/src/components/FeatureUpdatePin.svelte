@@ -153,7 +153,12 @@
             </span>
             <span class="pg-whats-new-pin__label">{$t('feature_updates_whats_new')}</span>
           </button>
-          <button type="button" class="pg-whats-new-pin__dismiss" aria-label={$t('close')} onclick={dismissPin}>
+          <button
+            type="button"
+            class="pg-whats-new-pin__dismiss pg-touch-target"
+            aria-label={$t('close')}
+            onclick={dismissPin}
+          >
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
               <path
                 fill="currentColor"
@@ -260,6 +265,7 @@
   }
 
   .pg-whats-new-pin__dismiss {
+    position: relative;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -275,6 +281,13 @@
     color: inherit;
     opacity: 0.72;
     cursor: pointer;
+  }
+
+  /* Vùng chạm 44px của nút đóng (pg-touch-target) tràn 8px mỗi bên — giãn gap để không đè nút mở */
+  @media (pointer: coarse) {
+    .pg-whats-new-pin {
+      gap: 0.5rem;
+    }
   }
 
   .pg-whats-new-pin:has(.pg-whats-new-pin__open:hover) {

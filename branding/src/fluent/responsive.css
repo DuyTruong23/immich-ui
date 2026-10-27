@@ -14,6 +14,43 @@
     #sidebar a {
       min-height: 44px;
     }
+
+    /*
+     * Nút icon vuông/tròn (IconButton @immich/ui: h-N w-N, hoặc size-N): chỉ nâng min-height sẽ biến
+     * nút tròn thành oval (vd. 40×44) — nâng cả min-width để giữ tỉ lệ 1:1, giống viewer.css cho navbar viewer.
+     */
+    :is(button, a, [role='button']):is(
+        [class*='h-6'][class*='w-6'],
+        [class*='h-8'][class*='w-8'],
+        [class*='h-10'][class*='w-10'],
+        [class*='size-6'],
+        [class*='size-8'],
+        [class*='size-10']
+      ):not([disabled], .pg-touch-target) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /*
+     * .pg-touch-target — giữ kích thước nhìn thấy, mở rộng vùng chạm lên 44px bằng ::before.
+     * Phần tử phải là containing block (relative/absolute/fixed): class không tự đặt position
+     * để không đè `absolute` của nút overlay.
+     */
+    :is(button, a, [role='button']).pg-touch-target:not([disabled]) {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .pg-touch-target::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      border-radius: inherit;
+      transform: translate(-50%, -50%);
+    }
   }
 
   html {

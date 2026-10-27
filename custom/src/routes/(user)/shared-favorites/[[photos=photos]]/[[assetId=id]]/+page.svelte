@@ -439,6 +439,7 @@
         class="rounded-full border px-3 py-1.5 text-sm transition-colors {filter === item.id
           ? 'border-primary bg-primary/15 text-primary'
           : 'border-(--pg-border) text-(--pg-text-muted) hover:border-primary/40'}"
+        aria-pressed={filter === item.id}
         onclick={() => (filter = item.id)}
       >
         {item.label}
@@ -475,7 +476,7 @@
           {#if canRemoveItem(item)}
             <button
               type="button"
-              class="absolute top-2 end-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
+              class="pg-touch-target absolute top-2 end-2 z-20 flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-sm hover:bg-black/80 disabled:opacity-50"
               aria-label={isAdmin ? $t('shared_favorites_remove_admin') : $t('unfavorite')}
               disabled={removingIds.has(item.assetId)}
               onclick={(event) => handlePromiseError(handleRemoveFavorite(event, item))}
