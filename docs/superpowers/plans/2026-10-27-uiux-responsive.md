@@ -26,6 +26,8 @@
 - svelte-check: `pnpm --filter immich-web exec svelte-check` — baseline 30 errors / 1 warning, không thêm lỗi. ESLint `--max-warnings 0` trên file đã sửa.
 - Commit: Conventional Commits, mô tả tiếng Việt, kết thúc bằng dòng trống + `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Khớp style và mật độ comment của code xung quanh (comment tiếng Việt).
+- Khoảng cách giữa hai vùng chạm liền kề ≥8px (gap-2) khi bố cục cho phép (ui-ux-pro-max: Touch Spacing).
+- Phần tử được focus không bị header/bottom nav/cụm FAB cố định che (WCAG 2.2 SC 2.4.11, ui-ux-pro-max: Focus Not Obscured).
 - Task chạy tuần tự 1→19; task sau thấy thay đổi của task trước. Neo chỉnh sửa theo selector/markup, không theo số dòng.
 
 ## Bảng đánh số task
@@ -61,6 +63,9 @@ Plan được ghép từ 3 bản nháp; trong thân task, "Task X-y" là nhãn n
 - R3 — Số cột grid mặc định trên phone (Task 9): sửa lỗi `Number(null) === 0` để mặc định đúng `GRID_COLUMNS_DEFAULT = 4` như hằng số thể hiện.
 - R4 — i18n: key mới chèn theo thứ tự chữ cái hoặc sau dòng `pg_maintenance_description` đều chấp nhận; trước khi chèn kiểm tra key chưa tồn tại.
 - R5 — `branding/src/fluent/navigation.css` không được import: không task nào sửa file này; Task 16 xóa nó.
+- R6 — Task 7 bổ sung `scroll-padding-top`/`scroll-padding-bottom` trên `html[data-mobile-shell]` theo biến chiều cao header / `--mobile-bottom-nav-offset` (cộng `--pg-gallery-fabs-height` khi có `html[data-gallery-fabs]`) để focus bàn phím/cuộn không nằm dưới thanh cố định (WCAG 2.4.11). Kiểm bằng grep + svelte-check; không cần spec jsdom.
+- R7 — Skill ui-ux-pro-max liệt kê "Disable zoom" là anti-pattern; quyết định của user (giữ chặn zoom) được ưu tiên.
+- R8 — Không áp dụng gợi ý `transition:x|local` của skill: Svelte 5 transition mặc định đã local.
 
 ## Phụ lục — ghi chú planner, finding bị bỏ, chồng lấn giữa task
 
